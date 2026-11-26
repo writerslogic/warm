@@ -84,7 +84,7 @@ class VersionTests(unittest.TestCase):
     def test_stale_documented_versions_are_rejected(self) -> None:
         for relative, old, new in (
             ("CITATION.cff", "version: 0.", "version: 9."),
-            ("bindings/js/warm-sdk/README.md", "writerslogic-warm@0.", "writerslogic-warm@9."),
+            ("bindings/js/warm-sdk/README.md", "warm-memory@0.", "warm-memory@9."),
             ("bindings/python/README.md", "uv add warm-python\n", "uv add warm-python==9.9.9\n"),
         ):
             with self.subTest(file=relative):
@@ -109,16 +109,11 @@ class VersionTests(unittest.TestCase):
         path = self.tree / "package-lock.json"
         original = path.read_text()
         package = json.loads((self.tree / "package.json").read_text())
-        name = next(iter(package["optionalDependencies"]))
         cases = (
             ((), "version", "0.0.0"),
             (("packages", ""), "version", "0.0.0"),
             (("packages", ""), "version", None),
-            (("packages", "", "optionalDependencies"), name, "0.0.0"),
-            (("packages", "", "optionalDependencies"), name, None),
-            (("packages", "", "optionalDependencies"), "unexpected-platform", package["version"]),
-            (("packages", f"node_modules/{name}"), "version", "0.0.0"),
-            (("packages",), f"node_modules/{name}", None),
+            (("packages", ""), "optionalDependencies", {"warm-memory-darwin-arm64": package["version"]}),
             (("packages",), "", None),
         )
         for parents, key, value in cases:
@@ -154,26 +149,17 @@ class VersionTests(unittest.TestCase):
                 path.write_text(json.dumps(manifest))
                 result = self.run_script("check-versions.py")
                 self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
-                self.assertIn("writerslogic-warm", result.stderr)
+                self.assertIn("binaryName" if key == "binaryName" else "warm-memory", result.stderr)
                 path.write_text(original)
 
-    def test_native_platform_family_cannot_be_renamed_consistently(self) -> None:
+    def test_native_package_must_bundle_its_bindings(self) -> None:
         package_path = self.tree / "package.json"
         package = json.loads(package_path.read_text())
-        name = next(iter(package["optionalDependencies"]))
-        renamed = name.replace("writerslogic-warm-", "warm-sdk-", 1)
-        self.assertNotEqual(name, renamed)
-        package["optionalDependencies"][renamed] = package["optionalDependencies"].pop(name)
+        package["optionalDependencies"] = {"warm-memory-darwin-arm64": package["version"]}
         package_path.write_text(json.dumps(package))
-        lock_path = self.tree / "package-lock.json"
-        lock = json.loads(lock_path.read_text())
-        dependencies = lock["packages"][""]["optionalDependencies"]
-        dependencies[renamed] = dependencies.pop(name)
-        lock["packages"][f"node_modules/{renamed}"] = lock["packages"].pop(f"node_modules/{name}")
-        lock_path.write_text(json.dumps(lock))
         result = self.run_script("check-versions.py")
         self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
-        self.assertIn("package family and napi.targets", result.stderr)
+        self.assertIn("bundle its bindings", result.stderr)
 
     def test_sdk_versions_and_shared_tag_match_independently_of_engine(self) -> None:
         version = json.loads((self.tree / "bindings/js/warm-sdk/package.json").read_text())["version"]
@@ -232,7 +218,7 @@ class VersionTests(unittest.TestCase):
                     target = manifest
                     for parent in parents:
                         target = target[parent]
-                    target[field] = {"writerslogic-warm": "0.6.7"}
+                    target[field] = {"warm-memory": "0.6.7"}
                     path.write_text(json.dumps(manifest))
                     result = self.run_script("check-sdk-versions.py")
                     self.assertEqual(result.returncode, 1, result.stdout + result.stderr)

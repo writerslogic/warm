@@ -35,7 +35,7 @@ Python 3.11+ (tested on 3.12), `warm-sdk` >= 0.1.3.
 
 ## JavaScript and TypeScript
 
-Native engine in process; Node 20 or newer, `writerslogic-warm` >= 0.6.5.
+Native engine in process; Node 20 or newer, `warm-memory` >= 0.6.5.
 Standalone examples of the embedded `WarmMemorySystem` surface (search, triplets, sequences,
 analogies, external embeddings) are listed in [examples/README.md](https://github.com/writerslogic/warm/blob/main/examples/README.md).
 
@@ -54,7 +54,7 @@ All of these speak to `warm-mcp`.
 
 | Adapter | Host | Install | Status |
 |---|---|---|---|
-| warm-mcp launcher | any MCP client | `npx -y writerslogic-warm-mcp` or `uvx warm-mcp` | tested |
+| warm-mcp launcher | any MCP client | `npx -y warm-mcp` or `uvx warm-mcp` | tested |
 | Claude memory tool | Anthropic `memory_20250818` (Python, TypeScript) | `pip install warm-claude-tool` or `npm install warm-claude-tool` | tested |
 | Claude Code | plugin | `claude plugin install` from the repo marketplace | plugin validated, headless session run |
 | Codex CLI | 0.163.0 | `codex mcp add` | CLI verified, no model session |
@@ -67,7 +67,7 @@ All of these speak to `warm-mcp`.
 | Binding | Source | Status |
 |---|---|---|
 | Rust | `warm-rust` on crates.io | published |
-| Embedded Node | `writerslogic-warm` on npm | published; optional native packages per platform |
+| Embedded Node | `warm-memory` on npm | published; one package with prebuilt binaries for eight platforms |
 | JavaScript and TypeScript client | `warm-sdk` on npm, `bindings/js/warm-sdk` | published; needs `warm-server` |
 | Python client | `warm-sdk` on PyPI, `bindings/python/warm-sdk` | published; needs `warm-server` |
 | Python native | `warm-python` on PyPI | published; in-process `Warm` class from 0.7.0 |

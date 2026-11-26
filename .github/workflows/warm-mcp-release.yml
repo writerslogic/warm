@@ -141,7 +141,7 @@ jobs:
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/mcp-npm"
           npm install --prefix "$RUNNER_TEMP/mcp-npm" --ignore-scripts --offline --no-audit --no-fund dist/npm/*.tgz
-          WARM_MCP_BINARY="$PWD/mcp-release-assets/warm-mcp-x86_64-unknown-linux-gnu" node "$RUNNER_TEMP/mcp-npm/node_modules/writerslogic-warm-mcp/bin/cli.js" --version
+          WARM_MCP_BINARY="$PWD/mcp-release-assets/warm-mcp-x86_64-unknown-linux-gnu" node "$RUNNER_TEMP/mcp-npm/node_modules/warm-mcp/bin/cli.js" --version
           uv venv "$RUNNER_TEMP/mcp-venv"
           uv pip install --python "$RUNNER_TEMP/mcp-venv/bin/python" dist/pypi/*.whl
           WARM_MCP_BINARY="$PWD/mcp-release-assets/warm-mcp-x86_64-unknown-linux-gnu" "$RUNNER_TEMP/mcp-venv/bin/warm-mcp" --version
@@ -215,7 +215,7 @@ jobs:
           set -euo pipefail
           version="${TAG#mcp-v}"
           for attempt in {1..20}; do
-            if npm_config_cache="$RUNNER_TEMP/mcp-registry-$attempt" npm view "writerslogic-warm-mcp@$version" version >/dev/null 2>&1; then
+            if npm_config_cache="$RUNNER_TEMP/mcp-registry-$attempt" npm view "warm-mcp@$version" version >/dev/null 2>&1; then
               break
             fi
             [ "$attempt" = 20 ] && { echo "MCP launcher did not appear in npm" >&2; exit 1; }
@@ -223,9 +223,9 @@ jobs:
           done
           mkdir consumer && cd consumer
           npm init -y >/dev/null
-          npm install --ignore-scripts --no-audit --no-fund "writerslogic-warm-mcp@$version"
+          npm install --ignore-scripts --no-audit --no-fund "warm-mcp@$version"
           npm audit signatures
-          ./node_modules/.bin/writerslogic-warm-mcp --version
+          ./node_modules/.bin/warm-mcp --version
 
   pypi-publish:
     if: startsWith(github.ref, 'refs/tags/mcp-v')
@@ -279,7 +279,7 @@ jobs:
           version="${GITHUB_REF_NAME#mcp-v}"
           for attempt in {1..30}; do
             if curl --fail --location --silent --show-error --max-time 15 \
-              https://registry.npmjs.org/writerslogic-warm-mcp \
+              https://registry.npmjs.org/warm-mcp \
               | jq --exit-status --arg version "$version" '.versions[$version] != null' >/dev/null \
               && curl --fail --location --silent --show-error --max-time 15 \
                 "https://pypi.org/pypi/warm-mcp/$version/json" \

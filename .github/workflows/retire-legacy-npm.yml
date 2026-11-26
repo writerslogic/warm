@@ -1,30 +1,31 @@
 # Copyright 2024-2026 WritersLogic Contributors
 # SPDX-License-Identifier: Apache-2.0
+#
+# Retires superseded npm names once their replacements are on the registry. `abandoned` tries to
+# unpublish the holographic-memory* family and the unused warm-sdk-<platform> packages (roots
+# first, so their platform packages lose their only dependent) and deprecates whatever registry
+# policy refuses to delete. The `renamed-*` groups deprecate names that users still install,
+# pointing each at its replacement; they are never unpublished.
 name: Retire legacy npm packages
 
 on:
   workflow_dispatch:
     inputs:
-      retire_legacy:
-        description: Unpublish old holographic packages, or deprecate if registry policy refuses
-        type: boolean
-        default: false
-      deprecate_only:
-        description: Skip deletion when registry policy already prevents unpublishing
-        type: boolean
-        default: true
-      scope:
+      group:
         description: Legacy package group to retire after its replacement is available
         type: choice
-        options: [core, mcp, all]
-        default: core
+        options: [abandoned, renamed-engine, renamed-mcp, renamed-adapters]
+      apply:
+        description: Change the registry (false lists what would change)
+        type: boolean
+        default: false
 
 permissions:
   contents: read
 
 jobs:
   retire:
-    if: inputs.retire_legacy && github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: npm
     steps:
@@ -33,11 +34,11 @@ jobs:
           node-version: "22"
           registry-url: https://registry.npmjs.org
           package-manager-cache: false
-      - name: Apply the registry's unpublish policy to the exact legacy names
+      - name: Apply the registry's unpublish and deprecation policy to the exact legacy names
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          RETIRE_SCOPE: ${{ inputs.scope }}
-          DEPRECATE_ONLY: ${{ inputs.deprecate_only }}
+          GROUP: ${{ inputs.group }}
+          APPLY: ${{ inputs.apply }}
         run: |
           set -euo pipefail
           npm whoami
@@ -45,17 +46,27 @@ jobs:
           const fs = require('node:fs');
           const { spawnSync } = require('node:child_process');
           const suffixes = ['darwin-arm64', 'darwin-x64', 'linux-arm64-gnu', 'linux-arm64-musl', 'linux-x64-gnu', 'linux-x64-musl', 'win32-arm64-msvc', 'win32-x64-msvc'];
-          const scope = process.env.RETIRE_SCOPE;
-          if (!['core', 'mcp', 'all'].includes(scope)) throw new Error('Invalid retirement scope');
-          const names = [];
-          if (scope !== 'mcp') names.push('holographic-memory');
-          if (scope !== 'core') names.push('holographic-memory-mcp');
-          if (scope === 'all') names.push('holographic-memory-models');
-          if (scope !== 'mcp') names.push(...suffixes.map(s => `holographic-memory-${s}`));
-          const results = [];
+          const adapters = ['core', 'claude-tool', 'langchain', 'llamaindex', 'mastra', 'openai-agents', 'vercel-ai'];
+          const groups = {
+            abandoned: [
+              ['holographic-memory', 'warm-memory', true],
+              ['holographic-memory-mcp', 'warm-mcp', true],
+              ...suffixes.map(s => [`holographic-memory-${s}`, 'warm-memory', true]),
+              ...suffixes.map(s => [`warm-sdk-${s}`, 'warm-sdk', true]),
+            ],
+            'renamed-engine': [
+              ['writerslogic-warm', 'warm-memory', false],
+              ...suffixes.map(s => [`writerslogic-warm-${s}`, 'warm-memory', false]),
+            ],
+            'renamed-mcp': [['writerslogic-warm-mcp', 'warm-mcp', false]],
+            'renamed-adapters': adapters.map(a => [`warm-${a}`, `@writerslogic/warm-${a}`, false]),
+          };
+          const entries = groups[process.env.GROUP];
+          if (!entries) throw new Error('Invalid retirement group');
+          const apply = process.env.APPLY === 'true';
           const clean = value => String(value ?? '').replaceAll(process.env.NODE_AUTH_TOKEN, '[redacted]');
           async function metadata(name) {
-            const response = await fetch(`https://registry.npmjs.org/${encodeURIComponent(name)}`, { signal: AbortSignal.timeout(30000) });
+            const response = await fetch(`https://registry.npmjs.org/${name.replace('/', '%2f')}`, { signal: AbortSignal.timeout(30000) });
             if (response.status === 404) return null;
             if (!response.ok) throw new Error(`Registry lookup ${name}: HTTP ${response.status}`);
             return response.json();
@@ -65,8 +76,8 @@ jobs:
             return { success: run.status === 0, output: clean(`${run.stdout ?? ''}${run.stderr ?? ''}${run.error?.message ?? ''}`) };
           }
           (async () => {
-            for (const legacy of names) {
-              const replacement = legacy.replace(/^holographic-memory/, 'writerslogic-warm');
+            const results = [];
+            for (const [legacy, replacement, unpublish] of entries) {
               const record = { legacy, replacement };
               try {
                 const old = await metadata(legacy);
@@ -77,19 +88,21 @@ jobs:
                   const current = await metadata(replacement);
                   if (!current?.['dist-tags']?.latest) throw new Error(`Replacement ${replacement} is not published; preserving ${legacy}`);
                   record.replacementVersion = current['dist-tags'].latest;
-                  const deprecateOnly = process.env.DEPRECATE_ONLY === 'true';
-                  const removed = deprecateOnly
-                    ? { success: false, output: 'Skipped: deprecation-only retirement requested.' }
-                    : npm(['unpublish', legacy, '--force']);
-                  record.unpublish = removed.output;
-                  if (removed.success) {
-                    record.result = 'unpublished';
+                  const message = unpublish
+                    ? `Retired. Install ${replacement} instead.`
+                    : `Renamed to ${replacement}. Install ${replacement} instead; this name receives no further releases.`;
+                  if (!apply) {
+                    record.result = unpublish ? 'would_unpublish_or_deprecate' : 'would_deprecate';
                   } else {
-                    const deprecated = npm(['deprecate', `${legacy}@*`, `Renamed to ${replacement}. Install ${replacement} instead; this legacy package is retired.`]);
-                    record.deprecation = deprecated.output;
-                    record.result = deprecated.success
-                      ? (deprecateOnly ? 'deprecated_without_unpublish_attempt' : 'deprecated_after_unpublish_denial')
-                      : 'failed';
+                    const removed = unpublish ? npm(['unpublish', legacy, '--force']) : { success: false, output: 'deprecation only' };
+                    record.unpublish = removed.output;
+                    if (removed.success) {
+                      record.result = 'unpublished';
+                    } else {
+                      const deprecated = npm(['deprecate', `${legacy}@*`, message]);
+                      record.deprecation = deprecated.output;
+                      record.result = deprecated.success ? (unpublish ? 'deprecated_after_unpublish_denial' : 'deprecated') : 'failed';
+                    }
                   }
                 }
               } catch (error) {
@@ -98,7 +111,7 @@ jobs:
               }
               results.push(record);
               fs.writeFileSync('legacy-npm-retirement.json', `${JSON.stringify(results, null, 2)}\n`);
-              console.log(JSON.stringify(record));
+              console.log(JSON.stringify({ legacy: record.legacy, result: record.result, error: record.error }));
             }
             if (results.some(r => r.result === 'failed')) process.exitCode = 1;
           })().catch(error => { console.error(clean(error.message)); process.exitCode = 1; });
@@ -107,6 +120,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: legacy-npm-retirement-${{ inputs.scope }}
+          name: legacy-npm-retirement-${{ inputs.group }}
           path: legacy-npm-retirement.json
           if-no-files-found: warn

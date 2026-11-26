@@ -1,9 +1,9 @@
 {
-  "name": "writerslogic-warm",
+  "name": "warm-memory",
   "version": "0.7.4",
   "license": "Apache-2.0",
   "author": "WritersLogic, Inc. <david@writerslogic.com>",
-  "description": "WritersLogic Adaptive Retention & Memory (WARM): local document search (BM25 + embedding cosine) and vector-symbolic associative memory.",
+  "description": "WARM (WritersLogic Adaptive Retention & Memory): local document search (BM25 + embedding cosine) and vector-symbolic associative memory, with prebuilt binaries for eight platforms in one package.",
   "repository": {
     "type": "git",
     "url": "https://github.com/writerslogic/warm"
@@ -66,7 +66,6 @@
     "build": "node scripts/build-node.cjs --release --features node-api,security",
     "build:debug": "node scripts/build-node.cjs --features node-api,security",
     "build:platform": "node scripts/build-node.cjs --platform --no-js --release --features node-api,security",
-    "prepublishOnly": "napi prepublish -t npm",
     "artifacts": "napi artifacts",
     "version": "napi version",
     "test": "node --test tests/node/*.test.cjs",
@@ -77,16 +76,6 @@
     "@napi-rs/cli": "^3.10.12",
     "@types/node": "^26.6.6",
     "typescript": "^7.0.2"
-  },
-  "optionalDependencies": {
-    "writerslogic-warm-darwin-arm64": "0.7.4",
-    "writerslogic-warm-darwin-x64": "0.7.4",
-    "writerslogic-warm-linux-arm64-gnu": "0.7.4",
-    "writerslogic-warm-linux-arm64-musl": "0.7.4",
-    "writerslogic-warm-linux-x64-gnu": "0.7.4",
-    "writerslogic-warm-linux-x64-musl": "0.7.4",
-    "writerslogic-warm-win32-arm64-msvc": "0.7.4",
-    "writerslogic-warm-win32-x64-msvc": "0.7.4"
   },
   "peerDependencies": {
     "@huggingface/transformers": "^3.8.1 || ^4.2.0"

@@ -2,10 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 'use strict'
 
-// Installs the release tarballs into an empty project the way a user's npm would and runs
-// a real document search. The root tarball's optionalDependencies are rewritten to the
-// local platform tarballs, so npm itself applies the os/cpu/libc filters and must pick
-// exactly the package for this machine.
+// Installs the release tarball into an empty project the way a user's npm would and runs a
+// real document search. The package bundles every platform binding; the loader must pick the
+// one for this machine.
 //
 // usage: node scripts/ci/smoke-node.cjs <tarballs-dir> --expect <suffix>
 
@@ -29,46 +28,30 @@ function npm(args, cwd) {
 const forwardSlashes = p => p.split(path.sep).join('/')
 
 const files = fs.readdirSync(tarballs).filter(f => f.endsWith('.tgz'))
-const rootTarball = files.find(f => /^writerslogic-warm-\d/.test(f))
-assert.ok(rootTarball, `no root tarball in ${tarballs}: ${files.join(', ')}`)
-const platformTarballs = files.filter(f => f !== rootTarball)
+const rootTarball = files.find(f => /^warm-memory-\d/.test(f))
+assert.ok(rootTarball, `no warm-memory tarball in ${tarballs}: ${files.join(', ')}`)
+assert.deepEqual(files, [rootTarball], 'the release ships one npm package')
 
 const work = fs.mkdtempSync(path.join(os.tmpdir(), 'warm-smoke-'))
 try {
-  const unpacked = path.join(work, 'root')
-  fs.mkdirSync(unpacked)
-  // Relative names with a fixed cwd: GNU tar on Windows reads `C:` as a remote host.
-  fs.copyFileSync(path.join(tarballs, rootTarball), path.join(work, 'root.tgz'))
-  execFileSync('tar', ['-xzf', 'root.tgz', '-C', 'root'], { cwd: work })
-  const manifestPath = path.join(unpacked, 'package', 'package.json')
-  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'))
-  const local = {}
-  for (const name of Object.keys(manifest.optionalDependencies)) {
-    const file = platformTarballs.find(f => f.startsWith(`${name}-${manifest.version}`))
-    assert.ok(file, `no tarball for optional dependency ${name}`)
-    local[name] = `file:${forwardSlashes(path.join(tarballs, file))}`
-  }
-  assert.equal(platformTarballs.length, Object.keys(local).length, 'unexpected extra tarballs')
-  manifest.optionalDependencies = local
-  fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2))
-  const repacked = path.join(work, 'writerslogic-warm-smoke.tgz')
-  execFileSync('tar', ['-czf', 'writerslogic-warm-smoke.tgz', '-C', 'root', 'package'], { cwd: work })
-
   const project = path.join(work, 'project')
   fs.mkdirSync(project)
   fs.writeFileSync(path.join(project, 'package.json'), JSON.stringify({ name: 'smoke', private: true }))
-  npm(['install', '--no-audit', '--no-fund', '--ignore-scripts', forwardSlashes(repacked)], project)
+  npm(['install', '--no-audit', '--no-fund', '--ignore-scripts', forwardSlashes(path.join(tarballs, rootTarball))], project)
 
-  const installed = fs.readdirSync(path.join(project, 'node_modules')).filter(n => n.startsWith('writerslogic-warm-'))
-  assert.deepEqual(installed, [`writerslogic-warm-${expected}`], 'npm must select exactly this platform package')
+  const installed = path.join(project, 'node_modules', 'warm-memory')
+  const bindings = fs.readdirSync(installed).filter(n => n.endsWith('.node')).sort()
+  assert.equal(bindings.length, 8, `expected eight bundled bindings, found ${bindings.join(', ')}`)
+  assert.ok(bindings.includes(`writerslogic-warm.${expected}.node`), `no binding for ${expected}`)
+  assert.ok(!bindings.includes('writerslogic-warm.node'), 'a development build leaked into the package')
 
   fs.writeFileSync(path.join(project, 'search.cjs'), `
     const assert = require('node:assert/strict');
     (async () => {
-      const cjs = require('writerslogic-warm');
-      const esm = await import('writerslogic-warm');
+      const cjs = require('warm-memory');
+      const esm = await import('warm-memory');
       assert.equal(cjs.WarmMemorySystem, esm.WarmMemorySystem);
-      const { DocumentMemory } = await import('writerslogic-warm/semantic');
+      const { DocumentMemory } = await import('warm-memory/semantic');
       const warm = new cjs.WarmMemorySystem(4096, './store');
       const memory = new DocumentMemory(warm);
       await memory.memorize({ id: 'manual', text: 'Backups protect stored documents.', sourceUri: 'manual.md' });

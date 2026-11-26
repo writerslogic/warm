@@ -4,7 +4,7 @@
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { WarmMemorySystem } from 'writerslogic-warm'
+import { WarmMemorySystem } from 'warm-memory'
 
 const dir = mkdtempSync(join(tmpdir(), 'warm-sequence-encoding-'))
 

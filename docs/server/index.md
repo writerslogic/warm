@@ -5,7 +5,7 @@ search:
 
 # warm-server
 
-`warm-server` is the HTTP service for WARM: the endpoints behind the portable `warm-sdk` clients for JavaScript/TypeScript (`bindings/js/warm-sdk`) and Python (`bindings/python/warm-sdk`), one `WarmCore` store per tenant, plus scoped per-tenant authentication, limits and backpressure, observability, TLS and unix sockets, snapshots, compaction and graceful shutdown. The clients are separate from the optional embedded Node package, `writerslogic-warm`.
+`warm-server` is the HTTP service for WARM: the endpoints behind the portable `warm-sdk` clients for JavaScript/TypeScript (`bindings/js/warm-sdk`) and Python (`bindings/python/warm-sdk`), one `WarmCore` store per tenant, plus scoped per-tenant authentication, limits and backpressure, observability, TLS and unix sockets, snapshots, compaction and graceful shutdown. The clients are separate from the optional embedded Node package, `warm-memory`.
 
 | File | Contents |
 |---|---|

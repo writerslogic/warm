@@ -24,17 +24,17 @@ try {
   execFileSync(process.execPath, ['-e', `
     const assert = require('node:assert/strict');
     (async () => {
-      const cjs = require('writerslogic-warm');
-      const esm = await import('writerslogic-warm');
+      const cjs = require('warm-memory');
+      const esm = await import('warm-memory');
       assert.equal(cjs.WarmMemorySystem, esm.WarmMemorySystem);
-      const { DocumentMemory } = await import('writerslogic-warm/semantic');
+      const { DocumentMemory } = await import('warm-memory/semantic');
       const warm = new cjs.WarmMemorySystem(4096, './store');
       const memory = new DocumentMemory(warm);
       await memory.memorize({ id: 'manual', text: 'Backups protect stored documents.', sourceUri: 'manual.md' });
       assert.equal((await memory.search('backups'))[0].sourceUri, 'manual.md');
       await memory.flush();
-      const { VectraMigrationIndex } = require('writerslogic-warm/vectra');
-      assert.equal(VectraMigrationIndex, (await import('writerslogic-warm/vectra')).VectraMigrationIndex);
+      const { VectraMigrationIndex } = require('warm-memory/vectra');
+      assert.equal(VectraMigrationIndex, (await import('warm-memory/vectra')).VectraMigrationIndex);
       const vectors = await VectraMigrationIndex.create({
         path: './vector-store',
         embeddingSpace: { model: 'package-fixture', revision: '1', dimensions: 3 },

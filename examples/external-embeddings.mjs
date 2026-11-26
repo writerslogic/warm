@@ -6,7 +6,7 @@ import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { WarmMemorySystem } from 'writerslogic-warm'
+import { WarmMemorySystem } from 'warm-memory'
 
 // Opt out of default encryption so memorizeVector/queryVector use the dense UpdatableVGraph cosine index.
 process.env.WARM_ENCRYPTION ??= 'off'

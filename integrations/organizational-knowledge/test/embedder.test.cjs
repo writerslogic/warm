@@ -1,14 +1,14 @@
 'use strict'
 
 // Opt-in: needs a local ONNX embedding model directory and @huggingface/transformers (an optional
-// peer dependency of writerslogic-warm that this checkout does not install).
+// peer dependency of warm-memory that this checkout does not install).
 const test = require('node:test')
 const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const os = require('node:os')
 const path = require('node:path')
-const { WarmMemorySystem } = require('writerslogic-warm')
-const { createLocalEmbedder } = require('writerslogic-warm/semantic')
+const { WarmMemorySystem } = require('warm-memory')
+const { createLocalEmbedder } = require('warm-memory/semantic')
 const { OrganizationalKnowledge } = require('../index.cjs')
 
 const MODEL_DIR = process.env.WARM_TEST_ONNX_MODEL_DIR

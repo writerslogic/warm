@@ -9,7 +9,7 @@ page says which surface to use and lists the Cargo features.
 | Surface | Use it for | Main entry points |
 |---|---|---|
 | Rust (`warm-rust`, library `writerslogic_warm`) | Embedding the engine in a Rust program | `WarmCore::new`, `memorize_documents`, `search_documents`, `delete_document`, `memorize_vector`, `query_vector`, `memory_api::Memory` (`remember`, `recall`, `forget`, `explain`) |
-| Embedded Node (`writerslogic-warm`) | The same engine in Node, in process | `WarmMemorySystem`, `DocumentMemory` (`ingest`, `search`), `Memory` (`remember`, `recall`) |
+| Embedded Node (`warm-memory`) | The same engine in Node, in process | `WarmMemorySystem`, `DocumentMemory` (`ingest`, `search`), `Memory` (`remember`, `recall`) |
 | HTTP (`warm-server`) | Multi-process or remote access, any language | `/api/v1/documents`, `/api/v1/query`, `/api/v1/search`, memory endpoints; see [server](../server/index.md) and [errors](../server/errors.md) |
 | JavaScript client (`warm-sdk` on npm) | Calling `warm-server` from JavaScript or TypeScript | `WarmClient`, `.memory` |
 | Python client (`warm-sdk` on PyPI) | Calling `warm-server` from Python | `WarmClient`, `.memory.remember_many`, `.memory.recall`, importers |

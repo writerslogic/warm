@@ -2,7 +2,7 @@
   "mcpServers": {
     "writerslogic-warm": {
       "command": "npx",
-      "args": ["-y", "writerslogic-warm-mcp"],
+      "args": ["-y", "warm-mcp"],
       "disabled": false,
       "autoApprove": ["recall", "search", "get", "list", "stats"]
     }

@@ -1,7 +1,7 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
-import { WarmMemorySystem } from 'writerslogic-warm'
-import { Memory, MemoryError, type Recalled, type ForgetReport, type MemoryConfig } from 'writerslogic-warm/memory'
+import { WarmMemorySystem } from 'warm-memory'
+import { Memory, MemoryError, type Recalled, type ForgetReport, type MemoryConfig } from 'warm-memory/memory'
 
 const config: MemoryConfig = {
   supersession: 'latest-by-subject',

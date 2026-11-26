@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 # One pipeline per `v*` tag: build and smoke-test every artefact (Python wheels and sdist,
-# eight npm native packages with the root package, the crate), write a CycloneDX SBOM per
+# the warm-memory npm package with all eight native bindings, the crate), write a CycloneDX SBOM per
 # artefact, attest SLSA build provenance and the SBOMs, then publish.
 #
 # Everything up to and including the attestations also runs on workflow_dispatch and on pull
@@ -315,7 +315,7 @@ jobs:
         with:
           name: npm-tarballs
           path: tarballs
-      - name: Publish the platform packages first, then the root package that depends on them
+      - name: Publish the package
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
@@ -331,11 +331,7 @@ jobs:
               npm publish "$1" --provenance --access public
             fi
           }
-          for tarball in writerslogic-warm-*-*.tgz; do
-            publish "$tarball"
-          done
-          root=$(ls writerslogic-warm-[0-9]*.tgz)
-          publish "$root"
+          publish "$(ls warm-memory-[0-9]*.tgz)"
 
   verify-published:
     name: install the published packages and search
@@ -356,31 +352,21 @@ jobs:
         run: |
           set -euo pipefail
           version="${VERSION#v}"
-          platform_packages=()
-          while IFS= read -r package; do platform_packages+=("$package"); done < <(node -e "console.log(Object.keys(require('./package.json').optionalDependencies).join('\n'))")
-          [ "${#platform_packages[@]}" -gt 0 ]
-          [ -n "${platform_packages[0]}" ]
           mkdir consumer && cd consumer
           npm init -y > /dev/null
           for attempt in {1..20}; do
-            ready=1
-            for package in writerslogic-warm "${platform_packages[@]}"; do
-              if ! npm_config_cache="$RUNNER_TEMP/npm-release-$attempt" npm view "${package}@${version}" version > /dev/null 2>&1; then
-                echo "${package}@${version} is not available yet (attempt $attempt/20)"
-                ready=0
-              fi
-            done
-            [ "$ready" = 1 ] && break
-            [ "$attempt" = 20 ] && { echo "Published npm packages did not all become available" >&2; exit 1; }
+            npm_config_cache="$RUNNER_TEMP/npm-release-$attempt" npm view "warm-memory@${version}" version > /dev/null 2>&1 && break
+            echo "warm-memory@${version} is not available yet (attempt $attempt/20)"
+            [ "$attempt" = 20 ] && { echo "warm-memory did not become available" >&2; exit 1; }
             sleep 30
           done
-          npm_config_cache="$RUNNER_TEMP/npm-release-install" npm install --ignore-scripts --save-exact --no-audit --no-fund "writerslogic-warm@${version}"
+          npm_config_cache="$RUNNER_TEMP/npm-release-install" npm install --ignore-scripts --save-exact --no-audit --no-fund "warm-memory@${version}"
           npm audit signatures
           node -e "
             const assert = require('node:assert/strict');
             (async () => {
-              const { WarmMemorySystem } = require('writerslogic-warm');
-              const { DocumentMemory } = await import('writerslogic-warm/semantic');
+              const { WarmMemorySystem } = require('warm-memory');
+              const { DocumentMemory } = await import('warm-memory/semantic');
               const memory = new DocumentMemory(new WarmMemorySystem(4096, './store'));
               await memory.memorize({ id: 'a', text: 'Backups protect stored documents.', sourceUri: 'a.md' });
               assert.equal((await memory.search('backups'))[0].sourceUri, 'a.md');

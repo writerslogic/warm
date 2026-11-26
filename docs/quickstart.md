@@ -6,10 +6,10 @@ index, so no embedding model is needed.
 | Runtime | Package | Needs a server |
 |---|---|---|
 | Rust | `warm-rust` | no, in process |
-| Embedded Node | `writerslogic-warm` | no, in process |
+| Embedded Node | `warm-memory` | no, in process |
 | Python | `warm-sdk` | yes, `warm-server` |
 | JavaScript or TypeScript client | `warm-sdk` (npm) | yes, `warm-server` |
-| MCP client | `writerslogic-warm-mcp` (npm) or `warm-mcp` (PyPI) | no, the launcher runs it |
+| MCP client | `warm-mcp` (npm or PyPI) | no, the launcher runs it |
 
 Rust 1.89 or newer builds the engine. Nothing is enabled by default; see the
 [feature table](reference/api.md#cargo-features).
@@ -44,12 +44,12 @@ With the `security` feature a new store is encrypted by default; see
 ## Embedded Node
 
 ```sh
-npm install writerslogic-warm
+npm install warm-memory
 ```
 
 ```js
-const { WarmMemorySystem } = require('writerslogic-warm')
-const { DocumentMemory } = require('writerslogic-warm/semantic')
+const { WarmMemorySystem } = require('warm-memory')
+const { DocumentMemory } = require('warm-memory/semantic')
 
 const memory = new DocumentMemory(new WarmMemorySystem(4096, './store'))
 await memory.ingest([{ id: 'udhr-14', text: 'Everyone has the right to seek and to enjoy asylum from persecution.' }])
@@ -93,7 +93,7 @@ The server is described in [server](server/index.md). Runnable versions are in
 ## MCP
 
 ```sh
-npx -y writerslogic-warm-mcp          # stdio, for clients that start a local command
+npx -y warm-mcp          # stdio, for clients that start a local command
 uvx warm-mcp                          # the same server from PyPI
 ```
 
