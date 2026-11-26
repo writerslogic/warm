@@ -224,7 +224,8 @@ mod tests {
 
     #[test]
     fn query_bounds_k_and_dimension() -> anyhow::Result<()> {
-        let warm = WarmCore::new(1024, None, None)?;
+        let directory = tempfile::tempdir()?;
+        let warm = WarmCore::new(1024, Some(directory.path().display().to_string()), None)?;
         let probe = EntangledHVec::new_deterministic(1024, 0);
         for i in 0..3 {
             warm.memorize(format!("v{i}"), EntangledHVec::new_deterministic(1024, i))?;
