@@ -501,7 +501,7 @@ fn failed_canonical_rebuild_keeps_the_live_text_segment() -> Result<()> {
     Ok(())
 }
 
-fn check_query_cache_errors(query: impl Fn(&WarmCore) -> Result<usize>) -> Result<()> {
+fn check_query_cache_errors(query: &dyn Fn(&WarmCore) -> Result<usize>) -> Result<()> {
     let directory = tempfile::tempdir()?;
     let core = WarmCore::new(
         256,
@@ -549,47 +549,57 @@ fn check_query_cache_errors(query: impl Fn(&WarmCore) -> Result<usize>) -> Resul
 }
 
 #[test]
-fn document_queries_report_cache_errors_without_panicking() -> Result<()> {
-    check_query_cache_errors(|core| {
-        core.search_documents("needle", &SearchOptions::default())
-            .map(|hits| hits.len())
-    })
-}
-
-#[test]
-fn vector_queries_report_cache_errors_without_panicking() -> Result<()> {
-    check_query_cache_errors(|core| {
-        core.search_vectors(&[1.0, 0.0], 2, &documents::VectorQueryOptions::default())
-            .map(|hits| hits.len())
-    })
-}
-
-#[test]
-fn phrase_queries_report_cache_errors_without_panicking() -> Result<()> {
-    check_query_cache_errors(|core| {
-        core.search_lexical(
-            &documents::LexicalQuery::parse("\"alpha beta\"")?,
-            &documents::LexicalOptions::default(),
-        )
-        .map(|result| result.hits.len())
-    })
-}
-
-#[test]
-fn captured_queries_report_cache_errors_without_panicking() -> Result<()> {
-    check_query_cache_errors(|core| {
-        documents::search(
-            &core.documents.read(),
-            "needle",
-            &SearchOptions::default(),
-            Some(2),
-        )
-        .map(|hits| hits.len())
-    })
-}
-
-#[test]
-fn document_get_and_list_report_cache_errors_without_panicking() -> Result<()> {
-    check_query_cache_errors(|core| Ok(core.get_document("b")?.map_or(0, |_| 2)))?;
-    check_query_cache_errors(|core| core.list_documents(None, 2).map(|records| records.len()))
+fn queries_report_cache_errors_without_panicking() -> Result<()> {
+    type Query = Box<dyn Fn(&WarmCore) -> Result<usize>>;
+    let queries: Vec<(&str, Query)> = vec![
+        (
+            "document search",
+            Box::new(|core| {
+                core.search_documents("needle", &SearchOptions::default())
+                    .map(|hits| hits.len())
+            }),
+        ),
+        (
+            "vector search",
+            Box::new(|core| {
+                core.search_vectors(&[1.0, 0.0], 2, &documents::VectorQueryOptions::default())
+                    .map(|hits| hits.len())
+            }),
+        ),
+        (
+            "phrase search",
+            Box::new(|core| {
+                core.search_lexical(
+                    &documents::LexicalQuery::parse("\"alpha beta\"")?,
+                    &documents::LexicalOptions::default(),
+                )
+                .map(|result| result.hits.len())
+            }),
+        ),
+        (
+            "captured search",
+            Box::new(|core| {
+                documents::search(
+                    &core.documents.read(),
+                    "needle",
+                    &SearchOptions::default(),
+                    Some(2),
+                )
+                .map(|hits| hits.len())
+            }),
+        ),
+        (
+            "get document",
+            Box::new(|core| Ok(core.get_document("b")?.map_or(0, |_| 2))),
+        ),
+        (
+            "list documents",
+            Box::new(|core| core.list_documents(None, 2).map(|records| records.len())),
+        ),
+    ];
+    for (name, query) in &queries {
+        check_query_cache_errors(query.as_ref())
+            .map_err(|error| anyhow::anyhow!("{name}: {error}"))?;
+    }
+    Ok(())
 }

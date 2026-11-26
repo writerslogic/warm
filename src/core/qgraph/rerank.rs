@@ -330,21 +330,21 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
-    fn i8_row_shorter_than_the_query_panics() {
-        let _ = super::dot_f32_i8(&[1.0; 16], &[1; 32]);
-    }
-
-    #[test]
-    #[should_panic]
-    fn i4_row_not_half_the_query_panics() {
-        let _ = super::dot_f32_i4(&[1.0; 16], &[1; 16]);
-    }
-
-    #[test]
-    #[should_panic]
-    fn i4_row_with_a_partial_block_panics() {
-        let _ = super::dot_f32_i4(&[1.0; 20], &[1; 10]);
+    fn mismatched_row_lengths_panic() {
+        let cases: [(&str, fn()); 3] = [
+            ("i8 row shorter than query", || {
+                let _ = super::dot_f32_i8(&[1.0; 16], &[1; 32]);
+            }),
+            ("i4 row not half the query", || {
+                let _ = super::dot_f32_i4(&[1.0; 16], &[1; 16]);
+            }),
+            ("i4 row with a partial block", || {
+                let _ = super::dot_f32_i4(&[1.0; 20], &[1; 10]);
+            }),
+        ];
+        for (name, case) in cases {
+            assert!(std::panic::catch_unwind(case).is_err(), "{name}");
+        }
     }
 
     #[test]

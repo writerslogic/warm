@@ -165,6 +165,15 @@ mod search;
 #[cfg(test)]
 mod tests;
 mod visited;
+
+/// Flushes `temp` to disk, then renames it over `path`.
+fn persist_synced(temp: tempfile::NamedTempFile, path: &std::path::Path) -> std::io::Result<()> {
+    temp.as_file().sync_all()?;
+    crate::core::durable_file::sync_mapped_file(temp.as_file())?;
+    temp.persist(path).map_err(|e| e.error)?;
+    Ok(())
+}
+
 use self::build_rows::*;
 use self::construct::*;
 use self::graph::*;
