@@ -459,6 +459,8 @@ export interface VectorRecordGetResult {
 export interface VectorRecordHit {
   item: VectorRecordInput
   score: number
+  /** Set instead of `item.vector` when the query asked for `rawVectors`. */
+  vectorBase64?: string
 }
 
 export interface VectorRecordInput {
@@ -504,6 +506,12 @@ export interface VectorRecordQueryOptions {
   minScore?: number
   mode?: string
   ef?: number
+  /**
+   * Return each hit's stored vector as base64 little-endian `f64` bytes in `vectorBase64`
+   * and leave `item.vector` empty, so a caller that may never read the vector pays for no
+   * decode and no per-element array.
+   */
+  rawVectors?: boolean
 }
 
 export interface VectorRecordQueryResult {

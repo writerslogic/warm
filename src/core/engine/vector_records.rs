@@ -386,10 +386,11 @@ impl WarmCore {
                     records::is_record(document),
                     "ranked result is not a vector record"
                 );
-                results.push(VectorRecordHit {
-                    item: read_input(document)?,
+                results.push(read_hit(
+                    document,
                     score,
-                });
+                    options.raw_vectors.unwrap_or(false),
+                )?);
             }
             return Ok(VectorRecordQueryResult {
                 revision: self.vector_record_revision(revision),
@@ -477,6 +478,30 @@ fn read_input(document: &documents::StoredDocument) -> Result<VectorRecordInput>
         id: record.id,
         vector: record.vector.expect("requested vector"),
         metadata: record.metadata,
+    })
+}
+
+fn read_hit(
+    document: &documents::StoredDocument,
+    score: f64,
+    raw: bool,
+) -> Result<VectorRecordHit> {
+    if raw {
+        let (f64le, metadata) = records::envelope(document)?;
+        return Ok(VectorRecordHit {
+            item: VectorRecordInput {
+                id: document.id.clone(),
+                vector: Vec::new(),
+                metadata: metadata.clone(),
+            },
+            score,
+            vector_base64: Some(f64le.to_owned()),
+        });
+    }
+    Ok(VectorRecordHit {
+        item: read_input(document)?,
+        score,
+        vector_base64: None,
     })
 }
 

@@ -61,6 +61,10 @@ pub struct VectorRecordQueryOptions {
     pub min_score: Option<f64>,
     pub mode: Option<String>,
     pub ef: Option<f64>,
+    /// Return each hit's stored vector as base64 little-endian `f64` bytes in `vectorBase64`
+    /// and leave `item.vector` empty, so a caller that may never read the vector pays for no
+    /// decode and no per-element array.
+    pub raw_vectors: Option<bool>,
 }
 
 #[cfg_attr(feature = "node-api", napi_derive::napi(object))]
@@ -115,6 +119,9 @@ pub struct VectorRecordListResult {
 pub struct VectorRecordHit {
     pub item: VectorRecordInput,
     pub score: f64,
+    /// Set instead of `item.vector` when the query asked for `rawVectors`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub vector_base64: Option<String>,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -139,7 +146,7 @@ pub(crate) fn is_record(document: &StoredDocument) -> bool {
     document.vector_record
 }
 
-fn envelope(document: &StoredDocument) -> Result<(&str, &Value)> {
+pub(crate) fn envelope(document: &StoredDocument) -> Result<(&str, &Value)> {
     ensure!(document.version == VERSION, "invalid vector record version");
     ensure!(
         document
