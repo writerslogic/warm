@@ -317,19 +317,23 @@ fn key_score(key: u64) -> f64 {
     })
 }
 
-/// A hit in the top-k heap: its score key, its tie order (read once, on entry) and its slot.
+/// A hit in the top-k heap: its score key and its slot. The tie order is read from the image
+/// only when two keys are equal.
 #[derive(Clone, Copy)]
 struct Entry {
     key: u64,
-    tie: u64,
     slot: u32,
 }
 
 impl Entry {
     /// Whether this is a worse hit than `other` (ties are ordered by id).
     #[inline(always)]
-    fn worse(&self, other: &Entry) -> bool {
-        (self.key, self.tie) > (other.key, other.tie)
+    fn worse(&self, other: &Entry, image: &ServingImage) -> bool {
+        if self.key != other.key {
+            return self.key > other.key;
+        }
+        self.slot != other.slot
+            && image.slot_tie_key(self.slot as usize) > image.slot_tie_key(other.slot as usize)
     }
 }
 
@@ -359,29 +363,26 @@ impl<'a> Top<'a> {
         if self.k == 0 {
             return;
         }
+        let image = self.image;
         let key = worse_key(score);
         let full = self.heap.len() == self.k;
         if full && key > self.heap[0].key {
             return;
         }
-        let hit = Entry {
-            key,
-            tie: self.image.slot_tie_key(slot as usize),
-            slot,
-        };
+        let hit = Entry { key, slot };
         if !full {
             let mut at = self.heap.len();
             self.heap.push(hit);
             while at > 0 {
                 let parent = (at - 1) / 2;
-                if !hit.worse(&self.heap[parent]) {
+                if !hit.worse(&self.heap[parent], image) {
                     break;
                 }
                 self.heap[at] = self.heap[parent];
                 at = parent;
             }
             self.heap[at] = hit;
-        } else if self.heap[0].worse(&hit) {
+        } else if self.heap[0].worse(&hit, image) {
             let len = self.heap.len();
             let mut at = 0;
             loop {
@@ -389,10 +390,10 @@ impl<'a> Top<'a> {
                 if child >= len {
                     break;
                 }
-                if child + 1 < len && self.heap[child + 1].worse(&self.heap[child]) {
+                if child + 1 < len && self.heap[child + 1].worse(&self.heap[child], image) {
                     child += 1;
                 }
-                if !self.heap[child].worse(&hit) {
+                if !self.heap[child].worse(&hit, image) {
                     break;
                 }
                 self.heap[at] = self.heap[child];
@@ -404,10 +405,17 @@ impl<'a> Top<'a> {
 
     /// The hits best first as `(score, slot)`.
     fn ranked(self) -> Vec<(f64, u32)> {
+        let image = self.image;
         let mut keyed: Vec<(f64, u64, u32)> = self
             .heap
             .into_iter()
-            .map(|hit| (key_score(hit.key), hit.tie, hit.slot))
+            .map(|hit| {
+                (
+                    key_score(hit.key),
+                    image.slot_tie_key(hit.slot as usize),
+                    hit.slot,
+                )
+            })
             .collect();
         // Best first: score descending, then the tie order.
         keyed.sort_unstable_by(|a, b| b.0.total_cmp(&a.0).then_with(|| a.1.cmp(&b.1)));
