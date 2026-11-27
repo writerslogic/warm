@@ -559,6 +559,7 @@ mod tests {
                     max_stores: 1,
                     encrypt: None,
                     plaintext: true,
+                    read_only: false,
                     #[cfg(feature = "local-models")]
                     stages: None,
                     #[cfg(feature = "local-models")]
