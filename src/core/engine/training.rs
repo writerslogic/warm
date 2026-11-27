@@ -69,6 +69,7 @@ impl WarmCore {
     }
 
     pub(super) fn arena_write(&self, data: &[u8]) -> Result<usize> {
+        self.ensure_writable()?;
         let payload = self.maybe_encrypt(data)?;
         self.arena.write_slice(&payload)
     }

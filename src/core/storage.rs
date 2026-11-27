@@ -10,10 +10,13 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::Arc;
 
+mod committed;
+mod read_only;
 #[cfg(test)]
 #[path = "storage/recovery_tests.rs"]
 mod recovery_tests;
 mod staging;
+pub(crate) use read_only::ReaderDiverged;
 pub(crate) use staging::StagedArena;
 
 pub(crate) const FORMAT_MANIFEST: &str = "format.json";
@@ -78,7 +81,7 @@ pub(crate) const END_MARK: u32 = 0x454E_444C;
 /// or `None` if fewer than [`HEADER_SIZE`] bytes remain.
 #[inline]
 #[must_use]
-fn header_words(bytes: &[u8]) -> Option<[u32; 4]> {
+pub(crate) fn header_words(bytes: &[u8]) -> Option<[u32; 4]> {
     let (words, _) = bytes.first_chunk::<HEADER_SIZE>()?.as_chunks::<4>();
     Some(std::array::from_fn(|i| u32::from_le_bytes(words[i])))
 }
@@ -174,6 +177,11 @@ pub(crate) struct PersistentArena {
     /// rotation the next append must rotate rather than write into the current segment.
     rotation_pending: AtomicBool,
     commit_uncertain: AtomicBool,
+    /// Set for a read-only engine: no frame is written and no generation published.
+    read_only: AtomicBool,
+    /// Present for a reader of a live store (see `read_only.rs`): segments are plain file
+    /// handles read by position, and `active_segment` is an unused placeholder.
+    view: Option<read_only::ReadView>,
 }
 
 pub(crate) struct PreparedCompaction {
@@ -279,6 +287,9 @@ impl PersistentArena {
             super::os_memory::release_file_pages(mut_map.as_ptr(), mut_map.len());
         }
 
+        // Everything up to the recovered end is durable: tell readers so (see `committed.rs`).
+        committed::publish(&data_path, active_id, recovered_offset)?;
+
         Ok(Self {
             segment_size: manifest.segment_size,
             format_version: manifest.version,
@@ -296,7 +307,42 @@ impl PersistentArena {
             }),
             rotation_pending: AtomicBool::new(false),
             commit_uncertain: AtomicBool::new(false),
+            read_only: AtomicBool::new(false),
+            view: None,
         })
+    }
+
+    /// Parses and checks the manifest at `source`.
+    fn parse_manifest(source: &Path) -> Result<(FormatManifest, Vec<u8>)> {
+        let bytes = std::fs::read(source)?;
+        let manifest: FormatManifest = serde_json::from_slice(&bytes)
+            .map_err(|e| anyhow!("Invalid WARM storage manifest {}: {}", source.display(), e))?;
+        if manifest.magic != FORMAT_MAGIC {
+            return Err(anyhow!(
+                "Storage manifest has unknown magic: {}",
+                manifest.magic
+            ));
+        }
+        if manifest.version > STORAGE_FORMAT_VERSION {
+            return Err(anyhow!(
+                "Storage format {} is newer than supported format {}",
+                manifest.version,
+                STORAGE_FORMAT_VERSION
+            ));
+        }
+        let expected = if manifest.version == 3 {
+            SEGMENT_SIZE
+        } else {
+            LEGACY_SEGMENT_SIZE
+        };
+        if manifest.segment_size != expected {
+            return Err(anyhow!(
+                "Storage segment size mismatch: manifest={}, runtime={}",
+                manifest.segment_size,
+                expected
+            ));
+        }
+        Ok((manifest, bytes))
     }
 
     fn validate_or_create_manifest(base: &Path) -> Result<FormatManifest> {
@@ -307,35 +353,7 @@ impl PersistentArena {
             super::durable_file::arena_generation(base)?.join(FORMAT_MANIFEST)
         };
         if source.exists() {
-            let bytes = std::fs::read(&source)?;
-            let manifest: FormatManifest = serde_json::from_slice(&bytes).map_err(|e| {
-                anyhow!("Invalid WARM storage manifest {}: {}", source.display(), e)
-            })?;
-            if manifest.magic != FORMAT_MAGIC {
-                return Err(anyhow!(
-                    "Storage manifest has unknown magic: {}",
-                    manifest.magic
-                ));
-            }
-            if manifest.version > STORAGE_FORMAT_VERSION {
-                return Err(anyhow!(
-                    "Storage format {} is newer than supported format {}",
-                    manifest.version,
-                    STORAGE_FORMAT_VERSION
-                ));
-            }
-            let expected = if manifest.version == 3 {
-                SEGMENT_SIZE
-            } else {
-                LEGACY_SEGMENT_SIZE
-            };
-            if manifest.segment_size != expected {
-                return Err(anyhow!(
-                    "Storage segment size mismatch: manifest={}, runtime={}",
-                    manifest.segment_size,
-                    expected
-                ));
-            }
+            let (manifest, bytes) = Self::parse_manifest(&source)?;
             if source != path {
                 super::durable_file::atomic_write(&path, &bytes)?;
             }
@@ -371,7 +389,24 @@ impl PersistentArena {
     pub(crate) fn flush(&self) -> Result<()> {
         let active = self.active_segment.write();
         self.ensure_writable()?;
-        active.sync()
+        active.sync()?;
+        self.publish_committed();
+        Ok(())
+    }
+
+    /// Records the current end of the log as committed for readers. Called only with the
+    /// active-segment guard held and after a sync that made every byte up to the end durable.
+    /// The frame is already committed if this fails, and the next commit publishes a later
+    /// end, so a failure only delays readers.
+    fn publish_committed(&self) {
+        let data_path = self.data_path.read();
+        if let Err(error) = committed::publish(
+            &data_path,
+            self.active_id.load(Ordering::Acquire),
+            self.write_offset.load(Ordering::Acquire),
+        ) {
+            tracing::warn!(%error, "committed-end word not updated; readers lag until the next commit");
+        }
     }
 
     /// Writes back the active segment's dirty pages without the platform's full sync; a later
@@ -490,7 +525,10 @@ impl PersistentArena {
     }
 
     pub(crate) fn read_slice(&self, global_offset: usize, len: usize) -> Result<Vec<u8>> {
-        self.with_slice(global_offset, len, <[u8]>::to_vec)
+        match &self.view {
+            Some(view) => view.read(self.segment_size, global_offset, len),
+            None => self.with_slice(global_offset, len, <[u8]>::to_vec),
+        }
     }
 
     /// Runs `read` on the mapped bytes `[global_offset, global_offset + len)` under one
@@ -536,51 +574,76 @@ impl PersistentArena {
         read(rest)
     }
 
+    /// Decodes the frame at the start of `rest` into its payload, header checksum and version.
+    fn decode_frame(rest: &[u8], global_offset: usize) -> Result<(Vec<u8>, u32, u32)> {
+        let [expected_crc, raw_len, comp_len, version] = header_words(rest)
+            .ok_or_else(|| anyhow!("Truncated header at offset {}", global_offset))?;
+        let (raw_len, comp_len) = (raw_len as usize, comp_len as usize);
+        if raw_len == 0 {
+            return Err(anyhow!("Empty frame at offset {}", global_offset));
+        }
+        if raw_len > MAX_RAW_FRAME_SIZE {
+            return Err(anyhow!(
+                "Suspiciously large raw frame length: {} at {}",
+                raw_len,
+                global_offset
+            ));
+        }
+        // Compressed data cannot exceed a full segment; reject to prevent OOM.
+        if comp_len == 0 || comp_len > raw_len {
+            return Err(anyhow!(
+                "Suspiciously large compressed frame length: {} at {}",
+                comp_len,
+                global_offset
+            ));
+        }
+        let payload = rest
+            .get(HEADER_SIZE..HEADER_SIZE + comp_len)
+            .ok_or_else(|| {
+                anyhow!(
+                    "Truncated payload at offset {}",
+                    global_offset + HEADER_SIZE
+                )
+            })?;
+        let data = if comp_len < raw_len {
+            lz4_flex::decompress(payload, raw_len)
+                .map_err(|e| anyhow!("LZ4 decompression failed: {}", e))?
+        } else {
+            payload.to_vec()
+        };
+        ensure!(
+            data.len() == raw_len,
+            "frame payload length differs from its header"
+        );
+        Ok((data, expected_crc, version))
+    }
+
     pub(crate) fn read_frame(&self, global_offset: usize) -> Result<(Vec<u8>, u32)> {
         // Header and payload come from one mapping under one lock acquisition; the payload is
         // decompressed (or copied) straight from it.
-        let (data, expected_crc, version) = self.with_mapping(global_offset, |rest| {
-            let [expected_crc, raw_len, comp_len, version] = header_words(rest)
-                .ok_or_else(|| anyhow!("Truncated header at offset {}", global_offset))?;
-            let (raw_len, comp_len) = (raw_len as usize, comp_len as usize);
-            if raw_len == 0 {
-                return Err(anyhow!("Empty frame at offset {}", global_offset));
+        let (data, expected_crc, version) = match &self.view {
+            Some(view) => {
+                let head = view.read(self.segment_size, global_offset, HEADER_SIZE)?;
+                match header_words(&head) {
+                    Some([_, raw_len, comp_len, _])
+                        if comp_len != 0
+                            && comp_len <= raw_len
+                            && raw_len as usize <= MAX_RAW_FRAME_SIZE =>
+                    {
+                        let whole = view.read(
+                            self.segment_size,
+                            global_offset,
+                            HEADER_SIZE + comp_len as usize,
+                        )?;
+                        Self::decode_frame(&whole, global_offset)?
+                    }
+                    _ => Self::decode_frame(&head, global_offset)?,
+                }
             }
-            if raw_len > MAX_RAW_FRAME_SIZE {
-                return Err(anyhow!(
-                    "Suspiciously large raw frame length: {} at {}",
-                    raw_len,
-                    global_offset
-                ));
-            }
-            // Compressed data cannot exceed a full segment; reject to prevent OOM.
-            if comp_len == 0 || comp_len > raw_len {
-                return Err(anyhow!(
-                    "Suspiciously large compressed frame length: {} at {}",
-                    comp_len,
-                    global_offset
-                ));
-            }
-            let payload = rest
-                .get(HEADER_SIZE..HEADER_SIZE + comp_len)
-                .ok_or_else(|| {
-                    anyhow!(
-                        "Truncated payload at offset {}",
-                        global_offset + HEADER_SIZE
-                    )
-                })?;
-            let data = if comp_len < raw_len {
-                lz4_flex::decompress(payload, raw_len)
-                    .map_err(|e| anyhow!("LZ4 decompression failed: {}", e))?
-            } else {
-                payload.to_vec()
-            };
-            ensure!(
-                data.len() == raw_len,
-                "frame payload length differs from its header"
-            );
-            Ok((data, expected_crc, version))
-        })?;
+            None => self.with_mapping(global_offset, |rest| {
+                Self::decode_frame(rest, global_offset)
+            })?,
+        };
 
         let mut hasher = Hasher::new();
         hasher.update(&data);
@@ -625,6 +688,9 @@ impl PersistentArena {
     }
 
     fn ensure_writable(&self) -> Result<()> {
+        if self.read_only.load(Ordering::Acquire) {
+            return Err(crate::core::error::ReadOnlyError.into());
+        }
         if self.commit_uncertain.load(Ordering::Acquire) {
             return Err(crate::core::error::IndeterminateMutationError {
                 effect: "journal recovery",
@@ -742,6 +808,9 @@ impl PersistentArena {
                 );
             }
         }
+        if durable {
+            self.publish_committed();
+        }
         let global = self.active_id.load(Ordering::SeqCst) * self.segment_size + offset;
         Ok(global)
     }
@@ -750,7 +819,7 @@ impl PersistentArena {
     /// are copied out (replay) or committed; the next read refaults them from the file. A
     /// hint, so an out-of-range span is ignored. Off with `WARM_RELEASE_JOURNAL_PAGES=0`.
     pub(crate) fn release_pages(&self, global_offset: usize, len: usize) {
-        if len == 0 || !super::os_memory::release_journal_pages_enabled() {
+        if len == 0 || self.view.is_some() || !super::os_memory::release_journal_pages_enabled() {
             return;
         }
         let active = self.active_segment.read();
@@ -1163,7 +1232,9 @@ impl PersistentArena {
                 let entry = entry?;
                 let name = entry.file_name();
                 let name = name.to_string_lossy();
-                if name.starts_with("seg_") && name.ends_with(".bin") {
+                if (name.starts_with("seg_") && name.ends_with(".bin"))
+                    || name == committed::COMMITTED_FILE
+                {
                     let removed = if scrub {
                         super::durable_file::scrub_remove_file(&entry.path())
                     } else {
@@ -1198,8 +1269,8 @@ impl PersistentArena {
                 super::durable_file::scrub_remove_dir(&path)?;
             } else if meta.is_file()
                 && live != self.base_path.as_path()
-                && name.starts_with("seg_")
-                && name.ends_with(".bin")
+                && ((name.starts_with("seg_") && name.ends_with(".bin"))
+                    || name == committed::COMMITTED_FILE)
             {
                 super::durable_file::scrub_remove_file(&path)?;
             }
@@ -1224,7 +1295,9 @@ impl Drop for PersistentArena {
     fn drop(&mut self) {
         // Drop cannot report a failure, and nothing depends on this write-back: every
         // acknowledged frame was already synced by its commit or by `flush`.
-        let _ = self.active_segment.write().write_back();
+        if self.view.is_none() {
+            let _ = self.active_segment.write().write_back();
+        }
     }
 }
 
@@ -1250,6 +1323,8 @@ mod tests {
 
     thread_local! {
         /// The named points at which the calling thread's next passes fail, in order.
+        /// Runs at the "commit sync" point, while the frame is written but not yet durable.
+        static WINDOW: std::cell::RefCell<Option<Box<dyn Fn()>>> = const { std::cell::RefCell::new(None) };
         static FAIL_AT: std::cell::RefCell<Vec<&'static str>> = const { std::cell::RefCell::new(Vec::new()) };
     }
 
@@ -1257,6 +1332,13 @@ mod tests {
     /// "rollback sync" fails the compensating end-marker sync; "rotation after create" fails
     /// a rotation once the next segment's file exists.
     pub(super) fn fail_point(point: &str) -> Result<()> {
+        if point == "commit sync" {
+            WINDOW.with(|window| {
+                if let Some(observe) = window.borrow().as_ref() {
+                    observe();
+                }
+            });
+        }
         if FAIL_AT.with(|armed| {
             let mut armed = armed.borrow_mut();
             if armed.last().copied() == Some(point) {
@@ -1368,6 +1450,78 @@ mod tests {
             };
             assert_eq!(replayed(&PersistentArena::new(dir.path())?)?, expected);
         }
+        Ok(())
+    }
+
+    /// A reader scanning while the writer's sync is in flight must not apply the frame: the
+    /// sync may fail and the frame be rolled back. After the failure the writer reuses the
+    /// range, and the reader follows the log from where it was.
+    #[test]
+    fn reader_never_applies_a_frame_whose_sync_failed() -> Result<()> {
+        let dir = tempdir()?;
+        let writer = PersistentArena::new(dir.path())?;
+        writer.write_slice(b"committed")?;
+        let reader = Arc::new(PersistentArena::open_read_only(dir.path())?);
+        let committed_end = reader.checkpoint();
+        let seen = Arc::new(std::sync::Mutex::new(Vec::new()));
+        {
+            let (reader, seen) = (Arc::clone(&reader), Arc::clone(&seen));
+            WINDOW.with(|window| {
+                *window.borrow_mut() = Some(Box::new(move || {
+                    seen.lock()
+                        .unwrap()
+                        .push((reader.advance().unwrap(), reader.has_more().unwrap()));
+                }));
+            });
+        }
+        let failed = failing_at("commit sync", || writer.write_slice(b"disowned frame"));
+        WINDOW.with(|window| *window.borrow_mut() = None);
+        assert!(failed.is_err());
+        assert_eq!(*seen.lock().unwrap(), vec![(false, false)]);
+        assert_eq!(reader.checkpoint(), committed_end);
+
+        let at = writer.write_slice(b"the next frame")?;
+        assert_eq!(at, committed_end.1);
+        assert!(reader.has_more()?);
+        assert!(reader.advance()?);
+        assert_eq!(reader.checkpoint(), writer.checkpoint());
+        assert_eq!(reader.read_frame(at)?.0, b"the next frame");
+        assert!(!reader.has_more()?);
+        Ok(())
+    }
+
+    /// A store written before the committed-end word has no file: readers scan to the last
+    /// whole frame as they always did.
+    #[test]
+    fn reader_follows_a_store_without_a_committed_end_word() -> Result<()> {
+        let dir = tempdir()?;
+        let writer = PersistentArena::new(dir.path())?;
+        writer.write_slice(b"one")?;
+        std::fs::remove_file(dir.path().join(committed::COMMITTED_FILE))?;
+        let reader = PersistentArena::open_read_only(dir.path())?;
+        assert_eq!(reader.checkpoint(), writer.checkpoint());
+        Ok(())
+    }
+
+    /// A recorded end that is not a frame boundary below the committed end (or is past it)
+    /// is reported as divergence, which a refresh answers with a fresh open.
+    #[test]
+    fn reader_off_a_frame_boundary_reports_divergence() -> Result<()> {
+        let dir = tempdir()?;
+        let writer = PersistentArena::new(dir.path())?;
+        writer.write_slice(b"first frame")?;
+        writer.write_slice(b"second frame")?;
+        let reader = PersistentArena::open_read_only(dir.path())?;
+        reader
+            .write_offset
+            .store(HEADER_SIZE + 3, Ordering::Release);
+        let error = reader.advance().unwrap_err();
+        assert!(error.is::<ReaderDiverged>(), "{error:#}");
+        reader
+            .write_offset
+            .store(writer.checkpoint().1 + 1, Ordering::Release);
+        let error = reader.advance().unwrap_err();
+        assert!(error.is::<ReaderDiverged>(), "{error:#}");
         Ok(())
     }
 

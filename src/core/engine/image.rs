@@ -174,7 +174,13 @@ impl WarmCore {
             .context("store served from a checkpoint without it")?;
         // The dead documents' postings are left out of the rebuilt lists rather than removed
         // from them one document at a time (each removal re-encodes every list it touches).
-        let mut store = image.hydrate_excluding(Some(self.fresh_text_segment()?), &dead)?;
+        // A reader keeps chunk text in memory: the text segment file belongs to the writer.
+        let text = if self.read_only {
+            None
+        } else {
+            Some(self.fresh_text_segment()?)
+        };
+        let mut store = image.hydrate_excluding(text, &dead)?;
         for id in &dead {
             store.remove_unindexed_scrubbed(id)?;
         }
@@ -250,9 +256,13 @@ impl WarmCore {
                 sealed_key.is_none(),
                 "plaintext checkpoint in an encrypted store"
             );
-            // SAFETY: the store lock keeps other engines out of the store directory, and no
-            // engine writes a published checkpoint: compactions write new ones in new
-            // generations and remove an old generation only after the switch.
+            // SAFETY: no engine writes a published checkpoint: compactions write new ones in new
+            // generations, and remove (a scrubbing one zeroes) an old generation only after
+            // `CURRENT` has switched. A writer hydrates before it compacts, so its mapping is
+            // gone by then. A reader may map a generation that is scrubbed under it, so it
+            // copies the image out at open (`hydrate_documents`) and `open_engine` then checks
+            // that `CURRENT` still names this generation: a scrub starts only after it changes,
+            // so an unchanged pointer proves the copy read unscrubbed bytes.
             Backing::Mapped(unsafe { memmap2::Mmap::map(&file)? })
         };
         ensure!(
@@ -387,7 +397,7 @@ impl WarmCore {
     /// one ([`Self::takes_checkpoint`]), and at least `document_checkpoint.min_journal_bytes` of
     /// frames in the live generation (the frames a checkpoint would fold in).
     pub(super) fn checkpoint_if_due(&self) -> Result<()> {
-        if !self.image.opened.load(Ordering::Acquire) {
+        if self.read_only || !self.image.opened.load(Ordering::Acquire) {
             return Ok(());
         }
         let used = self.arena.stats().used_bytes;

@@ -183,7 +183,13 @@ pub struct WarmCore {
     /// The experience store of tree-structured observations; absent until the store holds
     /// one, so a store that never receives an observation has no experience files.
     experience: RwLock<Option<super::experience::store::ExperienceStore>>,
-    _store_lock: StoreLock,
+    /// Absent for a reader, which takes no lock.
+    _store_lock: Option<StoreLock>,
+    /// Opened by `open_read_only`: every mutation is refused and nothing is written to the
+    /// store the writer owns.
+    read_only: bool,
+    /// What a reader has applied so far (see `reader.rs`); `None` for a writer.
+    reader: Option<reader::ReaderState>,
 }
 
 impl WarmCore {}
@@ -200,6 +206,9 @@ impl Drop for WarmCore {
     /// Closing writes a checkpoint when one is due (see `checkpoint_if_due`), so the next open
     /// maps it instead of replaying the frames. A failure leaves the journal as it was.
     fn drop(&mut self) {
+        if self.read_only {
+            return;
+        }
         if let Err(error) = self.checkpoint_if_due() {
             tracing::warn!(%error, "document checkpoint not written at close");
         } else {
@@ -217,5 +226,7 @@ mod graph_api;
 mod indices;
 mod meaning_api;
 mod provenance_api;
+mod reader;
+pub use reader::Refresh;
 mod replay;
 mod training;

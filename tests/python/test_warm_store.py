@@ -182,3 +182,52 @@ def test_master_key_path_outside_the_store(tmp_path):
     assert reopened.search_documents("harbor", {"k": 1})[0]["documentId"] == "harbor"
     with pytest.raises(Exception, match="not a directory"):
         hm.Warm(1024, str(tmp_path / "other"), master_key_path=str(key.parent))
+
+
+def test_read_only_reader_uses_the_external_master_key(tmp_path):
+    path, key = str(tmp_path / "store"), tmp_path / "keys" / "master.key"
+    with hm.Warm(1024, path, master_key_path=str(key)) as writer:
+        writer.memorize_document({"id": "one", "text": "harbor opens at six"})
+        reader = hm.Warm.open_read_only(1024, path, master_key_path=str(key))
+        assert reader.search_documents("harbor", {"k": 1})[0]["documentId"] == "one"
+        writer.memorize_document({"id": "two", "text": "market opens at nine"})
+        assert reader.refresh() is True
+        assert reader.search_documents("market", {"k": 1})[0]["documentId"] == "two"
+        reader.close()
+        with pytest.raises(Exception, match="master key"):
+            hm.Warm.open_read_only(1024, path)
+
+
+def test_read_only_reader_refresh_and_context_manager(tmp_path):
+    path = str(tmp_path / "store")
+    with hm.Warm(1024, path) as writer:
+        writer.memorize_document({"id": "one", "text": "first committed document"})
+        reader = hm.Warm.open_read_only(1024, path)
+        assert reader.read_only and not writer.read_only
+        assert reader.refresh() is False
+
+        writer.memorize_document({"id": "two", "text": "second committed document"})
+        with pytest.raises(hm.ReadOnlyError):
+            reader.memorize_document({"id": "x", "text": "denied"})
+        assert reader.refresh() is True
+        assert reader.refresh() is False
+        hits = reader.search_documents("second committed", {"k": 2})
+        assert "two" in {hit["documentId"] for hit in hits}
+        reader.close()
+        assert not os.path.exists(os.path.join(path, ".hms.readers"))
+
+
+def test_close_releases_the_lock_and_later_calls_fail(tmp_path):
+    path = str(tmp_path / "store")
+    store = hm.Warm(1024, path)
+    store.memorize_document({"id": "one", "text": "committed before close"})
+    with pytest.raises(hm.StoreLockedError, match="already open"):
+        hm.Warm(1024, path)
+    store.close()
+    store.close()
+    assert store.closed
+    with pytest.raises(hm.StoreClosedError):
+        store.memorize_document({"id": "two", "text": "late"})
+    with hm.Warm(1024, path) as again:
+        assert not again.closed
+    assert again.closed

@@ -54,6 +54,26 @@ TypeScript declarations are included. See the
 [Node integration guide](https://github.com/writerslogic/warm/blob/main/docs/integrations.md)
 and [API documentation](https://writerslogic.com/warm/docs/latest/).
 
+## One writer, many readers
+
+`new WarmMemorySystem(...)` is the writer: a second one, in any process, throws
+`[store_locked]` naming the holder. `WarmMemorySystem.openReadOnly(...)` takes no lock, so a
+reader runs beside the writer without copying the store and sees only what it committed;
+`refresh()` moves to newer commits, reading only the new ones (false when nothing changed). Mutations on a reader reject
+with `[read_only]`. `close()` flushes, releases the lock and is safe to repeat; later calls
+reject with `[store_closed]`.
+
+```js
+const writer = new WarmMemorySystem(1024, dir)
+const reader = WarmMemorySystem.openReadOnly(1024, dir)
+await writer.memorizeDocument({ id: 'a', text: 'committed' })
+reader.refresh() // true
+reader.close()
+writer.close()
+```
+
+Details and limits: [one writer, many readers](https://github.com/writerslogic/warm/blob/main/docs/reference/concurrency.md).
+
 ## MCP clients
 
 [`warm-mcp`](https://www.npmjs.com/package/warm-mcp) is a separate

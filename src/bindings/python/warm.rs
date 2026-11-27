@@ -19,7 +19,38 @@ use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict};
 use serde_json::Value;
 
-use super::context_err as err;
+use pyo3::create_exception;
+
+create_exception!(
+    writerslogic_warm,
+    StoreClosedError,
+    PyValueError,
+    "The store was used after `close()`."
+);
+create_exception!(
+    writerslogic_warm,
+    ReadOnlyError,
+    PyValueError,
+    "A mutation was attempted on a store opened with `Warm.open_read_only`."
+);
+create_exception!(
+    writerslogic_warm,
+    StoreLockedError,
+    PyValueError,
+    "Another process holds the store for writing; the message names it."
+);
+
+/// The error class of `e`, matched on the typed engine errors' messages.
+fn err(e: impl std::fmt::Display) -> PyErr {
+    let text = format!("{e:#}");
+    if text.contains(&crate::ReadOnlyError.to_string()) {
+        ReadOnlyError::new_err(text)
+    } else if text.contains("is already open by another engine") {
+        StoreLockedError::new_err(text)
+    } else {
+        super::context_err(text)
+    }
+}
 use crate::core::config::WarmConfig;
 use crate::core::documents::{DocumentInput, IngestOptions, SearchOptions};
 use crate::core::engine::{RankingMode, SparseSearch};
@@ -72,8 +103,126 @@ fn installed_embedder(object: &Bound<'_, PyAny>) -> PyResult<Arc<crate::core::em
 /// An in-process WARM store: document search, the memory API and vector search.
 #[pyclass(name = "Warm")]
 struct PyWarm {
+    /// `None` once closed. Calls clone the `Arc`s out and run on the clones, so `close` waits
+    /// for them before it releases the store lock.
+    slot: std::sync::RwLock<Option<Open>>,
+    reopen: Reopen,
+}
+
+struct Open {
     core: Arc<WarmCore>,
     memory: Arc<Memory>,
+}
+
+/// What `refresh` needs to open the store again.
+struct Reopen {
+    read_only: bool,
+    dimensions: u32,
+    path: Option<String>,
+    config: WarmConfig,
+    #[cfg(feature = "local-embed")]
+    embedder: Option<Arc<crate::core::embed::Embedder>>,
+}
+
+impl PyWarm {
+    fn slot(&self) -> std::sync::RwLockReadGuard<'_, Option<Open>> {
+        self.slot.read().unwrap_or_else(|e| e.into_inner())
+    }
+
+    fn core(&self) -> PyResult<Arc<WarmCore>> {
+        self.slot()
+            .as_ref()
+            .map(|open| open.core.clone())
+            .ok_or_else(|| StoreClosedError::new_err("the store is closed"))
+    }
+
+    fn memory(&self) -> PyResult<Arc<Memory>> {
+        self.slot()
+            .as_ref()
+            .map(|open| open.memory.clone())
+            .ok_or_else(|| StoreClosedError::new_err("the store is closed"))
+    }
+
+    fn open_engine(reopen: &Reopen) -> anyhow::Result<Open> {
+        let core = if reopen.read_only {
+            WarmCore::open_read_only(
+                reopen.dimensions,
+                reopen.path.clone(),
+                Some(reopen.config.clone()),
+            )?
+        } else {
+            WarmCore::new(
+                reopen.dimensions,
+                reopen.path.clone(),
+                Some(reopen.config.clone()),
+            )?
+        };
+        #[cfg(feature = "local-embed")]
+        core.set_text_embedder(reopen.embedder.clone())?;
+        let core = Arc::new(core);
+        Ok(Open {
+            memory: Arc::new(Memory::new(core.clone())),
+            core,
+        })
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn build(
+        py: Python<'_>,
+        read_only: bool,
+        dimensions: u32,
+        path: Option<String>,
+        embedder: Option<&Bound<'_, PyAny>>,
+        embedding_dimensions: Option<usize>,
+        embedding_model: &str,
+        embedding_revision: &str,
+        experience_form_state: bool,
+        master_key_path: Option<String>,
+    ) -> PyResult<Self> {
+        if embedder.is_some() && embedding_dimensions.is_some() {
+            return Err(err(
+                "pass either embedder or embedding_dimensions, not both: an embedder fixes the embedding space",
+            ));
+        }
+        let mut config = WarmConfig::default();
+        config.experience.form_state = experience_form_state;
+        config.security.master_key_file = master_key_path;
+        #[cfg(feature = "local-embed")]
+        let mut text_embedder = None;
+        if let Some(embedder) = embedder {
+            #[cfg(feature = "local-embed")]
+            {
+                let embedder = installed_embedder(embedder)?;
+                config.embedding_space = Some(embedder.space());
+                text_embedder = Some(embedder);
+            }
+            #[cfg(not(feature = "local-embed"))]
+            return Err(err(format!(
+                "this build has no local embedder (feature local-embed); got {embedder}"
+            )));
+        } else if let Some(dimensions) = embedding_dimensions {
+            config.embedding_space = Some(EmbeddingSpace {
+                model: embedding_model.into(),
+                revision: embedding_revision.into(),
+                dimensions,
+                normalization: "l2".into(),
+                metric: "cosine".into(),
+            });
+        }
+        let reopen = Reopen {
+            read_only,
+            dimensions,
+            path,
+            config,
+            #[cfg(feature = "local-embed")]
+            embedder: text_embedder,
+        };
+        let open = py.detach(|| Self::open_engine(&reopen)).map_err(err)?;
+        Ok(Self {
+            slot: std::sync::RwLock::new(Some(open)),
+            reopen,
+        })
+    }
 }
 
 #[pymethods]
@@ -114,56 +263,165 @@ impl PyWarm {
         experience_form_state: bool,
         master_key_path: Option<String>,
     ) -> PyResult<Self> {
-        if embedder.is_some() && embedding_dimensions.is_some() {
-            return Err(err(
-                "pass either embedder or embedding_dimensions, not both: an embedder fixes the embedding space",
-            ));
+        Self::build(
+            py,
+            false,
+            dimensions,
+            path,
+            embedder,
+            embedding_dimensions,
+            embedding_model,
+            embedding_revision,
+            experience_form_state,
+            master_key_path,
+        )
+    }
+
+    /// Opens an existing store without the writer lock, so another process can hold it for
+    /// writing. Reads see one committed snapshot; `refresh()` moves to a newer one. Every
+    /// mutation raises `ReadOnlyError`. Takes the same arguments as the constructor.
+    #[staticmethod]
+    #[pyo3(signature = (
+        dimensions=16384, path=None, *, embedder=None, embedding_dimensions=None,
+        embedding_model="external", embedding_revision="1", experience_form_state=true,
+        master_key_path=None
+    ))]
+    #[allow(clippy::too_many_arguments)]
+    fn open_read_only(
+        py: Python<'_>,
+        dimensions: u32,
+        path: Option<String>,
+        embedder: Option<&Bound<'_, PyAny>>,
+        embedding_dimensions: Option<usize>,
+        embedding_model: &str,
+        embedding_revision: &str,
+        experience_form_state: bool,
+        master_key_path: Option<String>,
+    ) -> PyResult<Self> {
+        Self::build(
+            py,
+            true,
+            dimensions,
+            path,
+            embedder,
+            embedding_dimensions,
+            embedding_model,
+            embedding_revision,
+            experience_form_state,
+            master_key_path,
+        )
+    }
+
+    /// True for a store opened with `open_read_only`.
+    #[getter]
+    fn read_only(&self) -> bool {
+        self.reopen.read_only
+    }
+
+    /// True after `close()`.
+    #[getter]
+    fn closed(&self) -> bool {
+        self.slot().is_none()
+    }
+
+    /// Moves a read-only store to the writer's latest commit, reading only what was appended
+    /// since (a compaction is read once, afresh). Returns False when nothing was committed.
+    fn refresh(&self, py: Python<'_>) -> PyResult<bool> {
+        if !self.reopen.read_only {
+            return Err(err("refresh applies to a store opened read-only"));
         }
-        let mut config = WarmConfig::default();
-        config.experience.form_state = experience_form_state;
-        config.security.master_key_file = master_key_path;
-        #[cfg(feature = "local-embed")]
-        let mut text_embedder = None;
-        if let Some(embedder) = embedder {
-            #[cfg(feature = "local-embed")]
-            {
-                let embedder = installed_embedder(embedder)?;
-                config.embedding_space = Some(embedder.space());
-                text_embedder = Some(embedder);
-            }
-            #[cfg(not(feature = "local-embed"))]
-            return Err(err(format!(
-                "this build has no local embedder (feature local-embed); got {embedder}"
-            )));
-        } else if let Some(dimensions) = embedding_dimensions {
-            config.embedding_space = Some(EmbeddingSpace {
-                model: embedding_model.into(),
-                revision: embedding_revision.into(),
-                dimensions,
-                normalization: "l2".into(),
-                metric: "cosine".into(),
-            });
-        }
-        let core = py
+        let current = self.core()?;
+        let reopen = &self.reopen;
+        let fresh = py
             .detach(|| {
-                let core = WarmCore::new(dimensions, path, Some(config))?;
-                #[cfg(feature = "local-embed")]
-                core.set_text_embedder(text_embedder)?;
-                anyhow::Ok(core)
+                match current.refresh_in_place()? {
+                    crate::core::Refresh::Unchanged => anyhow::Ok(Some(None)),
+                    crate::core::Refresh::Advanced => Ok(None),
+                    // A compaction replaced the generation this store reads: open it afresh.
+                    crate::core::Refresh::Reopen => Ok(Some(Some(Self::open_engine(reopen)?))),
+                }
             })
             .map_err(err)?;
-        let core = Arc::new(core);
-        Ok(Self {
-            memory: Arc::new(Memory::new(core.clone())),
-            core,
-        })
+        let fresh = match fresh {
+            None => return Ok(true),
+            Some(None) => return Ok(false),
+            Some(Some(fresh)) => fresh,
+        };
+        match &mut *self.slot.write().unwrap_or_else(|e| e.into_inner()) {
+            Some(open) => {
+                *open = fresh;
+                Ok(true)
+            }
+            None => Err(StoreClosedError::new_err("the store is closed")),
+        }
+    }
+
+    /// Flushes and releases the store lock so another process can open it for writing. Safe
+    /// to call twice. Every later call raises `StoreClosedError`. Waits up to 10 seconds for
+    /// calls in flight; if they do not finish the store stays open and this raises.
+    fn close(&self, py: Python<'_>) -> PyResult<()> {
+        // Take the engine out and release the lock on the slot before waiting: calls that
+        // arrive meanwhile fail with `StoreClosedError` at once instead of queuing behind
+        // this wait while holding the GIL that the calls in flight need to finish.
+        let taken = self.slot.write().unwrap_or_else(|e| e.into_inner()).take();
+        let Some(Open { core, memory }) = taken else {
+            return Ok(());
+        };
+        drop(memory);
+        let outcome = py.detach(|| {
+            let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+            let mut core = core;
+            loop {
+                match Arc::try_unwrap(core) {
+                    Ok(core) => return Ok(core.close()),
+                    Err(shared) if std::time::Instant::now() < deadline => {
+                        core = shared;
+                        std::thread::sleep(std::time::Duration::from_millis(5));
+                    }
+                    Err(shared) => return Err(shared),
+                }
+            }
+        });
+        match outcome {
+            Ok(closed) => closed.map_err(err),
+            Err(shared) => {
+                let memory = Arc::new(Memory::new(shared.clone()));
+                self.slot
+                    .write()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .get_or_insert(Open {
+                        core: shared,
+                        memory,
+                    });
+                Err(err(
+                    "close timed out: operations are still running; the store stays open",
+                ))
+            }
+        }
+    }
+
+    fn __enter__(slf: PyRef<'_, Self>) -> PyResult<PyRef<'_, Self>> {
+        slf.core()?;
+        Ok(slf)
+    }
+
+    #[pyo3(signature = (_exc_type=None, _exc_value=None, _traceback=None))]
+    fn __exit__(
+        &self,
+        py: Python<'_>,
+        _exc_type: Option<&Bound<'_, PyAny>>,
+        _exc_value: Option<&Bound<'_, PyAny>>,
+        _traceback: Option<&Bound<'_, PyAny>>,
+    ) -> PyResult<bool> {
+        self.close(py)?;
+        Ok(false)
     }
 
     /// Adds or replaces one document: `{"id", "text", "metadata"?, "embeddings"?, ...}`.
     /// Returns the number of chunks stored.
     fn memorize_document(&self, py: Python<'_>, document: &Bound<'_, PyAny>) -> PyResult<u32> {
         let input: DocumentInput = typed(py, document)?;
-        let core = &self.core;
+        let core = self.core()?;
         py.detach(|| core.memorize_document(input)).map_err(err)
     }
 
@@ -174,7 +432,7 @@ impl PyWarm {
         documents: &Bound<'_, PyAny>,
     ) -> PyResult<Vec<u32>> {
         let inputs: Vec<DocumentInput> = typed(py, documents)?;
-        let core = &self.core;
+        let core = self.core()?;
         py.detach(|| core.memorize_documents(inputs)).map_err(err)
     }
 
@@ -192,7 +450,7 @@ impl PyWarm {
             Some(options) => typed(py, options)?,
             None => SearchOptions::default(),
         };
-        let core = &self.core;
+        let core = self.core()?;
         let hits = py
             .detach(|| core.search_documents(query, &options))
             .map_err(err)?;
@@ -227,7 +485,7 @@ impl PyWarm {
                 )
             })
             .collect();
-        let core = &self.core;
+        let core = self.core()?;
         py.detach(|| core.memorize_documents_sparse(inputs, &IngestOptions::default()))
             .map_err(err)
     }
@@ -257,7 +515,7 @@ impl PyWarm {
             mode,
             query: SparseVector::new(ids, weights),
         };
-        let core = &self.core;
+        let core = self.core()?;
         let hits = py
             .detach(|| core.search_documents_ranked(query, &options, &ranking))
             .map_err(err)?;
@@ -265,12 +523,12 @@ impl PyWarm {
     }
 
     fn delete_document(&self, py: Python<'_>, id: &str) -> PyResult<bool> {
-        let core = &self.core;
+        let core = self.core()?;
         py.detach(|| core.delete_document(id)).map_err(err)
     }
 
     fn get_document<'py>(&self, py: Python<'py>, id: &str) -> PyResult<Bound<'py, PyAny>> {
-        let core = &self.core;
+        let core = self.core()?;
         let record = py.detach(|| core.get_document(id)).map_err(err)?;
         to_py(py, &serde_json::to_value(record).map_err(err)?)
     }
@@ -334,9 +592,13 @@ impl PyWarm {
     /// The form tables of observation steps, one string per `(episode, step)` in order: the
     /// step's controls as rows, without rows already shown for an earlier step of the list, or
     /// `""` for a step with no controls.
-    fn experience_form_tables(&self, py: Python<'_>, states: Vec<(String, u32)>) -> Vec<String> {
-        let core = &self.core;
-        py.detach(|| core.experience_form_tables(&states))
+    fn experience_form_tables(
+        &self,
+        py: Python<'_>,
+        states: Vec<(String, u32)>,
+    ) -> PyResult<Vec<String>> {
+        let core = self.core()?;
+        Ok(py.detach(|| core.experience_form_tables(&states)))
     }
 
     /// The action stored with an observation step and the occurrences it targeted, or `None`.
@@ -349,14 +611,14 @@ impl PyWarm {
         episode: String,
         step: u32,
     ) -> PyResult<Option<Bound<'py, PyAny>>> {
-        let core = &self.core;
+        let core = self.core()?;
         let v = py.detach(|| core.experience_action_targets(&episode, step));
         v.map(|v| to_py(py, &v)).transpose()
     }
 
     /// Stores `vector` under `id` in the vector index (the vertex graph).
     fn memorize_vector(&self, py: Python<'_>, id: String, vector: Vec<f32>) -> PyResult<()> {
-        let core = &self.core;
+        let core = self.core()?;
         py.detach(|| core.memorize_vector(id, &vector)).map_err(err)
     }
 
@@ -368,7 +630,7 @@ impl PyWarm {
         vector: Vec<f32>,
         k: u32,
     ) -> PyResult<Vec<(String, f64)>> {
-        let core = &self.core;
+        let core = self.core()?;
         let hits = py.detach(|| core.query_vector(&vector, k)).map_err(err)?;
         Ok(hits.into_iter().map(|h| (h.id, h.similarity)).collect())
     }
@@ -391,12 +653,16 @@ impl PyWarm {
         op: &str,
         request: Value,
     ) -> PyResult<Bound<'py, PyAny>> {
-        let memory = &self.memory;
+        let memory = self.memory()?;
         let result = py.detach(|| memory.call(op, request)).map_err(err)?;
         to_py(py, &result)
     }
 }
 
 pub(super) fn register(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    m.add_class::<PyWarm>()
+    m.add_class::<PyWarm>()?;
+    m.add("StoreClosedError", m.py().get_type::<StoreClosedError>())?;
+    m.add("ReadOnlyError", m.py().get_type::<ReadOnlyError>())?;
+    m.add("StoreLockedError", m.py().get_type::<StoreLockedError>())?;
+    Ok(())
 }

@@ -147,7 +147,9 @@ Details and tested versions: [integrations](docs/integrations.md).
 
 ## Limits
 
-- One writer per store; a second writing process fails at open with a lock error.
+- One writer per store; a second writing process fails at open with a lock error naming the holder.
+  Any number of read-only readers open the same store beside the writer
+  ([one writer, many readers](docs/reference/concurrency.md)).
 - Sketches and term counts are not encryption, and `storeText: false` is not a privacy control
   ([security](docs/security.md)).
 - Capacity numbers are sweeps over a tested range, not guarantees.

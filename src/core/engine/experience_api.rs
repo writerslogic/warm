@@ -41,11 +41,19 @@ impl WarmCore {
         if !store::exists(&self.storage_path) {
             return Ok(());
         }
-        let opened = ExperienceStore::open(
-            &self.storage_path,
-            self.config.experience.clone(),
-            self.experience_sealer(),
-        )?;
+        let opened = if self.read_only {
+            ExperienceStore::open_reader(
+                &self.storage_path,
+                self.config.experience.clone(),
+                self.experience_sealer(),
+            )?
+        } else {
+            ExperienceStore::open(
+                &self.storage_path,
+                self.config.experience.clone(),
+                self.experience_sealer(),
+            )?
+        };
         *self.experience.write() = Some(opened);
         Ok(())
     }
@@ -55,6 +63,11 @@ impl WarmCore {
         &self,
         f: impl FnOnce(&mut ExperienceStore) -> R,
     ) -> std::result::Result<R, ExperienceError> {
+        if self.read_only {
+            return Err(ExperienceError::Invalid(
+                "write: the store is open read-only",
+            ));
+        }
         let mut slot = self.experience.write();
         if slot.is_none() {
             *slot = Some(ExperienceStore::create(

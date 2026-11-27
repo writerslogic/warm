@@ -205,6 +205,7 @@ async fn main() -> Result<()> {
             max_stores: cli.max_stores,
             encrypt: cli.encrypt.then(|| cli.passphrase_env.clone()),
             plaintext: false,
+            read_only: cli.read_only,
             #[cfg(feature = "local-models")]
             stages,
             #[cfg(feature = "local-models")]
