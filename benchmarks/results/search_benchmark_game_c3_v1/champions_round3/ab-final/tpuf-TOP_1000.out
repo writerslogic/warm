@@ -1,0 +1,4 @@
+  worst regress: [('what is the name of the chemis', 58719, 58847), ('a search engine is an informat', 13825, 13893), ('kenyan world marathon record o', 6936, 6990)]
+TOP_1000 order A (base first=True): union 9540->9415 (-1.3%) | union:num_tokens_2 2371->2217 (-6.5%) | union:num_tokens_3 1419->1379 (-2.8%) | intersection 1880->1834 (-2.4%) | term 1284->113 (-91.2%) | ALL 6289->6125 (-2.6%) | differing 0
+  worst regress: [('what is the name of the chemis', 58765, 58856), ('kenyan world marathon record o', 6968, 6985), ('a database index is a data str', 31103, 31110)]
+TOP_1000 order B (base first=False): union 9552->9412 (-1.5%) | union:num_tokens_2 2369->2219 (-6.3%) | union:num_tokens_3 1414->1375 (-2.7%) | intersection 1879->1834 (-2.4%) | term 1276->112 (-91.2%) | ALL 6295->6123 (-2.7%) | differing 0

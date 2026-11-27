@@ -18,3 +18,11 @@ Known gate failures (cells that move the wrong way in both orders): A at TOP_10,
 Tried and dropped: seeding the heap floor from the lone required term's champions in `required_optional` (intersection_union). Same-session A/B against the final tree, both orders, 0 differing: TOP_1000 intersection_union 2487 -> 2530 (+1.7%) and 2488 -> 2531 (+1.8%), TOP_100 1250 -> 1269 (+1.5%) and 1253 -> 1268 (+1.2%), every other cell within 1%. It regresses the target cell in both orders, so it is not in any PR. Only 10 of the 40 intersection_union queries have two tokens, the shape where the lacking class is a pure champion read.
 
 Not done: persisting champions in the index; intersection_union restructuring (lever 2); COUNT union (lever 4: `union_count` already counts by inclusion-exclusion and bitmap popcount).
+
+## Final stack (one commit)
+
+`ab-final/` is main vs the squashed tree (`perf/sbg-round3-final`), both orders, 3 rounds, all modes, both query sets, differing 0 in every cell. With the heap reading tie keys only on equal scores, TOP_10 negated no longer regresses (37 -> 36 us, both orders).
+
+TOP_1000 (us, both orders agree): term 1896 -> 105, negated 435 -> 382, union 1223 -> 1150, union:num_tokens_>3 5003 -> 4793, intersection_union 2558 -> 2492, ALL 918 -> 886. TOP_100: negated 118 -> 102, term 248 -> 16, ALL -0.6%. tpuf TOP_1000: ALL -2.6%, union -1.4%. COUNT and TOP_10: within 1.5%, no cell moves the wrong way in both orders beyond 0.5%.
+
+Open question from review: the champions are derived at open, which the benchmark owners count as index time; they are to move into the persisted checkpoint section being added on perf/index-time-tables.

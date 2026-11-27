@@ -1,0 +1,4 @@
+  worst regress: [('france president world war res', 7409, 7467), ('+to +be +or +not +to +be', 5627, 5682), ('+the +who', 985, 1026)]
+TOP_100 order A (base first=True): union 5700->5674 (-0.4%) | union:num_tokens_2 525->516 (-1.8%) | union:num_tokens_3 627->620 (-1.2%) | intersection 922->925 (+0.4%) | term 192->18 (-90.4%) | ALL 3649->3624 (-0.7%) | differing 0
+  worst regress: [('+to +be +or +not +to +be', 5614, 5718), ('france president world war res', 7404, 7455), ('+the +who', 989, 1016)]
+TOP_100 order B (base first=False): union 5710->5681 (-0.5%) | union:num_tokens_2 536->526 (-1.8%) | union:num_tokens_3 638->630 (-1.1%) | intersection 919->930 (+1.2%) | term 191->18 (-90.4%) | ALL 3654->3630 (-0.7%) | differing 0

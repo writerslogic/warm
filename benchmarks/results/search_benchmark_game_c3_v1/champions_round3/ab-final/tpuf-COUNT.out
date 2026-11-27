@@ -1,0 +1,4 @@
+  worst regress: [('+to +be +or +not +to +be', 174, 234), ('what is the name of the chemis', 3258, 3308), ('kenyan world marathon record o', 1019, 1058)]
+COUNT order A (base first=True): union 908->919 (+1.2%) | union:num_tokens_2 303->306 (+1.0%) | union:num_tokens_3 480->484 (+0.8%) | intersection 303->311 (+2.6%) | term 1->1 (+0.0%) | ALL 635->644 (+1.5%) | differing 0
+  worst regress: [('+to +be +or +not +to +be', 173, 222), ('+the +who', 220, 256), ('a search engine is an informat', 1826, 1842)]
+COUNT order B (base first=False): union 920->921 (+0.0%) | union:num_tokens_2 302->306 (+1.5%) | union:num_tokens_3 488->487 (-0.3%) | intersection 301->310 (+2.9%) | term 1->1 (+7.4%) | ALL 641->645 (+0.5%) | differing 0

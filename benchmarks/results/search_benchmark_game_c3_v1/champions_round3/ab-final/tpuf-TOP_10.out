@@ -1,0 +1,4 @@
+  worst regress: [('+to +be +or +not +to +be', 3393, 3454), ('what is the name of the chemis', 25270, 25302), ('+new +york +population', 688, 703)]
+TOP_10 order A (base first=True): union 3759->3757 (-0.0%) | union:num_tokens_2 317->309 (-2.6%) | union:num_tokens_3 435->433 (-0.4%) | intersection 576->583 (+1.1%) | term 35->5 (-85.2%) | ALL 2389->2389 (-0.0%) | differing 0
+  worst regress: [('to be or not to be', 3830, 3902), ('pop singer songwriter born 198', 5572, 5601), ('a search engine is an informat', 5366, 5391)]
+TOP_10 order B (base first=False): union 3760->3764 (+0.1%) | union:num_tokens_2 327->308 (-5.7%) | union:num_tokens_3 442->432 (-2.3%) | intersection 581->575 (-1.0%) | term 35->5 (-84.8%) | ALL 2392->2390 (-0.1%) | differing 0
