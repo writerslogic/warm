@@ -20,7 +20,7 @@ use self::count::keep_probed;
 use self::lazy::keep_common_lazy;
 use super::wand::{sum_bound, Bound};
 use super::*;
-use crate::core::documents::image::ServingImage;
+use crate::core::documents::image::{Champions, ServingImage, CHAMPIONS};
 use crate::core::documents::impact::{prefetch, Dense};
 use crate::core::documents::lists::{
     dense_word, holds, Cursor, ListRef, PositionIter, RankTable, NO_DOC, RUN_BLOCKS,
@@ -402,8 +402,8 @@ impl<'a> Top<'a> {
         }
     }
 
-    fn finish(self) -> Vec<LexicalHit> {
-        let image = self.image;
+    /// The hits best first as `(score, slot)`.
+    fn ranked(self) -> Vec<(f64, u32)> {
         let mut keyed: Vec<(f64, u64, u32)> = self
             .heap
             .into_iter()
@@ -413,16 +413,67 @@ impl<'a> Top<'a> {
         keyed.sort_unstable_by(|a, b| b.0.total_cmp(&a.0).then_with(|| a.1.cmp(&b.1)));
         keyed
             .into_iter()
-            .map(|(score, _, slot)| {
-                let (id, chunk) = image.slot_order(slot as usize);
-                LexicalHit {
-                    document_id: id.to_owned(),
-                    chunk_index: chunk,
-                    score,
-                }
-            })
+            .map(|(score, _, slot)| (score, slot))
             .collect()
     }
+
+    fn finish(self) -> Vec<LexicalHit> {
+        let image = self.image;
+        hits_of(image, self.ranked().into_iter())
+    }
+}
+
+/// The champions of `list` under the default BM25 shape at `average` words, built on first use
+/// (see [`Champions`]); `None` for a list without them. `idf` is the list's, as the scorer
+/// computes it.
+pub(in crate::core::documents) fn champions_of<'a>(
+    image: &'a ServingImage,
+    list: ListRef<'a>,
+    idf: f64,
+    average: f64,
+) -> Result<Option<&'a Champions>> {
+    let found = image.champions(list.skips, || {
+        let bm25 = Bm25::DEFAULT;
+        let mut all = Top::new(image, CHAMPIONS);
+        let mut cursor = Cursor::open(list);
+        let words = image.word_counts();
+        for block in 0..cursor.block_count() {
+            cursor.goto_block(block);
+            let (slots, frequencies) = cursor.block_postings();
+            for (&slot, &frequency) in slots.iter().zip(frequencies) {
+                let count = match words[slot as usize] {
+                    u16::MAX => image.slot_word_count(slot as usize),
+                    short => u32::from(short),
+                };
+                let norm = bm25.norm(f64::from(count), average);
+                let score = 0.0 + bm25.weight(idf, f64::from(frequency), norm);
+                ensure!(
+                    score.is_finite(),
+                    "lexical score is nonfinite; reduce BM25 parameters"
+                );
+                all.offer(score, slot);
+            }
+        }
+        Ok::<_, anyhow::Error>(Some(Champions {
+            average: average.to_bits(),
+            hits: all.ranked().into_boxed_slice(),
+        }))
+    })?;
+    Ok(found.filter(|c| c.average == average.to_bits()))
+}
+
+/// The hits of ranked `(score, slot)` pairs.
+fn hits_of(image: &ServingImage, ranked: impl Iterator<Item = (f64, u32)>) -> Vec<LexicalHit> {
+    ranked
+        .map(|(score, slot)| {
+            let (id, chunk) = image.slot_order(slot as usize);
+            LexicalHit {
+                document_id: id.to_owned(),
+                chunk_index: chunk,
+                score,
+            }
+        })
+        .collect()
 }
 
 /// The score of the chunk in `slot` as the exhaustive scorer sums it.
@@ -773,6 +824,9 @@ struct Run<'a, 'q> {
     /// Per slot its word count, `u16::MAX` where the slot table holds it.
     word_counts: &'a [u16],
 }
+
+/// From this `k` a required term's exclusions are applied to its champions.
+const NEGATED_CHAMPIONS_K: usize = 100;
 
 /// From this `k` a union of two or three terms goes through its classes even when the
 /// conjunction leaves the heap short: the classes after it fill it, and the ranker's windows
@@ -1462,6 +1516,16 @@ impl<'a> Run<'a, '_> {
         terms: &mut [Rt<'a>],
         excluded: &mut [Rt<'a>],
     ) -> Result<(Vec<LexicalHit>, usize)> {
+        // Below this `k` the ordinary scan of the lead's strongest blocks is the cheaper read.
+        if self.k >= NEGATED_CHAMPIONS_K
+            && !self.count
+            && terms.len() == 1
+            && terms[0].twins.is_empty()
+        {
+            if let Some(hits) = self.negated_champions(&mut terms[0], &*excluded)? {
+                return Ok((hits, 0));
+            }
+        }
         let mut top = Top::new(self.image, self.k);
         let count = self.negated_top_into(terms, excluded, &mut top, false)?;
         Ok((top.finish(), count))
@@ -2027,6 +2091,12 @@ impl<'a> Run<'a, '_> {
                 .is_some_and(|floor| sum_bound(weight, 1) < floor)
         };
         let image = self.image;
+        if let Some(found) = self.champions(cursor, idf)? {
+            return Ok(hits_of(
+                image,
+                found.hits[..self.k.min(found.hits.len())].iter().copied(),
+            ));
+        }
         if let Some(table) = image.rank_table(cursor, self.shape.bm25, self.shape.average) {
             for &run in table.order.iter() {
                 let run = run as usize;
@@ -2060,6 +2130,58 @@ impl<'a> Run<'a, '_> {
             }
         }
         Ok(top.finish())
+    }
+
+    /// The champions of the list under `cursor` (see [`Champions`]), when this query's top `k`
+    /// is within them and its scores are the ones they were made under.
+    fn champions(&self, cursor: &Cursor<'a>, idf: f64) -> Result<Option<&'a Champions>> {
+        if self.k > CHAMPIONS || self.shape.bm25 != Bm25::DEFAULT {
+            return Ok(None);
+        }
+        let average = self.shape.average.to_bits();
+        let found = champions_of(self.image, cursor.list(), idf, self.shape.average)?;
+        Ok(found.filter(|c| c.average == average))
+    }
+
+    /// A required term's top `k` with exclusions, read from its champions: the champions that
+    /// survive the exclusions are the term's best surviving chunks when at least `k` do,
+    /// because every other chunk ranks after the last champion. `None` when too few survive.
+    fn negated_champions(
+        &self,
+        lead: &mut Rt<'a>,
+        excluded: &[Rt<'a>],
+    ) -> Result<Option<Vec<LexicalHit>>> {
+        let Some(bound) = lead.bound else {
+            return Ok(None);
+        };
+        let Some(found) = self.champions(&lead.cursors[0], bound.idf)? else {
+            return Ok(None);
+        };
+        let examined = found.hits.len().min(self.k.saturating_mul(2));
+        let mut by_slot: Vec<(u32, u32)> = found.hits[..examined]
+            .iter()
+            .enumerate()
+            .map(|(rank, &(_, slot))| (slot, rank as u32))
+            .collect();
+        by_slot.sort_unstable();
+        let mut gone = vec![false; examined];
+        for rt in excluded.iter() {
+            // A fresh cursor: the clause's own stays where the ordinary path starts from.
+            let mut cursor = Cursor::open(rt.cursors[0].list());
+            for &(slot, rank) in &by_slot {
+                if !gone[rank as usize] && cursor.advance_to(slot) == slot {
+                    gone[rank as usize] = true;
+                }
+            }
+        }
+        let kept: Vec<(f64, u32)> = found.hits[..examined]
+            .iter()
+            .zip(&gone)
+            .filter(|(_, &gone)| !gone)
+            .map(|(&hit, _)| hit)
+            .take(self.k)
+            .collect();
+        Ok((kept.len() == self.k).then(|| hits_of(self.image, kept.into_iter())))
     }
 
     /// Scores a block for the query's only clause with matching postings.
@@ -3897,11 +4019,14 @@ mod tests {
             "+w0 +w1",
             "+w0 +w3 +w7",
             "w0 w2",
+            "+w0 -w7",
+            "+w0 -w3 -w5",
+            "+w1 -w0",
             "\"w0 w1\"",
         ] {
             let query = LexicalQuery::parse(text).unwrap();
             for (k1, b) in [(1.2, 0.75), (2.0, 0.3)] {
-                for k in [1usize, 10, 100, 1000] {
+                for k in [1usize, 10, 100, 1000, 4096, 5000] {
                     for count in [false, true] {
                         let options = LexicalOptions {
                             k,
