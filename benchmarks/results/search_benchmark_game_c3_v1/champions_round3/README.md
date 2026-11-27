@@ -26,3 +26,5 @@ Not done: persisting champions in the index; intersection_union restructuring (l
 TOP_1000 (us, both orders agree): term 1896 -> 105, negated 435 -> 382, union 1223 -> 1150, union:num_tokens_>3 5003 -> 4793, intersection_union 2558 -> 2492, ALL 918 -> 886. TOP_100: negated 118 -> 102, term 248 -> 16, ALL -0.6%. tpuf TOP_1000: ALL -2.6%, union -1.4%. COUNT and TOP_10: within 1.5%, no cell moves the wrong way in both orders beyond 0.5%.
 
 Open question from review: the champions are derived at open, which the benchmark owners count as index time; they are to move into the persisted checkpoint section being added on perf/index-time-tables.
+
+Exactness of the final tree (`differential/`, `qb7d` served vs `LexicalExecution::Exhaustive`, ordered ids, chunk indexes and score bits): 0 differences in TOP_10, TOP_100, TOP_1000, COUNT and TOP_100_COUNT on the 600k index (`diff3-600k.log`, 962 and 31 queries) and on the 5,032,104-document index on warm-textscale-5 (`diff3-5m.log` 962 queries, `diff3-5m-tpuf.log` 31 queries).
