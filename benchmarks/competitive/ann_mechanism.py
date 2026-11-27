@@ -28,7 +28,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import numpy as np  # noqa: E402
 
-from warmbench import analyze, common, data, rawdata, registry, runner  # noqa: E402
+from warmbench import analyze, common, data, rawdata, runner  # noqa: E402
 from warmbench.common import run_measured  # noqa: E402
 
 TARGETS = (0.90, 0.95, 0.99)
@@ -270,7 +270,7 @@ def factor(num, den):
 def cmd_evals(a):
     """Recount hnswlib's distance calls per query for an existing ablation file (needs its hnswlib index in the work directory)."""
     path = Path(a.file)
-    r = json.load(open(path))
+    r = json.loads(Path(path).read_text())
     directory, meta = data.ann_subset(r["dataset"]["name"], a.n_train, a.n_test)
     hb = next(iter(r["systems"]["hnswlib-cpp"]["builds"]))
     hdir = runner.WORK / f"mech-{r['dataset']['name']}-hnswlib"
@@ -281,7 +281,7 @@ def cmd_evals(a):
 
 def cmd_report(a):
     for path in a.files:
-        r = json.load(open(path))
+        r = json.loads(Path(path).read_text())
         warm = r["systems"]["warm-variants"]["builds"]
         out = {"source_file": Path(path).name, "hardware": r["hardware"], "dataset": r["dataset"], "commit": r["commit"], "rounds": r["protocol"]["rounds"], "targets": {}}
         hb = next(iter(r["systems"]["hnswlib-cpp"]["builds"]))
@@ -330,7 +330,7 @@ def best_build(builds, target):
 def cmd_headline(a):
     """Paired factors from `warm-bench run` files: WARM and every comparator ran in the same session, rotated per round."""
     for path in a.files:
-        r = json.load(open(path))
+        r = json.loads(Path(path).read_text())
         systems = r["systems"]
         rounds = r["protocol"]["rounds"]
         out = {"source_file": Path(path).name, "hardware": r["hardware"], "dataset": r["dataset"], "commit": r["commit"], "rounds": rounds, "targets": {},
