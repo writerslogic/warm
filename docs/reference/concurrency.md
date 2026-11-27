@@ -89,8 +89,12 @@ handles that: a dense hit whose id the reader's journal does not hold is dropped
 search falls back to the sparse path for a vector the graph lacks. This rests on the commit
 protocol, which the tests below exercise:
 
-- The journal is append-only. A frame counts only if its CRC32 matches, and frames are written
-  in order, so the longest prefix of valid frames is a committed state.
+- The journal is append-only. A frame counts only if its CRC32 matches and it lies below the
+  committed end, and frames are written in order, so the prefix below the committed end is a
+  committed state. The committed end is a 20-byte word (`committed_end`, next to the segment
+  files: segment, offset, CRC32), written by the writer only after the frame's sync succeeded
+  and never scanned past by a reader. A store from before the word has no such file and is
+  read to its last whole frame; a writer that predates the word does not maintain it.
 - Sealed segments and generation files never change. A reader walking into a segment sealed
   since its last refresh moves to the next one.
 - A compaction publishes a new generation by replacing `CURRENT`, then deletes the old one. A
@@ -107,8 +111,10 @@ Limits, stated plainly:
   only refresh is incremental. A reader does not serve from a mapped checkpoint, because a
   scrubbing compaction overwrites the checkpoint file in place.
 - A commit whose durable sync fails is rolled back by the writer by rewriting the frame's
-  bytes. A reader that walked over that frame in that instant keeps it until it reopens. The
-  writer reported that commit as failed.
+  bytes. A reader never scans past the committed-end word, which the writer advances only
+  after the sync, so it never applies that frame. A reader whose recorded position is not a
+  frame boundary below the committed end (the log was truncated under it) reopens on its next
+  refresh instead of stalling.
 - Erasure. A scrubbing compaction (`forget` with a purge) zero-fills the old generation
   through the same inode before unlinking it, so on Unix the erased bytes are gone from the
   disk at once, including from a reader's open handle (a read through it then fails its

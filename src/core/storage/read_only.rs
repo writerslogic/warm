@@ -7,8 +7,10 @@
 //! rename. Every handle is opened with all three share modes (Rust's `File::open` does so on
 //! Windows), so the writer's rename and delete are never refused for the handle itself.
 //!
-//! The committed end is found by walking frames from the last known end and stopping at the
-//! first byte that is not a whole, checksum-valid frame: that is the snapshot boundary.
+//! The committed end is the writer's committed-end word (`committed.rs`): a reader never
+//! scans past it, because a frame the writer copied but has not yet synced may still be rolled
+//! back. Frames are walked from the last known end up to that word. A store from before the
+//! word is walked to the first byte that is not a whole, checksum-valid frame instead.
 
 use super::*;
 
@@ -47,6 +49,20 @@ impl ReadView {
         Ok(bytes)
     }
 }
+
+/// The reader's recorded end does not lie on a frame boundary at or before the writer's
+/// committed end (the log was truncated or rewritten under it): it cannot follow in place, and
+/// a fresh open reads the log as it now is.
+#[derive(Debug)]
+pub(crate) struct ReaderDiverged(pub(crate) String);
+
+impl std::fmt::Display for ReaderDiverged {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "reader diverged from the journal: {}", self.0)
+    }
+}
+
+impl std::error::Error for ReaderDiverged {}
 
 enum Scan {
     /// A whole frame: the offset after it.
@@ -150,14 +166,41 @@ impl PersistentArena {
             self.write_offset.load(Ordering::Acquire),
         );
         let (mut segment, mut offset) = before;
+        let limit = match committed::read(&data_path)? {
+            committed::Committed::Absent => None,
+            committed::Committed::Unreadable => Some(before),
+            committed::Committed::At(end_segment, end_offset) => {
+                if before > (end_segment, end_offset) {
+                    return Err(ReaderDiverged(format!(
+                        "recorded end {before:?} is past the committed end \
+                         {:?}",
+                        (end_segment, end_offset)
+                    ))
+                    .into());
+                }
+                Some((end_segment, end_offset))
+            }
+        };
         let mut scratch = Vec::new();
         while let Some(file) = files.get(segment) {
+            if limit.is_some_and(|limit| (segment, offset) >= limit) {
+                break;
+            }
             let sealed = segment + 1 < files.len();
             match self.scan_frame(file, offset, &mut scratch)? {
                 Scan::Frame(next) => offset = next,
                 Scan::End if sealed => {
                     segment += 1;
                     offset = 0;
+                }
+                Scan::Bad if limit.is_some() => {
+                    // Everything below the committed end is whole frames: a reader that
+                    // cannot parse one is not where it thinks it is.
+                    return Err(ReaderDiverged(format!(
+                        "no whole frame at segment {segment} offset {offset} below the \
+                         committed end"
+                    ))
+                    .into());
                 }
                 Scan::Bad if sealed => {
                     return Err(anyhow!(

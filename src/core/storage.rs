@@ -10,11 +10,13 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::Arc;
 
+mod committed;
 mod read_only;
 #[cfg(test)]
 #[path = "storage/recovery_tests.rs"]
 mod recovery_tests;
 mod staging;
+pub(crate) use read_only::ReaderDiverged;
 pub(crate) use staging::StagedArena;
 
 pub(crate) const FORMAT_MANIFEST: &str = "format.json";
@@ -285,6 +287,9 @@ impl PersistentArena {
             super::os_memory::release_file_pages(mut_map.as_ptr(), mut_map.len());
         }
 
+        // Everything up to the recovered end is durable: tell readers so (see `committed.rs`).
+        committed::publish(&data_path, active_id, recovered_offset)?;
+
         Ok(Self {
             segment_size: manifest.segment_size,
             format_version: manifest.version,
@@ -384,7 +389,24 @@ impl PersistentArena {
     pub(crate) fn flush(&self) -> Result<()> {
         let active = self.active_segment.write();
         self.ensure_writable()?;
-        active.sync()
+        active.sync()?;
+        self.publish_committed();
+        Ok(())
+    }
+
+    /// Records the current end of the log as committed for readers. Called only with the
+    /// active-segment guard held and after a sync that made every byte up to the end durable.
+    /// The frame is already committed if this fails, and the next commit publishes a later
+    /// end, so a failure only delays readers.
+    fn publish_committed(&self) {
+        let data_path = self.data_path.read();
+        if let Err(error) = committed::publish(
+            &data_path,
+            self.active_id.load(Ordering::Acquire),
+            self.write_offset.load(Ordering::Acquire),
+        ) {
+            tracing::warn!(%error, "committed-end word not updated; readers lag until the next commit");
+        }
     }
 
     /// Writes back the active segment's dirty pages without the platform's full sync; a later
@@ -785,6 +807,9 @@ impl PersistentArena {
                     released,
                 );
             }
+        }
+        if durable {
+            self.publish_committed();
         }
         let global = self.active_id.load(Ordering::SeqCst) * self.segment_size + offset;
         Ok(global)
@@ -1296,6 +1321,8 @@ mod tests {
 
     thread_local! {
         /// The named points at which the calling thread's next passes fail, in order.
+        /// Runs at the "commit sync" point, while the frame is written but not yet durable.
+        static WINDOW: std::cell::RefCell<Option<Box<dyn Fn()>>> = const { std::cell::RefCell::new(None) };
         static FAIL_AT: std::cell::RefCell<Vec<&'static str>> = const { std::cell::RefCell::new(Vec::new()) };
     }
 
@@ -1303,6 +1330,13 @@ mod tests {
     /// "rollback sync" fails the compensating end-marker sync; "rotation after create" fails
     /// a rotation once the next segment's file exists.
     pub(super) fn fail_point(point: &str) -> Result<()> {
+        if point == "commit sync" {
+            WINDOW.with(|window| {
+                if let Some(observe) = window.borrow().as_ref() {
+                    observe();
+                }
+            });
+        }
         if FAIL_AT.with(|armed| {
             let mut armed = armed.borrow_mut();
             if armed.last().copied() == Some(point) {
@@ -1414,6 +1448,78 @@ mod tests {
             };
             assert_eq!(replayed(&PersistentArena::new(dir.path())?)?, expected);
         }
+        Ok(())
+    }
+
+    /// A reader scanning while the writer's sync is in flight must not apply the frame: the
+    /// sync may fail and the frame be rolled back. After the failure the writer reuses the
+    /// range, and the reader follows the log from where it was.
+    #[test]
+    fn reader_never_applies_a_frame_whose_sync_failed() -> Result<()> {
+        let dir = tempdir()?;
+        let writer = PersistentArena::new(dir.path())?;
+        writer.write_slice(b"committed")?;
+        let reader = Arc::new(PersistentArena::open_read_only(dir.path())?);
+        let committed_end = reader.checkpoint();
+        let seen = Arc::new(std::sync::Mutex::new(Vec::new()));
+        {
+            let (reader, seen) = (Arc::clone(&reader), Arc::clone(&seen));
+            WINDOW.with(|window| {
+                *window.borrow_mut() = Some(Box::new(move || {
+                    seen.lock()
+                        .unwrap()
+                        .push((reader.advance().unwrap(), reader.has_more().unwrap()));
+                }));
+            });
+        }
+        let failed = failing_at("commit sync", || writer.write_slice(b"disowned frame"));
+        WINDOW.with(|window| *window.borrow_mut() = None);
+        assert!(failed.is_err());
+        assert_eq!(*seen.lock().unwrap(), vec![(false, false)]);
+        assert_eq!(reader.checkpoint(), committed_end);
+
+        let at = writer.write_slice(b"the next frame")?;
+        assert_eq!(at, committed_end.1);
+        assert!(reader.has_more()?);
+        assert!(reader.advance()?);
+        assert_eq!(reader.checkpoint(), writer.checkpoint());
+        assert_eq!(reader.read_frame(at)?.0, b"the next frame");
+        assert!(!reader.has_more()?);
+        Ok(())
+    }
+
+    /// A store written before the committed-end word has no file: readers scan to the last
+    /// whole frame as they always did.
+    #[test]
+    fn reader_follows_a_store_without_a_committed_end_word() -> Result<()> {
+        let dir = tempdir()?;
+        let writer = PersistentArena::new(dir.path())?;
+        writer.write_slice(b"one")?;
+        std::fs::remove_file(dir.path().join(committed::COMMITTED_FILE))?;
+        let reader = PersistentArena::open_read_only(dir.path())?;
+        assert_eq!(reader.checkpoint(), writer.checkpoint());
+        Ok(())
+    }
+
+    /// A recorded end that is not a frame boundary below the committed end (or is past it)
+    /// is reported as divergence, which a refresh answers with a fresh open.
+    #[test]
+    fn reader_off_a_frame_boundary_reports_divergence() -> Result<()> {
+        let dir = tempdir()?;
+        let writer = PersistentArena::new(dir.path())?;
+        writer.write_slice(b"first frame")?;
+        writer.write_slice(b"second frame")?;
+        let reader = PersistentArena::open_read_only(dir.path())?;
+        reader
+            .write_offset
+            .store(HEADER_SIZE + 3, Ordering::Release);
+        let error = reader.advance().unwrap_err();
+        assert!(error.is::<ReaderDiverged>(), "{error:#}");
+        reader
+            .write_offset
+            .store(writer.checkpoint().1 + 1, Ordering::Release);
+        let error = reader.advance().unwrap_err();
+        assert!(error.is::<ReaderDiverged>(), "{error:#}");
         Ok(())
     }
 

@@ -371,6 +371,14 @@ fn a_commit_caught_mid_write_is_invisible_until_it_is_whole() {
     }
     let mut r = held.unwrap();
     write_prefix(frame.len());
+    // The writer publishes the committed end after the frame is durable; until it does, even a
+    // whole frame is not a commit.
+    assert!(
+        !r.has_newer_commits().unwrap(),
+        "an unpublished frame counted"
+    );
+    let word = |root: &std::path::Path| segment(root).with_file_name("committed_end");
+    std::fs::copy(word(&shadow), word(&store)).unwrap();
     assert!(r.has_newer_commits().unwrap());
     assert!(r.refresh().unwrap());
     assert_eq!(visible_counter(&r).unwrap(), 2);

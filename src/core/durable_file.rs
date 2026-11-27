@@ -270,16 +270,44 @@ pub(crate) fn sync_mapped_file(file: &std::fs::File) -> std::io::Result<()> {
     }
 }
 
+/// Whether opening an entry failed because it is gone: not found, or on Windows access denied,
+/// which is how a delete-pending file answers.
+fn already_removed(error: &anyhow::Error) -> bool {
+    use std::io::ErrorKind::{NotFound, PermissionDenied};
+    error
+        .chain()
+        .filter_map(|cause| cause.downcast_ref::<std::io::Error>())
+        .any(|cause| match cause.kind() {
+            NotFound => true,
+            PermissionDenied => cfg!(windows),
+            _ => false,
+        })
+}
+
 /// Overwrites a file with zeros, syncs it, then unlinks it, so the bytes are not left in the
 /// freed blocks of a filesystem that does not zero them. Copy-on-write and wear-levelled
 /// media can still keep prior copies, which no file API controls.
 pub(crate) fn scrub_remove_file(path: &Path) -> Result<()> {
     use std::io::{Seek, SeekFrom};
-    if path.symlink_metadata()?.file_type().is_symlink() {
-        // Never write through a link; the target is not ours to overwrite.
-        return Ok(std::fs::remove_file(path)?);
-    }
-    let mut file = open_regular(path, true)?;
+    let opened = match path.symlink_metadata() {
+        Ok(meta) if meta.file_type().is_symlink() => {
+            // Never write through a link; the target is not ours to overwrite.
+            return Ok(std::fs::remove_file(path)?);
+        }
+        Ok(_) => open_regular(path, true).map_err(anyhow::Error::from),
+        Err(error) => Err(error.into()),
+    };
+    let mut file = match opened {
+        Ok(file) => file,
+        // Already removed (a race), or on Windows deleted while a reader still holds a handle:
+        // the entry stays listed and every open of it is refused. Its content was zeroed
+        // before the unlink that left it pending, so there is nothing left to scrub.
+        Err(error) if already_removed(&error) => {
+            tracing::debug!(%error, path = %path.display(), "scrub skipped an entry that is already deleted");
+            return Ok(());
+        }
+        Err(error) => return Err(error),
+    };
     #[cfg(unix)]
     {
         use std::os::unix::fs::MetadataExt;

@@ -256,9 +256,13 @@ impl WarmCore {
                 sealed_key.is_none(),
                 "plaintext checkpoint in an encrypted store"
             );
-            // SAFETY: the store lock keeps other engines out of the store directory, and no
-            // engine writes a published checkpoint: compactions write new ones in new
-            // generations and remove an old generation only after the switch.
+            // SAFETY: no engine writes a published checkpoint: compactions write new ones in new
+            // generations, and remove (a scrubbing one zeroes) an old generation only after
+            // `CURRENT` has switched. A writer hydrates before it compacts, so its mapping is
+            // gone by then. A reader may map a generation that is scrubbed under it, so it
+            // copies the image out at open (`hydrate_documents`) and `open_engine` then checks
+            // that `CURRENT` still names this generation: a scrub starts only after it changes,
+            // so an unchanged pointer proves the copy read unscrubbed bytes.
             Backing::Mapped(unsafe { memmap2::Mmap::map(&file)? })
         };
         ensure!(

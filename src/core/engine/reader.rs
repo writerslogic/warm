@@ -65,13 +65,15 @@ impl WarmCore {
         self.read_only
     }
 
-    pub(super) fn record_reader_position(&self) {
+    pub(super) fn record_reader_position(
+        &self,
+        experience_stamp: super::super::experience::store::DiskStamp,
+    ) {
         if let Some(reader) = &self.reader {
             reader
                 .replayed
                 .store(self.arena.stats().used_bytes, Ordering::Release);
-            *reader.experience.lock() =
-                super::super::experience::store::disk_stamp(&self.storage_path);
+            *reader.experience.lock() = experience_stamp;
         }
     }
 
@@ -106,9 +108,13 @@ impl WarmCore {
         let mut changed = false;
         let moved = match self.arena.advance() {
             Ok(moved) => moved,
-            // The generation was replaced and its files removed between the check and now.
+            // The generation was replaced and its files removed between the check and now, or
+            // the log no longer holds this reader's position (it was truncated or rewritten):
+            // a fresh open reads it as it stands.
             Err(error) => {
-                return if self.arena.generation_replaced()? {
+                return if error.is::<crate::core::storage::ReaderDiverged>()
+                    || self.arena.generation_replaced()?
+                {
                     Ok(Refresh::Reopen)
                 } else {
                     Err(error)
@@ -332,6 +338,11 @@ mod tests {
         let old = reader.arena.data_dir();
         assert_ne!(old, dir.path().join("vectors_data.bin"));
         writer.delete_document("d-3").unwrap();
+        writer.compact_scrubbing().unwrap();
+        // On Windows the old generation still lists the file the reader holds, delete-pending
+        // and refusing every open: a second compaction with the reader still open must treat it
+        // as removed rather than fail.
+        writer.delete_document("d-4").unwrap();
         writer.compact_scrubbing().unwrap();
         drop(reader);
         writer.compact_scrubbing().unwrap();

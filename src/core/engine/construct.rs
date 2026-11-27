@@ -299,6 +299,14 @@ impl WarmCore {
                 core.load_from_log()?;
             }
         }
+        if read_only {
+            // The checkpoint was copied out above; a compaction that published a generation
+            // meanwhile may have scrubbed it under the copy. `open_read_only` opens again.
+            anyhow::ensure!(
+                !core.arena.generation_replaced()?,
+                "the journal generation was replaced while the store was opened"
+            );
+        }
         *core.history_floor.write() = core.initial_history_floor();
         core.load_indices()?;
         {
@@ -307,10 +315,13 @@ impl WarmCore {
         }
         // Only a completely opened engine may write an image when it closes.
         core.flush_audit()?;
+        // Stamped before the read: an append after the stamp is seen as newer by the next
+        // refresh instead of being lost between the read and the stamp.
+        let experience_stamp = super::super::experience::store::disk_stamp(&core.storage_path);
         core.open_experience()?;
         core.mark_opened();
         if read_only {
-            core.record_reader_position();
+            core.record_reader_position(experience_stamp);
         }
         // A purge that died between its delete commit and the end of its compaction left the
         // deleted text in the journal; finish it before the store is handed out.

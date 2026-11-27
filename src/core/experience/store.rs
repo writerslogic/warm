@@ -162,17 +162,18 @@ impl ExperienceStore {
         sealer: Option<Arc<dyn Sealer>>,
     ) -> Result<Self> {
         const ATTEMPTS: u32 = 20;
-        let mut last = None;
         for attempt in 0..ATTEMPTS {
             let before = disk_stamp(dir);
             let read = Self::open_with(dir, cfg.clone(), sealer.clone(), false);
             if disk_stamp(dir) == before {
                 return read;
             }
-            last = Some(read);
             std::thread::sleep(std::time::Duration::from_millis(5 * u64::from(attempt + 1)));
         }
-        last.expect("at least one attempt")
+        // Every read overlapped a write, so none is known to be consistent: not a result.
+        Err(io(format!(
+            "the experience store changed during each of {ATTEMPTS} reads; retry the open"
+        )))
     }
 
     fn open_with(

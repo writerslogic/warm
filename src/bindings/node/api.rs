@@ -50,6 +50,18 @@ struct Reopen {
     memory_config: crate::core::sync::Mutex<Option<crate::core::memory_api::MemoryConfig>>,
 }
 
+impl Reopen {
+    /// A memory API over `core` with the configuration the caller last set.
+    fn memory_for(&self, core: Arc<WarmCore>) -> Result<crate::core::memory_api::Memory> {
+        match self.memory_config.lock().clone() {
+            Some(config) => {
+                crate::core::memory_api::Memory::with_config(core, config).map_err(napi_err)
+            }
+            None => Ok(crate::core::memory_api::Memory::new(core)),
+        }
+    }
+}
+
 struct Open {
     core: Arc<WarmCore>,
     memory: Arc<crate::core::memory_api::Memory>,
@@ -280,11 +292,7 @@ impl WarmMemorySystem {
             )
             .map_err(napi_err)?,
         );
-        let memory = match self.reopen.memory_config.lock().clone() {
-            Some(config) => crate::core::memory_api::Memory::with_config(core.clone(), config)
-                .map_err(napi_err)?,
-            None => crate::core::memory_api::Memory::new(core.clone()),
-        };
+        let memory = self.reopen.memory_for(core.clone())?;
         match &mut *self.slot.write() {
             Some(open) => {
                 *open = Open {
@@ -319,7 +327,7 @@ impl WarmMemorySystem {
                     std::thread::sleep(std::time::Duration::from_millis(5));
                 }
                 Err(shared) => {
-                    let memory = Arc::new(crate::core::memory_api::Memory::new(shared.clone()));
+                    let memory = Arc::new(self.reopen.memory_for(shared.clone())?);
                     self.slot.write().get_or_insert(Open {
                         core: shared,
                         memory,
