@@ -6,7 +6,7 @@ import argparse
 import os
 import sys
 
-from . import envs, registry, runner, server_registry, server_runner, table
+from . import envs, js_runner, registry, runner, server_registry, server_runner, table
 from .common import RESULTS
 
 
@@ -16,6 +16,13 @@ def main(argv=None):
     sub.add_parser("lock", help="re-resolve the pinned comparator lock files (needs network)")
     ins = sub.add_parser("install", help="create the pinned comparator environments")
     ins.add_argument("systems", nargs="*")
+    js = sub.add_parser("js", help="WARM (warm-memory) against Vectra, both in-process from Node; see benchmarks/competitive/js")
+    js.add_argument("--datasets", nargs="*", default=list(js_runner.DATASETS))
+    js.add_argument("--embed-bin", required=True, help="built examples/competitive_hybrid (embeds documents and queries once for every system)")
+    js.add_argument("--rounds", type=int, default=js_runner.ROUNDS)
+    js.add_argument("--build-repeats", type=int, default=js_runner.BUILD_REPEATS)
+    js.add_argument("--suite", default="standard")
+    js.add_argument("--out", help="write the results here instead of benchmarks/results/competitive (local correctness runs)")
     run = sub.add_parser("run", help="run a suite and write results under benchmarks/results/competitive/")
     run.add_argument("--suite", choices=list(runner.SUITES), default="light")
     run.add_argument("--only", choices=["ann", "text", "both"], default="both")
@@ -90,6 +97,9 @@ def main(argv=None):
                 if a.datasets and dataset not in a.datasets:
                     continue
                 print(runner.run_text(dataset, spec, systems))
+    elif a.cmd == "js":
+        for dataset in a.datasets:
+            print(js_runner.run(dataset, a.embed_bin, a.out, a.rounds, a.build_repeats, a.suite))
     elif a.cmd == "install-servers":
         unavailable = server_runner.install(a.systems or list(server_registry.SERVER_SYSTEMS))
         for system, why in unavailable.items():

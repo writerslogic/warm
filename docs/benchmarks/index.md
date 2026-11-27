@@ -23,6 +23,22 @@ when a 95% (Bonferroni-adjusted) percentile bootstrap interval of the ratio excl
 
 Retain the raw result with its hardware class, then regenerate the table and submit both.
 
+### JavaScript: WARM and Vectra
+
+`warm-bench js` compares `warm-memory` with Vectra (`vectra`, npm), both called in-process from Node, on the text datasets of the
+lexical protocol (SciFact, NFCorpus, LongMemEval-dev sessions, FiQA). Both index the same 384-dimension document vectors from one file
+(WARM's local embedder, embedded once by `examples/competitive_hybrid embed`) and answer with the same query vectors, so the
+comparison is the stores. Rows: exact cosine top 10 (`warm-memory/vectra` against `LocalIndex.queryItems`), hybrid (WARM's fused BM25 and
+cosine against Vectra's `isBm25` option, which appends BM25 hits after the semantic list and rebuilds its engine per query, so it runs on a
+10-query sample per round) and keyword only (Vectra has none). Package versions are pinned exactly in
+`benchmarks/competitive/js/package.json` and recorded in each results file (`kind: js`).
+
+```sh
+(cd benchmarks/competitive/js && npm ci)
+cargo build --release --example competitive_hybrid --features local-embed-download
+./benchmarks/competitive/warm-bench js --datasets scifact nfcorpus memory fiqa --embed-bin target/release/examples/competitive_hybrid --rounds 10 --build-repeats 8
+```
+
 ## Recorded results
 
 | Result | Conditions | Source |
