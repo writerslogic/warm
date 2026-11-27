@@ -436,6 +436,21 @@ impl PyWarm {
         py.detach(|| core.memorize_documents(inputs)).map_err(err)
     }
 
+    /// Applies `[{"op": "memorize", "document": {...}}, {"op": "delete", "id": ...}]` as one
+    /// atomic unit: after a crash or in a read-only reader, all of it is visible or none.
+    /// Operations apply in order; if any is invalid nothing is applied. 1..=4096 operations.
+    /// Returns `[{"op": "memorize", "chunks": n}, {"op": "delete", "existed": bool}, ...]`.
+    fn write_batch<'py>(
+        &self,
+        py: Python<'py>,
+        ops: &Bound<'py, PyAny>,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let ops: Vec<crate::core::engine::BatchOp> = typed(py, ops)?;
+        let core = self.core()?;
+        let results = py.detach(|| core.write_batch(ops)).map_err(err)?;
+        to_py(py, &serde_json::to_value(results).map_err(err)?)
+    }
+
     /// Hybrid lexical (BM25) and semantic search over the documents. `options` takes `k`,
     /// `filter`, `embedding`, `lexicalWeight`, `semanticWeight` and the other camelCase fields
     /// of the document search options. Returns a list of result dicts, best first.

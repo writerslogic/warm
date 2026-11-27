@@ -104,6 +104,12 @@ protocol, which the tests below exercise:
   mapped, since a mapped file cannot be deleted on Windows). The reader goes on serving what
   it applied until it refreshes.
 
+Atomic batches (`write_batch`, [API](api.md#atomic-batches)) rest on this. A batch of upserts
+and deletes is one frame: it is durable before it is applied in memory, a reader applies it
+whole under one publication or not at all, and a store cut anywhere inside the frame replays as
+if the batch never ran (the test truncates the journal at every byte of the frame, for plain and
+sealed stores, and runs a refreshing reader against a writer committing batches).
+
 Limits, stated plainly:
 
 - A reader holds the whole applied state in memory: documents (text included), vectors and

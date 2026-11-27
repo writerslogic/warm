@@ -231,3 +231,60 @@ def test_close_releases_the_lock_and_later_calls_fail(tmp_path):
     with hm.Warm(1024, path) as again:
         assert not again.closed
     assert again.closed
+
+
+def test_write_batch_is_atomic_ordered_and_reports_each_operation(tmp_path):
+    path = str(tmp_path / "store")
+    store = hm.Warm(1024, path)
+    store.memorize_document({"id": "old", "text": "old document to remove"})
+    put = lambda i, t: {"op": "memorize", "document": {"id": i, "text": t}}
+    delete = lambda i: {"op": "delete", "id": i}
+
+    results = store.write_batch(
+        [put("a", "first document"), delete("old"), put("a", "final version of a"), delete("missing")]
+    )
+    assert results == [
+        {"op": "memorize", "chunks": 1},
+        {"op": "delete", "existed": True},
+        {"op": "memorize", "chunks": 1},
+        {"op": "delete", "existed": False},
+    ]
+    assert store.get_document("old") is None
+    assert store.search_documents("final version", {"k": 1})[0]["documentId"] == "a"
+
+    before = store.search_documents("final version", {"k": 5})
+    for bad in (put("", "no id"), delete(""), {"op": "upsert", "id": "x"}, {"op": "delete"}):
+        with pytest.raises(ValueError):
+            store.write_batch([put("new", "would be added"), delete("a"), bad])
+        assert store.get_document("new") is None
+        assert store.get_document("a") is not None
+    with pytest.raises(ValueError):
+        store.write_batch([])
+    with pytest.raises(ValueError, match="4096"):
+        store.write_batch([delete(f"x{i}") for i in range(4097)])
+    assert store.search_documents("final version", {"k": 5}) == before
+
+    del store
+    reopened = hm.Warm(1024, path)
+    assert reopened.get_document("old") is None
+    assert reopened.search_documents("final version", {"k": 1})[0]["documentId"] == "a"
+
+
+def test_write_batch_is_visible_whole_to_a_reader_and_denied_to_it(tmp_path):
+    path = str(tmp_path / "store")
+    writer = hm.Warm(1024, path)
+    writer.memorize_document({"id": "seed", "text": "seed document"})
+    reader = hm.Warm.open_read_only(1024, path)
+    with pytest.raises(hm.ReadOnlyError):
+        reader.write_batch([{"op": "delete", "id": "seed"}])
+    writer.write_batch(
+        [
+            {"op": "memorize", "document": {"id": "p", "text": "pair zebra"}},
+            {"op": "memorize", "document": {"id": "q", "text": "pair zebra"}},
+            {"op": "delete", "id": "seed"},
+        ]
+    )
+    assert reader.refresh()
+    ids = sorted(h["documentId"] for h in reader.search_documents("pair zebra", {"k": 5}))
+    assert ids == ["p", "q"]
+    assert reader.get_document("seed") is None

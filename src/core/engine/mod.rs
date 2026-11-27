@@ -17,6 +17,8 @@ mod sparse_docs;
 pub use sparse_docs::{RankingMode, SparseSearch};
 mod document_api;
 mod document_batch;
+mod write_batch;
+pub use write_batch::{BatchOp, BatchResult, MAX_BATCH_BYTES};
 #[cfg(feature = "local-embed")]
 mod embed_api;
 mod experience_api;
