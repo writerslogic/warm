@@ -46,7 +46,7 @@ jobs:
           node-version: '24'
           package-manager-cache: false
 
-      - uses: dtolnay/rust-toolchain@39008827e6b4319a349e9a42dfc90579dd25f1ca # stable
+      - uses: dtolnay/rust-toolchain@df2a88e9fe4098bad09cb42c3dec7187f15861fc # stable
 
       # No rust-cache here: this job produces the Pages artifact, and a poisoned cache must not be
       # able to reach what is published (zizmor cache-poisoning).
