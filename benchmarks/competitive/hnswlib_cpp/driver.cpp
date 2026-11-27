@@ -17,6 +17,7 @@
 // that whole sequence, as perf_counter_ns is around the Python call.
 //
 //   driver serve <index.bin> <queries.f32> <nq> <dim> <l2|ip> <max_elements>
+//   driver count <index.bin> <queries.f32> <nq> <dim> <l2|ip> <max_elements> <ef>...   distance-function calls per query at each ef
 //   driver trivial <dim> <calls>   one-vector index, k=1, ef=1: per-call searchKnn time in ns
 #include <chrono>
 #include <cstdint>
@@ -165,6 +166,46 @@ int trivial(int argc, char** argv) {
     std::fwrite(floor_ns.data(), 8, floor_ns.size(), stdout);
     return 0;
 }
+
+// Wraps a space so every distance call is counted (hnswlib 0.8.0's own counters skip the base layer search).
+hnswlib::DISTFUNC<float> g_inner = nullptr;
+unsigned long long g_calls = 0;
+float counted(const void* a, const void* b, const void* qty) {
+    g_calls++;
+    return g_inner(a, b, qty);
+}
+struct CountingSpace : hnswlib::SpaceInterface<float> {
+    hnswlib::SpaceInterface<float>* inner;
+    explicit CountingSpace(hnswlib::SpaceInterface<float>* s) : inner(s) { g_inner = s->get_dist_func(); }
+    size_t get_data_size() override { return inner->get_data_size(); }
+    hnswlib::DISTFUNC<float> get_dist_func() override { return counted; }
+    void* get_dist_func_param() override { return inner->get_dist_func_param(); }
+};
+
+int count(int argc, char** argv) {
+    if (argc < 9) throw std::runtime_error("count needs <index> <queries> <nq> <dim> <l2|ip> <max_elements> <ef>...");
+    const std::string index_path = argv[2], query_path = argv[3];
+    const size_t nq = std::stoull(argv[4]), dim = std::stoull(argv[5]);
+    const std::string space_name = argv[6];
+    const size_t max_elements = std::stoull(argv[7]);
+    std::unique_ptr<hnswlib::SpaceInterface<float>> base;
+    if (space_name == "l2") base.reset(new hnswlib::L2Space(dim));
+    else if (space_name == "ip") base.reset(new hnswlib::InnerProductSpace(dim));
+    else throw std::runtime_error("space must be l2 or ip");
+    CountingSpace space(base.get());
+    const std::vector<float> queries = read_f32(query_path, nq * dim);
+    hnswlib::HierarchicalNSW<float> index(&space, index_path, false, max_elements, false);
+    Search search{&index, K};
+    std::vector<hnswlib::labeltype> row(K);
+    for (int i = 8; i < argc; i++) {
+        const size_t ef = std::stoull(argv[i]);
+        index.setEf(ef);
+        g_calls = 0;
+        for (size_t q = 0; q < nq; q++) search.run(queries.data() + q * dim, row.data());
+        std::printf("%zu %.6f\n", ef, static_cast<double>(g_calls) / static_cast<double>(nq));
+    }
+    return 0;
+}
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -173,6 +214,7 @@ int main(int argc, char** argv) {
         const std::string mode = argv[1];
         if (mode == "serve") return serve(argc, argv);
         if (mode == "trivial") return trivial(argc, argv);
+        if (mode == "count") return count(argc, argv);
         throw std::runtime_error("unknown mode");
     } catch (const std::exception& e) {
         std::fprintf(stderr, "driver error: %s\n", e.what());

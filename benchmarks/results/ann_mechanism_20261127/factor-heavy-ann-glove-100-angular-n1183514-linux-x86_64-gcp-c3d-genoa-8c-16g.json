@@ -1,0 +1,544 @@
+{
+  "source_file": "heavy-ann-glove-100-angular-n1183514-linux-x86_64-gcp-c3d-genoa-8c-16g.json",
+  "hardware": {
+    "class": "linux-x86_64-gcp-c3d-genoa-8c-16g",
+    "cpu": "AMD EPYC 9B14",
+    "logical_cores": 8,
+    "memory_bytes": 16765661184,
+    "os": "Linux 6.8.0-1074-gcp",
+    "machine": "x86_64",
+    "hosted_runner": false,
+    "load_1m": 1.080078125
+  },
+  "dataset": {
+    "name": "glove-100-angular",
+    "metric": "angular",
+    "n_train": 1183514,
+    "n_test": 10000,
+    "dim": 100,
+    "subset_of": null,
+    "train_sha256": "3cccad7d66dd35ffd7215e37503f2e1fa31b3aab917a45aa0a6eb4ef590ebcef",
+    "test_sha256": "38f1a79170d097f088eee8ba78761975205ff713faab0a4e283d6b7231f18ea0"
+  },
+  "commit": "dbe04ad64efbae155ea4a9615d6671e2919027e0",
+  "rounds": 6,
+  "targets": {
+    "0.9": {
+      "warm": {
+        "reached": true,
+        "config": 3,
+        "params": {
+          "ef": 192,
+          "rerank": 64
+        },
+        "select_recall": 0.91958,
+        "report_recall": 0.9251,
+        "qps_by_round": [
+          4317.779382672741,
+          4332.419625171139,
+          4299.753038879073,
+          4231.272077472275,
+          4329.399585662915,
+          4292.491274137931
+        ],
+        "qps_median": 4308.766210775907,
+        "qps_ci": [
+          4261.881675805103,
+          4329.399585662915
+        ],
+        "estimates_per_query": null,
+        "build": "vertex-d32"
+      },
+      "warm_interpolated": {
+        "reached": true,
+        "build": "vertex-d32",
+        "qps_by_round": [
+          5781.190210029639,
+          5855.709248082821,
+          5801.024542010946,
+          5734.4897687610555,
+          5839.816944603167,
+          5794.227382247711
+        ],
+        "qps_median": 5797.625962129328
+      },
+      "hnswlib": {
+        "operating_point": {
+          "reached": true,
+          "config": 8,
+          "params": {
+            "ef": 192
+          },
+          "select_recall": 0.91556,
+          "report_recall": 0.91954,
+          "qps_by_round": [
+            1616.4314094569495,
+            1576.160788147748,
+            1629.4552147833635,
+            1619.0749746798829,
+            1622.5137580425085,
+            1629.5592436242937
+          ],
+          "qps_median": 1620.7943663611957,
+          "qps_ci": [
+            1596.2960988023488,
+            1629.5072292038285
+          ],
+          "estimates_per_query": null,
+          "build": "m32"
+        },
+        "warm_over": {
+          "reached": true,
+          "factor": 2.6584286694242456,
+          "ci95": [
+            2.632294206540834,
+            2.710854488924711
+          ],
+          "rounds": 6
+        },
+        "warm_over_interpolated": {
+          "reached": true,
+          "factor": 2.794627762631772,
+          "ci95": [
+            2.781207195625343,
+            2.8535565048847484
+          ],
+          "rounds": 6
+        }
+      },
+      "hnswlib-cpp": {
+        "operating_point": {
+          "reached": true,
+          "config": 8,
+          "params": {
+            "ef": 192
+          },
+          "select_recall": 0.91755,
+          "report_recall": 0.91755,
+          "qps_by_round": [
+            1710.1725682984747,
+            1708.8496417585673,
+            1701.4903941932846,
+            1684.7475862463984,
+            1721.9889622187006,
+            1709.3829151914936
+          ],
+          "qps_median": 1709.1162784750304,
+          "qps_ci": [
+            1693.1189902198416,
+            1716.0807652585877
+          ],
+          "estimates_per_query": null,
+          "build": "m32"
+        },
+        "warm_over": {
+          "reached": true,
+          "factor": 2.521049190766839,
+          "ci95": [
+            2.5111350043281937,
+            2.534400628109161
+          ],
+          "rounds": 6
+        },
+        "warm_over_interpolated": {
+          "reached": true,
+          "factor": 2.6851329738854446,
+          "ci95": [
+            2.675528824276942,
+            2.703835421937346
+          ],
+          "rounds": 6
+        }
+      },
+      "faiss-hnsw": {
+        "operating_point": {
+          "reached": true,
+          "config": 7,
+          "params": {
+            "ef": 128
+          },
+          "select_recall": 0.90458,
+          "report_recall": 0.9074,
+          "qps_by_round": [
+            1822.1527089352687,
+            1845.3567536994462,
+            1836.968899347545,
+            1829.238542953907,
+            1835.5375408139653,
+            1837.4281252743308
+          ],
+          "qps_median": 1836.253220080755,
+          "qps_ci": [
+            1825.6956259445878,
+            1841.1628265234956
+          ],
+          "estimates_per_query": null,
+          "build": "m32e500"
+        },
+        "warm_over": {
+          "reached": true,
+          "factor": 2.346498927085021,
+          "ci95": [
+            2.3258619781339154,
+            2.364109144815774
+          ],
+          "rounds": 6
+        },
+        "warm_over_interpolated": {
+          "reached": true,
+          "factor": 2.9722482297748907,
+          "ci95": [
+            2.959454653371434,
+            2.994556496464046
+          ],
+          "rounds": 6
+        }
+      },
+      "usearch": {
+        "operating_point": {
+          "reached": true,
+          "config": 8,
+          "params": {
+            "ef": 192
+          },
+          "select_recall": 0.91488,
+          "report_recall": 0.92054,
+          "qps_by_round": [
+            576.0222952003479,
+            595.4201991096425,
+            598.1378712065995,
+            600.1455126874259,
+            553.4861777467374,
+            519.4506209040907
+          ],
+          "qps_median": 585.7212471549951,
+          "qps_ci": [
+            536.4683993254141,
+            599.1416919470128
+          ],
+          "estimates_per_query": null,
+          "build": "m32"
+        },
+        "warm_over": {
+          "reached": true,
+          "factor": 7.3563426829822856,
+          "ci95": [
+            7.119371954093473,
+            8.00138699601981
+          ],
+          "rounds": 6
+        },
+        "warm_over_interpolated": {
+          "reached": true,
+          "factor": 7.725452048198461,
+          "ci95": [
+            7.617329915651851,
+            8.195927761477138
+          ],
+          "rounds": 6
+        }
+      }
+    },
+    "0.95": {
+      "warm": {
+        "reached": true,
+        "config": 5,
+        "params": {
+          "ef": 384,
+          "rerank": 64
+        },
+        "select_recall": 0.95382,
+        "report_recall": 0.95542,
+        "qps_by_round": [
+          2314.0524569956374,
+          2316.030845695392,
+          2318.4832025188516,
+          2293.633545092812,
+          2341.1936228808545,
+          2339.156959678504
+        ],
+        "qps_median": 2317.2570241071217,
+        "qps_ci": [
+          2303.8430010442244,
+          2340.175291279679
+        ],
+        "estimates_per_query": null,
+        "build": "vertex-d32"
+      },
+      "warm_interpolated": {
+        "reached": true,
+        "build": "vertex-d32",
+        "qps_by_round": [
+          2534.486614204772,
+          2539.175626202983,
+          2541.6940929795232,
+          2512.9609040561186,
+          2562.419636564631,
+          2564.211773714331
+        ],
+        "qps_median": 2540.4348595912534
+      },
+      "hnswlib": {
+        "operating_point": {
+          "reached": true,
+          "config": 10,
+          "params": {
+            "ef": 384
+          },
+          "select_recall": 0.95292,
+          "report_recall": 0.9555,
+          "qps_by_round": [
+            845.9109655027771,
+            838.1098043615225,
+            858.3831077064194,
+            839.7776686678221,
+            843.3325809568869,
+            860.5235274628412
+          ],
+          "qps_median": 844.621773229832,
+          "qps_ci": [
+            838.9437365146723,
+            859.4533175846303
+          ],
+          "estimates_per_query": null,
+          "build": "m32"
+        },
+        "warm_over": {
+          "reached": true,
+          "factor": 2.743544030656391,
+          "ci95": [
+            2.700988849505423,
+            2.7749138882128808
+          ],
+          "rounds": 6
+        },
+        "warm_over_interpolated": {
+          "reached": true,
+          "factor": 2.7464005366541966,
+          "ci95": [
+            2.7093664021650183,
+            2.7724163125180286
+          ],
+          "rounds": 6
+        }
+      },
+      "hnswlib-cpp": {
+        "operating_point": {
+          "reached": true,
+          "config": 10,
+          "params": {
+            "ef": 384
+          },
+          "select_recall": 0.95421,
+          "report_recall": 0.95421,
+          "qps_by_round": [
+            908.802716612244,
+            917.1503242045441,
+            905.0488982208308,
+            894.3684041642014,
+            915.6535779190826,
+            898.6524954174554
+          ],
+          "qps_median": 906.9258074165374,
+          "qps_ci": [
+            896.5104497908284,
+            915.6535779190826
+          ],
+          "estimates_per_query": null,
+          "build": "m32"
+        },
+        "warm_over": {
+          "reached": true,
+          "factor": 2.5550679065005815,
+          "ci95": [
+            2.52864697791419,
+            2.593729724807872
+          ],
+          "rounds": 6
+        },
+        "warm_over_interpolated": {
+          "reached": true,
+          "factor": 2.5915712130153428,
+          "ci95": [
+            2.5661791426959084,
+            2.62740815615123
+          ],
+          "rounds": 6
+        }
+      },
+      "faiss-hnsw": {
+        "operating_point": {
+          "reached": true,
+          "config": 10,
+          "params": {
+            "ef": 384
+          },
+          "select_recall": 0.96598,
+          "report_recall": 0.9671,
+          "qps_by_round": [
+            682.0721735147183,
+            679.606811516978,
+            678.5763025829074,
+            682.8489181188845,
+            680.5049907169987,
+            681.4423698591243
+          ],
+          "qps_median": 680.9736802880615,
+          "qps_ci": [
+            679.0915570499427,
+            682.4605458168014
+          ],
+          "estimates_per_query": null,
+          "build": "m32e500"
+        },
+        "warm_over": {
+          "reached": true,
+          "factor": 3.402858423436996,
+          "ci95": [
+            3.3757892894553705,
+            3.4388804243948403
+          ],
+          "rounds": 6
+        },
+        "warm_over_interpolated": {
+          "reached": true,
+          "factor": 2.659626531133058,
+          "ci95": [
+            2.6390762361685165,
+            2.6851832248460665
+          ],
+          "rounds": 6
+        }
+      },
+      "usearch": {
+        "operating_point": {
+          "reached": true,
+          "config": 10,
+          "params": {
+            "ef": 384
+          },
+          "select_recall": 0.95118,
+          "report_recall": 0.95546,
+          "qps_by_round": [
+            319.8772446610998,
+            278.39652222790164,
+            320.2526391628198,
+            322.37823232958533,
+            280.3833416996508,
+            285.1016706053557
+          ],
+          "qps_median": 302.48945763322774,
+          "qps_ci": [
+            280.3833416996508,
+            321.3154357462025
+          ],
+          "estimates_per_query": null,
+          "build": "m32"
+        },
+        "warm_over": {
+          "reached": true,
+          "factor": 7.660620777458052,
+          "ci95": [
+            7.173113828289969,
+            8.319180236739586
+          ],
+          "rounds": 6
+        },
+        "warm_over_interpolated": {
+          "reached": true,
+          "factor": 7.997306123191764,
+          "ci95": [
+            7.523189263867013,
+            8.468685734291986
+          ],
+          "rounds": 6
+        }
+      }
+    },
+    "0.99": {
+      "warm": {
+        "reached": true,
+        "config": 9,
+        "params": {
+          "ef": 1536,
+          "rerank": 64
+        },
+        "select_recall": 0.99034,
+        "report_recall": 0.99014,
+        "qps_by_round": [
+          608.713174420461,
+          609.9258838558494,
+          609.411806887268,
+          603.7496145782409,
+          610.3590397870398,
+          607.7400050364754
+        ],
+        "qps_median": 609.0624906538644,
+        "qps_ci": [
+          605.7448098073581,
+          610.1424618214446
+        ],
+        "estimates_per_query": null,
+        "build": "vertex-d32"
+      },
+      "warm_interpolated": {
+        "reached": true,
+        "build": "vertex-d32",
+        "qps_by_round": [
+          615.1337566409762,
+          616.3476382251308,
+          616.0300748022456,
+          610.0338825468166,
+          616.8376619915371,
+          614.2663260641514
+        ],
+        "qps_median": 615.5819157216109
+      },
+      "hnswlib": {
+        "operating_point": {
+          "reached": false
+        },
+        "warm_over": {
+          "reached": false
+        },
+        "warm_over_interpolated": {
+          "reached": false
+        }
+      },
+      "hnswlib-cpp": {
+        "operating_point": {
+          "reached": false
+        },
+        "warm_over": {
+          "reached": false
+        },
+        "warm_over_interpolated": {
+          "reached": false
+        }
+      },
+      "faiss-hnsw": {
+        "operating_point": {
+          "reached": false
+        },
+        "warm_over": {
+          "reached": false
+        },
+        "warm_over_interpolated": {
+          "reached": false
+        }
+      },
+      "usearch": {
+        "operating_point": {
+          "reached": false
+        },
+        "warm_over": {
+          "reached": false
+        },
+        "warm_over_interpolated": {
+          "reached": false
+        }
+      }
+    }
+  },
+  "pairing": "WARM and every comparator ran each round in the same session, order rotated per round; the factor is median-over-rounds QPS ratio, interval is a percentile bootstrap over rounds with one round draw for both sides"
+}
