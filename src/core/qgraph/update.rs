@@ -73,6 +73,8 @@ pub enum UpdateError {
     WriterBusy,
     #[error("index is already open by a writer")]
     Locked,
+    #[error("index is open read-only")]
+    ReadOnly,
     #[error("write outcome uncertain; reopen the index before further writes")]
     RecoveryRequired,
     #[error(transparent)]
@@ -329,7 +331,7 @@ thread_local! { static SCRATCH: RefCell<Option<SearchScratch>> = const { RefCell
 /// Only one process may open a directory, while any number of threads may search it.
 pub struct UpdatableVGraph {
     dir: PathBuf,
-    _lock: IndexLock,
+    _lock: Option<IndexLock>,
     writer: AtomicU8,
     state: RwLock<State>,
     diagnostics: diagnostics::Diagnostics,
@@ -337,6 +339,9 @@ pub struct UpdatableVGraph {
     churn: AtomicUsize,
     store: RowStore,
 }
+/// The `writer` state of an index opened by [`UpdatableVGraph::open_reader`]: no writer
+/// admission ever succeeds.
+const READER: u8 = 3;
 struct Writer<'a>(&'a AtomicU8);
 impl Writer<'_> {
     fn uncertain(&self) {
@@ -468,7 +473,7 @@ impl UpdatableVGraph {
         let base = Base::open(path, &manifest, RowStore::Mapped)?;
         Ok(Self {
             dir: path.to_path_buf(),
-            _lock: file,
+            _lock: Some(file),
             writer: AtomicU8::new(0),
             state: RwLock::new(State::new(base, manifest)),
             diagnostics: diagnostics::Diagnostics::from_env(),
@@ -486,7 +491,7 @@ impl UpdatableVGraph {
         let base = Base::open(path, &manifest, RowStore::Mapped)?;
         Ok(Self {
             dir: path.to_path_buf(),
-            _lock: file,
+            _lock: Some(file),
             writer: AtomicU8::new(0),
             state: RwLock::new(State::new(base, manifest)),
             diagnostics: diagnostics::Diagnostics::from_env(),
@@ -560,7 +565,7 @@ impl UpdatableVGraph {
         cleanup_generations(path, state.manifest.sequence)?;
         Ok(Self {
             dir: path.to_path_buf(),
-            _lock: file,
+            _lock: Some(file),
             writer: AtomicU8::new(0),
             state: RwLock::new(state),
             diagnostics: diagnostics::Diagnostics::from_env(),
@@ -568,11 +573,124 @@ impl UpdatableVGraph {
             store,
         })
     }
+    /// Opens the index beside its writer without taking the writer lock or changing a file:
+    /// the immutable base is mapped, and the committed prefix of the update log is replayed.
+    /// [`Self::refresh_reader`] follows the writer afterwards. Every mutation fails with
+    /// [`UpdateError::ReadOnly`].
+    pub fn open_reader(path: &Path) -> Result<Self, UpdateError> {
+        const ATTEMPTS: u32 = 20;
+        let mut attempt = 0;
+        loop {
+            match Self::read_state(path, RowStore::Mapped) {
+                Ok(state) => {
+                    return Ok(Self {
+                        dir: path.to_path_buf(),
+                        _lock: None,
+                        writer: AtomicU8::new(READER),
+                        state: RwLock::new(state),
+                        diagnostics: diagnostics::Diagnostics::from_env(),
+                        churn: AtomicUsize::new(0),
+                        store: RowStore::Mapped,
+                    })
+                }
+                // The writer consolidated between reading `CURRENT` and opening what it names.
+                Err(error) if attempt + 1 < ATTEMPTS && Self::superseded(&error) => {
+                    attempt += 1;
+                    std::thread::sleep(std::time::Duration::from_millis(5 * u64::from(attempt)));
+                }
+                Err(error) => return Err(error),
+            }
+        }
+    }
+
+    fn superseded(error: &UpdateError) -> bool {
+        matches!(
+            error,
+            UpdateError::CorruptLog { .. } | UpdateError::CorruptBase(_) | UpdateError::Io(_)
+        )
+    }
+
+    fn read_state(path: &Path, store: RowStore) -> Result<State, UpdateError> {
+        let manifest = Manifest::read(&path.join("CURRENT"))?;
+        let base = Base::open(path, &manifest, store)?;
+        let mut state = State::new(base, manifest.clone());
+        let (sequence, end) =
+            format::replay_from(&path.join("updates.log"), &manifest, None, true, |ops| {
+                state.replay(ops)
+            })?;
+        state.sequence = sequence;
+        state.log_end = end;
+        Ok(state)
+    }
+
+    /// Brings a reader up to the writer's last complete batch: the new log tail is applied in
+    /// place, and a consolidation (a new base) replaces the whole state. Returns whether
+    /// anything changed. A scan of the tail only costs what the writer appended since.
+    pub fn refresh_reader(&self) -> Result<bool, UpdateError> {
+        if self.writer.load(Ordering::Acquire) != READER {
+            return Err(UpdateError::WriterBusy);
+        }
+        const ATTEMPTS: u32 = 20;
+        let mut attempt = 0;
+        loop {
+            let result = (|| {
+                let manifest = Manifest::read(&self.dir.join("CURRENT"))?;
+                let (same, resume) = {
+                    let s = self.state.read();
+                    (
+                        s.manifest.encode() == manifest.encode(),
+                        format::Resume {
+                            at: s.log_end,
+                            sequence: s.sequence,
+                        },
+                    )
+                };
+                if !same {
+                    let state = Self::read_state(&self.dir, self.store)?;
+                    *self.state.write() = state;
+                    return Ok(true);
+                }
+                let mut s = self.state.write();
+                let (sequence, end) = format::replay_from(
+                    &self.dir.join("updates.log"),
+                    &manifest,
+                    Some(resume),
+                    true,
+                    |ops| s.replay(ops),
+                )?;
+                let moved = end != s.log_end;
+                s.sequence = sequence;
+                s.log_end = end;
+                Ok(moved)
+            })();
+            match result {
+                Err(error) if attempt + 1 < ATTEMPTS && Self::superseded(&error) => {
+                    attempt += 1;
+                    std::thread::sleep(std::time::Duration::from_millis(5 * u64::from(attempt)));
+                }
+                other => return other,
+            }
+        }
+    }
+
+    /// Whether the writer has appended to the log or consolidated since this reader last read.
+    pub fn reader_is_stale(&self) -> bool {
+        let Ok(manifest) = Manifest::read(&self.dir.join("CURRENT")) else {
+            return true;
+        };
+        let s = self.state.read();
+        s.manifest.encode() != manifest.encode()
+            || std::fs::metadata(self.dir.join("updates.log"))
+                .map_or(true, |meta| meta.len() != s.log_end)
+    }
+
     fn writer(&self) -> Result<Writer<'_>, UpdateError> {
         self.writer
             .compare_exchange(0, 1, Ordering::Acquire, Ordering::Relaxed)
             .map_err(|v| {
-                if v == 2 {
+                if v == READER {
+                    UpdateError::ReadOnly
+                } else if v == 2 {
                     UpdateError::RecoveryRequired
                 } else {
                     UpdateError::WriterBusy
@@ -1201,7 +1319,11 @@ fn cleanup_generations(dir: &Path, active: u64) -> Result<(), UpdateError> {
             })
             .and_then(|s| s.parse::<u64>().ok());
         if sequence.is_some_and(|s| s != active) {
-            std::fs::remove_file(entry.path())?;
+            // A reader may hold the stale file open (Windows refuses to delete it then); it is
+            // removed by a later open or consolidation.
+            if let Err(error) = std::fs::remove_file(entry.path()) {
+                tracing::warn!(%error, file = name, "stale vector index file not removed");
+            }
         }
     }
     sync_directory(dir)?;

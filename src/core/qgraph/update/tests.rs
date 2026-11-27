@@ -225,7 +225,7 @@ fn close_unlocks_even_when_a_descriptor_is_inherited() {
     let dir = tempfile::tempdir().unwrap();
     let path = dir.path().join("index");
     let index = UpdatableVGraph::create(&path, &[], 2, &params()).unwrap();
-    let inherited = index._lock.0.try_clone().unwrap();
+    let inherited = index._lock.as_ref().unwrap().0.try_clone().unwrap();
     assert!(matches!(
         UpdatableVGraph::open(&path),
         Err(UpdateError::Locked)

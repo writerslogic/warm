@@ -17,6 +17,9 @@ page says which surface to use and lists the Cargo features.
 | MCP (`warm-mcp`) | Agent and editor integration | memory tools over stdio or streamable HTTP |
 | C ABI | Go, Java and .NET bindings | `hms1_*` symbols; check `hms1_abi_version()` |
 
+Opening a store beside a running writer (`open_read_only`, `refresh`, `close`) is described in
+[one writer, many readers](concurrency.md).
+
 The memory API (`remember`, `recall`, `forget`, `explain`) is described in
 [concepts](../concepts.md#memory-api). Stability promises per surface are in
 [security](../security.md#stability-and-compatibility).

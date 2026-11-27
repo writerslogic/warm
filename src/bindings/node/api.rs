@@ -35,8 +35,77 @@ pub struct VectorRecordQueryResultJs {
 #[napi]
 // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
 pub struct WarmMemorySystem {
+    /// `None` once closed. Calls clone the `Arc` out and run on the clone, so `close` waits
+    /// for them before it releases the store lock.
+    slot: crate::core::sync::RwLock<Option<Open>>,
+    reopen: Reopen,
+}
+
+/// What `refresh` needs to open the store again.
+struct Reopen {
+    read_only: bool,
+    dimensions: u32,
+    storage_path: Option<String>,
+    config: Option<crate::core::WarmConfig>,
+    memory_config: crate::core::sync::Mutex<Option<crate::core::memory_api::MemoryConfig>>,
+}
+
+impl Reopen {
+    /// A memory API over `core` with the configuration the caller last set.
+    fn memory_for(&self, core: Arc<WarmCore>) -> Result<crate::core::memory_api::Memory> {
+        match self.memory_config.lock().clone() {
+            Some(config) => {
+                crate::core::memory_api::Memory::with_config(core, config).map_err(napi_err)
+            }
+            None => Ok(crate::core::memory_api::Memory::new(core)),
+        }
+    }
+}
+
+struct Open {
     core: Arc<WarmCore>,
-    memory: crate::core::sync::RwLock<Arc<crate::core::memory_api::Memory>>,
+    memory: Arc<crate::core::memory_api::Memory>,
+}
+
+const CLOSED: &str = "[store_closed] the store is closed";
+
+impl WarmMemorySystem {
+    fn core(&self) -> Result<Arc<WarmCore>> {
+        match &*self.slot.read() {
+            Some(open) => Ok(open.core.clone()),
+            None => Err(napi::Error::from_reason(CLOSED)),
+        }
+    }
+
+    fn memory(&self) -> Result<Arc<crate::core::memory_api::Memory>> {
+        match &*self.slot.read() {
+            Some(open) => Ok(open.memory.clone()),
+            None => Err(napi::Error::from_reason(CLOSED)),
+        }
+    }
+
+    fn opened(
+        core: WarmCore,
+        read_only: bool,
+        dimensions: u32,
+        storage_path: Option<String>,
+        config: Option<crate::core::WarmConfig>,
+    ) -> Self {
+        let core = Arc::new(core);
+        Self {
+            slot: crate::core::sync::RwLock::new(Some(Open {
+                memory: Arc::new(crate::core::memory_api::Memory::new(core.clone())),
+                core,
+            })),
+            reopen: Reopen {
+                read_only,
+                dimensions,
+                storage_path,
+                config,
+                memory_config: Default::default(),
+            },
+        }
+    }
 }
 
 #[napi]
@@ -51,7 +120,7 @@ impl WarmMemorySystem {
         operations: Vec<VectorRecordOperationJs>,
         options: Option<core::vector_records::VectorRecordRevisionOptions>,
     ) -> Result<serde_json::Value> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || {
             use core::vector_records::VectorRecordOperation;
             let operations = operations.into_iter().map(|operation| {
@@ -76,7 +145,7 @@ impl WarmMemorySystem {
         id: String,
         options: Option<core::vector_records::VectorRecordRevisionOptions>,
     ) -> Result<serde_json::Value> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || {
             Ok(serde_json::to_value(
                 core.get_vector_record(&id, &options.unwrap_or_default())?,
@@ -90,7 +159,7 @@ impl WarmMemorySystem {
         &self,
         options: Option<core::vector_records::VectorRecordListOptions>,
     ) -> Result<core::vector_records::VectorRecordListResult> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || core.list_vector_records(&options.unwrap_or_default())).await
     }
 
@@ -101,7 +170,7 @@ impl WarmMemorySystem {
         k: f64,
         options: Option<core::vector_records::VectorRecordQueryOptions>,
     ) -> Result<VectorRecordQueryResultJs> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || {
             anyhow::ensure!(
                 k.is_finite()
@@ -131,7 +200,7 @@ impl WarmMemorySystem {
         filter: serde_json::Value,
         options: Option<core::vector_records::VectorRecordQueryOptions>,
     ) -> Result<VectorRecordQueryResultJs> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || {
             anyhow::ensure!(
                 k.is_finite()
@@ -164,14 +233,111 @@ impl WarmMemorySystem {
             .map(|c| c.into_config())
             .transpose()
             .map_err(napi_err)?;
-        let core = WarmCore::new(dimensions, storage_path, cfg).map_err(napi_err)?;
-        let core = Arc::new(core);
-        Ok(Self {
-            memory: crate::core::sync::RwLock::new(Arc::new(crate::core::memory_api::Memory::new(
-                core.clone(),
-            ))),
-            core,
-        })
+        let core =
+            WarmCore::new(dimensions, storage_path.clone(), cfg.clone()).map_err(napi_err)?;
+        Ok(Self::opened(core, false, dimensions, storage_path, cfg))
+    }
+
+    /// Opens an existing store without the writer lock, so another process can hold it for
+    /// writing. Reads see the journal up to its last complete frame; `refresh()` moves to a
+    /// newer one. Every mutation fails with code `read_only`.
+    #[napi(factory)]
+    pub fn open_read_only(
+        dimensions: u32,
+        storage_path: Option<String>,
+        config: Option<WarmConfigJs>,
+    ) -> Result<Self> {
+        let cfg = config
+            .map(|c| c.into_config())
+            .transpose()
+            .map_err(napi_err)?;
+        let core = WarmCore::open_read_only(dimensions, storage_path.clone(), cfg.clone())
+            .map_err(napi_err)?;
+        Ok(Self::opened(core, true, dimensions, storage_path, cfg))
+    }
+
+    /// True for a store opened with `openReadOnly`.
+    #[napi(getter)]
+    pub fn read_only(&self) -> bool {
+        self.reopen.read_only
+    }
+
+    /// True after `close()`.
+    #[napi(getter)]
+    pub fn closed(&self) -> bool {
+        self.slot.read().is_none()
+    }
+
+    /// Moves a read-only store to the writer's latest commit, reading only what was appended
+    /// since (a compaction is read once, afresh). Returns false when nothing was committed.
+    #[napi]
+    pub fn refresh(&self) -> Result<bool> {
+        if !self.reopen.read_only {
+            return Err(napi::Error::from_reason(
+                "refresh applies to a store opened read-only",
+            ));
+        }
+        let current = self.core()?;
+        match current.refresh_in_place().map_err(napi_err)? {
+            crate::core::Refresh::Unchanged => return Ok(false),
+            crate::core::Refresh::Advanced => return Ok(true),
+            // A compaction replaced the generation this store reads: open it afresh.
+            crate::core::Refresh::Reopen => {}
+        }
+        let core = Arc::new(
+            WarmCore::open_read_only(
+                self.reopen.dimensions,
+                self.reopen.storage_path.clone(),
+                self.reopen.config.clone(),
+            )
+            .map_err(napi_err)?,
+        );
+        let memory = self.reopen.memory_for(core.clone())?;
+        match &mut *self.slot.write() {
+            Some(open) => {
+                *open = Open {
+                    core,
+                    memory: Arc::new(memory),
+                };
+                Ok(true)
+            }
+            None => Err(napi::Error::from_reason(CLOSED)),
+        }
+    }
+
+    /// Flushes and releases the store lock so another process can open it for writing. Safe
+    /// to call twice. Every later call fails with code `store_closed`. Waits up to 10 seconds
+    /// for calls in flight; if they do not finish the store stays open and this throws.
+    #[napi]
+    pub fn close(&self) -> Result<()> {
+        // Release the slot's lock before waiting, so calls that arrive meanwhile fail with
+        // `store_closed` at once instead of queuing behind this wait.
+        let taken = self.slot.write().take();
+        let Some(Open { core, memory }) = taken else {
+            return Ok(());
+        };
+        drop(memory);
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+        let mut core = core;
+        loop {
+            match Arc::try_unwrap(core) {
+                Ok(core) => return core.close().map_err(napi_err),
+                Err(shared) if std::time::Instant::now() < deadline => {
+                    core = shared;
+                    std::thread::sleep(std::time::Duration::from_millis(5));
+                }
+                Err(shared) => {
+                    let memory = Arc::new(self.reopen.memory_for(shared.clone())?);
+                    self.slot.write().get_or_insert(Open {
+                        core: shared,
+                        memory,
+                    });
+                    return Err(napi::Error::from_reason(
+                        "close timed out: operations are still running; the store stays open",
+                    ));
+                }
+            }
+        }
     }
 
     /// Replaces the memory API's configuration (policies and defaults; see
@@ -183,9 +349,14 @@ impl WarmMemorySystem {
                 .map_err(|e| napi::Error::from_reason(format!("invalid memory config: {e}")))?,
             None => Default::default(),
         };
-        let memory = crate::core::memory_api::Memory::with_config(self.core.clone(), config)
-            .map_err(napi_err)?;
-        *self.memory.write() = Arc::new(memory);
+        let core = self.core()?;
+        let memory =
+            crate::core::memory_api::Memory::with_config(core, config.clone()).map_err(napi_err)?;
+        match &mut *self.slot.write() {
+            Some(open) => open.memory = Arc::new(memory),
+            None => return Err(napi::Error::from_reason(CLOSED)),
+        }
+        *self.reopen.memory_config.lock() = Some(config);
         Ok(())
     }
 
@@ -198,7 +369,7 @@ impl WarmMemorySystem {
         op: String,
         request: serde_json::Value,
     ) -> Result<serde_json::Value> {
-        let memory = self.memory.read().clone();
+        let memory = self.memory()?;
         tokio::task::spawn_blocking(move || memory.call(&op, request))
             .await
             .map_err(|e| napi::Error::from_reason(e.to_string()))?
@@ -208,13 +379,13 @@ impl WarmMemorySystem {
     #[napi]
     // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn memorize_document(&self, input: DocumentInput) -> Result<u32> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || core.memorize_document(input)).await
     }
 
     #[napi]
     pub async fn memorize_documents(&self, inputs: Vec<DocumentInput>) -> Result<Vec<u32>> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || core.memorize_documents(inputs)).await
     }
 
@@ -231,7 +402,7 @@ impl WarmMemorySystem {
         text: String,
         options: Option<SearchOptions>,
     ) -> Result<Vec<DocumentResult>> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || core.search_documents(&text, &options.unwrap_or_default())).await
     }
 
@@ -244,7 +415,7 @@ impl WarmMemorySystem {
         k: f64,
         options: Option<VectorSearchOptions>,
     ) -> Result<Vec<DocumentResult>> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || {
             anyhow::ensure!(
                 k.is_finite()
@@ -264,7 +435,7 @@ impl WarmMemorySystem {
     #[napi]
     // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn delete_document(&self, id: String) -> Result<bool> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || core.delete_document(&id)).await
     }
 
@@ -278,7 +449,7 @@ impl WarmMemorySystem {
     ) -> Result<Vec<ListedDocument>> {
         // An f64 so that a value outside u32 or a fraction is rejected, not wrapped or truncated.
         let limit = limit.unwrap_or(100.0);
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || {
             anyhow::ensure!(
                 limit.fract() == 0.0 && (1.0..=1000.0).contains(&limit),
@@ -298,52 +469,52 @@ impl WarmMemorySystem {
 
     #[napi]
     pub async fn get_document_info(&self, id: String) -> Result<Option<ListedDocument>> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || Ok(core.get_document_info(&id)?.map(ListedDocument::from))).await
     }
 
     /// Opaque store revision. Equal values bracket an unchanged store on this handle.
     #[napi]
-    pub fn revision(&self) -> String {
-        self.core.revision().to_string()
+    pub fn revision(&self) -> Result<String> {
+        Ok(self.core()?.revision().to_string())
     }
 
     #[napi]
     // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
-    pub fn security_status(&self) -> serde_json::Value {
-        self.core.security_status()
+    pub fn security_status(&self) -> Result<serde_json::Value> {
+        Ok(self.core()?.security_status())
     }
 
     #[napi(getter)]
-    pub fn vector_count(&self) -> u32 {
-        self.core.vector_count() as u32
+    pub fn vector_count(&self) -> Result<u32> {
+        Ok(self.core()?.vector_count() as u32)
     }
 
     #[napi(getter)]
-    pub fn nsg_trained(&self) -> bool {
-        self.core.nsg_trained()
+    pub fn nsg_trained(&self) -> Result<bool> {
+        Ok(self.core()?.nsg_trained())
     }
 
     #[napi(getter)]
-    pub fn ivf_trained(&self) -> bool {
-        self.core.ivf_trained()
+    pub fn ivf_trained(&self) -> Result<bool> {
+        Ok(self.core()?.ivf_trained())
     }
 
     #[napi(getter)]
-    pub fn dimensions(&self) -> u32 {
-        self.core.dimensions() as u32
+    pub fn dimensions(&self) -> Result<u32> {
+        Ok(self.core()?.dimensions() as u32)
     }
 
     #[napi]
     // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
-    pub fn index_status(&self) -> IndexStatus {
-        self.core.index_status()
+    pub fn index_status(&self) -> Result<IndexStatus> {
+        Ok(self.core()?.index_status())
     }
 
     #[napi]
     // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
-    pub fn storage_health(&self) -> StorageHealth {
-        self.core.storage_health()
+    pub fn storage_health(&self) -> Result<StorageHealth> {
+        Ok(self.core()?.storage_health())
     }
 
     #[napi]
@@ -355,35 +526,35 @@ impl WarmMemorySystem {
     #[napi]
     // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub fn explain_query(&self, text: String, k: u32) -> Result<QueryExplanation> {
-        let query = self.core.try_encode_text(&text).map_err(napi_err)?;
-        Ok(self.core.explain_query(&query, k))
+        let query = self.core()?.try_encode_text(&text).map_err(napi_err)?;
+        Ok(self.core()?.explain_query(&query, k))
     }
 
     #[napi]
     // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn maintain_indices(&self) -> Result<IndexStatus> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || core.maintain_indices()).await
     }
 
     #[napi]
     // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn flush(&self) -> Result<()> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || core.flush()).await
     }
 
     #[napi]
     // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn analyze_text(&self, text: String) -> Result<TextMetrics> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || Ok(core.analyze_text(&text))).await
     }
 
     #[napi]
     // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn calculate_readability(&self, metrics: TextMetrics) -> Result<f64> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || Ok(core.calculate_readability(&metrics))).await
     }
 
@@ -395,7 +566,7 @@ impl WarmMemorySystem {
         text: String,
         trace_id: Option<String>,
     ) -> Result<()> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || {
             let _span =
                 info_span!("memorize_text", id = %id, trace_id = trace_id.as_deref().unwrap_or(""))
@@ -416,7 +587,7 @@ impl WarmMemorySystem {
         text: Buffer,
         trace_id: Option<String>,
     ) -> Result<()> {
-        let core = self.core.clone();
+        let core = self.core()?;
         let text_str = std::str::from_utf8(&text)
             .map_err(|e| napi::Error::from_reason(format!("Invalid UTF-8: {}", e)))?
             .to_owned();
@@ -437,7 +608,7 @@ impl WarmMemorySystem {
         items: Vec<MemorizeBatchItem>,
         trace_id: Option<String>,
     ) -> Result<()> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || {
             let _span = info_span!(
                 "memorize_batch",
@@ -455,7 +626,7 @@ impl WarmMemorySystem {
     #[napi]
     // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn memorize_file(&self, id: String, file_path: String) -> Result<()> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || {
             use std::io::Read;
             let file = std::fs::File::open(&file_path)
@@ -492,7 +663,7 @@ impl WarmMemorySystem {
     #[napi]
     // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn memorize_vector(&self, id: String, vector: Float32Array) -> Result<()> {
-        let core = self.core.clone();
+        let core = self.core()?;
         let dense: Vec<f32> = vector.to_vec();
         run_async(move || core.memorize_vector(id, &dense)).await
     }
@@ -500,7 +671,7 @@ impl WarmMemorySystem {
     #[napi]
     // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn memorize_scalar(&self, id: String, value: f64, min: f64, max: f64) -> Result<()> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || core.memorize_scalar(id, value, min, max)).await
     }
 
@@ -512,7 +683,7 @@ impl WarmMemorySystem {
         k: u32,
         trace_id: Option<String>,
     ) -> Result<Vec<RetrievalResult>> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || {
             let _span =
                 info_span!("query", k = k, trace_id = trace_id.as_deref().unwrap_or("")).entered();
@@ -526,7 +697,7 @@ impl WarmMemorySystem {
     #[napi]
     // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn query_vector(&self, vector: Float32Array, k: u32) -> Result<Vec<RetrievalResult>> {
-        let core = self.core.clone();
+        let core = self.core()?;
         let dense = vector.to_vec();
         run_async(move || core.query_vector(&dense, k)).await
     }
@@ -540,7 +711,7 @@ impl WarmMemorySystem {
         max: f64,
         k: u32,
     ) -> Result<Vec<RetrievalResult>> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || {
             let q_vec = EntangledHVec::from_scalar(value, min, max, core.dimensions());
             core.query(&q_vec, k)
@@ -556,7 +727,7 @@ impl WarmMemorySystem {
         texts: Vec<String>,
         k: u32,
     ) -> Result<Vec<Vec<RetrievalResult>>> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || {
             let queries: Vec<EntangledHVec> = texts
                 .iter()
@@ -575,7 +746,7 @@ impl WarmMemorySystem {
         vectors: Vec<Float32Array>,
         k: u32,
     ) -> Result<Vec<Vec<RetrievalResult>>> {
-        let core = self.core.clone();
+        let core = self.core()?;
         let dense: Vec<Vec<f32>> = vectors.iter().map(|v| v.to_vec()).collect();
         run_async(move || {
             anyhow::ensure!(dense.len() <= 4096, "query batch exceeds 4096 vectors");
@@ -588,7 +759,7 @@ impl WarmMemorySystem {
     #[napi]
     // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn analyze_components(&self, text: String) -> Result<Vec<RetrievalResult>> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || {
             let vec = core.try_encode_text(&text)?;
             core.analyze_components(&vec)
@@ -604,7 +775,7 @@ impl WarmMemorySystem {
         domains: Vec<Vec<String>>,
         max_iter: u32,
     ) -> Result<Vec<Option<String>>> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || {
             let vec = core.try_encode_text(&product_text)?;
             let domain_vecs: Vec<Vec<EntangledHVec>> = domains
@@ -644,7 +815,7 @@ impl WarmMemorySystem {
         relation: String,
         tail: String,
     ) -> Result<()> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || core.memorize_triplet(id, head, relation, tail)).await
     }
 
@@ -656,7 +827,7 @@ impl WarmMemorySystem {
         relation: String,
         k: u32,
     ) -> Result<Vec<RetrievalResult>> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || core.query_triplet(head, relation, k)).await
     }
 
@@ -675,7 +846,7 @@ impl WarmMemorySystem {
         k: Option<u32>,
         trace_id: Option<String>,
     ) -> Result<Vec<RetrievalResult>> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || {
             let _span =
                 info_span!("find_analogy", trace_id = trace_id.as_deref().unwrap_or("")).entered();
@@ -688,7 +859,7 @@ impl WarmMemorySystem {
     #[napi]
     // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn synthesize_concepts(&self) -> Result<Vec<ConceptCandidate>> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || {
             core.synthesize_concepts_with_limits(crate::core::query_limits::QueryLimits::default())
         })
@@ -698,33 +869,33 @@ impl WarmMemorySystem {
     #[napi]
     // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn memorize_sequence(&self, id: String, sequence: Vec<String>) -> Result<()> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || core.memorize_sequence(id, &sequence)).await
     }
 
     #[napi]
     // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn train_nsg(&self) -> Result<()> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || core.train_nsg()).await
     }
 
     #[napi]
     // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn train_ivf(&self) -> Result<()> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || core.train_ivf()).await
     }
 
     #[napi]
     pub async fn train_document_index(&self) -> Result<()> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || core.train_document_index()).await
     }
 
     #[napi(getter)]
-    pub fn document_index_trained(&self) -> bool {
-        self.core.document_index_trained()
+    pub fn document_index_trained(&self) -> Result<bool> {
+        Ok(self.core()?.document_index_trained())
     }
 
     #[napi]
@@ -734,14 +905,14 @@ impl WarmMemorySystem {
         partial: Vec<String>,
         k: u32,
     ) -> Result<Vec<RetrievalResult>> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || core.query_sequence(&partial, k)).await
     }
 
     #[napi]
     // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn delete(&self, id: String) -> Result<bool> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || core.delete(&id)).await
     }
 
@@ -754,7 +925,7 @@ impl WarmMemorySystem {
     #[napi]
     // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn compact(&self) -> Result<()> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || core.compact()).await
     }
 
@@ -766,16 +937,18 @@ impl WarmMemorySystem {
         options: Option<super::CompactionOptionsJs>,
     ) -> Result<super::CompactionJob> {
         let options = options.unwrap_or_default().into_options()?;
-        let handle = self.core.start_compaction(options).map_err(napi_err)?;
+        let handle = self.core()?.start_compaction(options).map_err(napi_err)?;
         Ok(super::CompactionJob::new(handle))
     }
 
     /// Hexadecimal Ed25519 public key, or null when signing is disabled. Establish trust independently.
     #[napi]
-    pub fn audit_verifying_key(&self) -> Option<String> {
-        self.core
-            .audit_verifying_key()
-            .map(|key| super::types::hex_encode(&key))
+    pub fn audit_verifying_key(&self) -> Result<Option<String>> {
+        Ok({
+            self.core()?
+                .audit_verifying_key()
+                .map(|key| super::types::hex_encode(&key))
+        })
     }
 
     #[napi]
@@ -789,7 +962,7 @@ impl WarmMemorySystem {
                 "timestampMs must be a nonnegative safe integer",
             ));
         }
-        let core = self.core.clone();
+        let core = self.core()?;
         let ts = timestamp_ms as u64;
         run_async(move || {
             let entries = core.audit_since(ts)?;
@@ -803,7 +976,7 @@ impl WarmMemorySystem {
     #[napi]
     // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn bundle_texts(&self, texts: Vec<String>) -> Result<Vec<u32>> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || {
             let vecs: Vec<EntangledHVec> = texts
                 .iter()
@@ -818,7 +991,7 @@ impl WarmMemorySystem {
     #[napi]
     // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn memorize_meaning(&self, id: String, text: String) -> Result<()> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || core.memorize_meaning(&id, &text)).await
     }
 
@@ -830,7 +1003,7 @@ impl WarmMemorySystem {
         known_relations: Vec<String>,
         target_role: String,
     ) -> Result<Vec<StructuralResultJs>> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || {
             let known_vecs: Vec<EntangledHVec> = known_subjects
                 .iter()
@@ -865,7 +1038,7 @@ impl WarmMemorySystem {
         start_entity: String,
         relations: Vec<String>,
     ) -> Result<Vec<MultiHopResultJs>> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || {
             let rel_refs: Vec<&str> = relations.iter().map(|s| s.as_str()).collect();
             let results = core.multi_hop_with_limits(
@@ -888,7 +1061,7 @@ impl WarmMemorySystem {
     #[napi]
     // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn meaning_cleanup(&self, text: String) -> Result<Option<CleanupResultJs>> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || {
             let vec = core.try_encode_text(&text)?;
             Ok(core
@@ -901,7 +1074,7 @@ impl WarmMemorySystem {
     #[napi]
     // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn cleanup_vector(&self, vector: Float32Array) -> Result<Option<CleanupResultJs>> {
-        let core = self.core.clone();
+        let core = self.core()?;
         let q_vec = EntangledHVec::from_dense(&vector, core.dimensions());
         run_async(move || {
             Ok(core
@@ -919,58 +1092,59 @@ impl WarmMemorySystem {
         input_relations: Vec<String>,
         output_relation: String,
     ) -> Result<()> {
-        self.core
+        self.core()?
             .declare_rule(&name, input_relations, output_relation)
             .map_err(napi_err)
     }
 
     #[napi(getter)]
-    pub fn meaning_enabled(&self) -> bool {
-        self.core.meaning_enabled()
+    pub fn meaning_enabled(&self) -> Result<bool> {
+        Ok(self.core()?.meaning_enabled())
     }
 
     #[napi]
     // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub fn start_cognition(&self) -> Result<()> {
-        self.core.start_cognition().map_err(napi_err)
+        self.core()?.start_cognition().map_err(napi_err)
     }
 
     #[napi]
     // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
-    pub fn stop_cognition(&self) {
-        self.core.stop_cognition();
+    pub fn stop_cognition(&self) -> Result<()> {
+        self.core()?.stop_cognition();
+        Ok(())
     }
 
     #[napi(getter)]
-    pub fn cognition_running(&self) -> bool {
-        self.core.cognition_running()
+    pub fn cognition_running(&self) -> Result<bool> {
+        Ok(self.core()?.cognition_running())
     }
 
     #[napi(getter)]
-    pub fn cognition_cycle_count(&self) -> u32 {
-        self.core.cognition_cycle_count() as u32
+    pub fn cognition_cycle_count(&self) -> Result<u32> {
+        Ok(self.core()?.cognition_cycle_count() as u32)
     }
 
     #[napi(getter)]
-    pub fn cognition_insight_count(&self) -> u32 {
-        self.core.cognition_insight_count() as u32
+    pub fn cognition_insight_count(&self) -> Result<u32> {
+        Ok(self.core()?.cognition_insight_count() as u32)
     }
 
     #[napi(getter)]
-    pub fn cognition_enabled(&self) -> bool {
-        self.core.cognition_enabled()
+    pub fn cognition_enabled(&self) -> Result<bool> {
+        Ok(self.core()?.cognition_enabled())
     }
 
     #[napi]
     // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
-    pub fn run_cognition_once(&self) -> u32 {
-        self.core.run_cognition_once().len() as u32
+    pub fn run_cognition_once(&self) -> Result<u32> {
+        Ok(self.core()?.run_cognition_once().len() as u32)
     }
 
     #[napi]
     // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub fn govern_memory(&self) -> Result<GovernanceReportJs> {
-        self.core
+        self.core()?
             .govern_memory()
             .map(governance_report)
             .map_err(napi_err)
@@ -978,7 +1152,7 @@ impl WarmMemorySystem {
 
     #[napi]
     pub async fn govern_memory_async(&self) -> Result<GovernanceReportJs> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || core.govern_memory().map(governance_report)).await
     }
 
@@ -991,26 +1165,29 @@ impl WarmMemorySystem {
         relevance: f64,
         urgency: f64,
         cost: f64,
-    ) -> Option<u32> {
-        self.core
+    ) -> Result<Option<u32>> {
+        Ok(self
+            .core()?
             .add_goal(&name, &description, relevance, urgency, cost)
-            .map(|id| id as u32)
+            .map(|id| id as u32))
     }
 
     #[napi]
     // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
-    pub fn deactivate_goal(&self, name: String) -> bool {
-        self.core.deactivate_goal(&name)
+    pub fn deactivate_goal(&self, name: String) -> Result<bool> {
+        Ok(self.core()?.deactivate_goal(&name))
     }
 
     #[napi]
     // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
-    pub fn active_goals(&self) -> Vec<GoalJs> {
-        self.core
-            .active_goals()
-            .into_iter()
-            .map(|(name, utility)| GoalJs { name, utility })
-            .collect()
+    pub fn active_goals(&self) -> Result<Vec<GoalJs>> {
+        Ok({
+            self.core()?
+                .active_goals()
+                .into_iter()
+                .map(|(name, utility)| GoalJs { name, utility })
+                .collect()
+        })
     }
 
     #[napi]
@@ -1020,12 +1197,12 @@ impl WarmMemorySystem {
         goal: String,
         causal_relations: Vec<String>,
         max_depth: Option<u32>,
-    ) -> PlanJs {
+    ) -> Result<PlanJs> {
         let rel_refs: Vec<&str> = causal_relations.iter().map(|s| s.as_str()).collect();
         let plan = self
-            .core
+            .core()?
             .plan_goal(&goal, &rel_refs, max_depth.unwrap_or(10) as usize);
-        PlanJs {
+        Ok(PlanJs {
             goal: plan.goal,
             actions: plan
                 .actions
@@ -1040,20 +1217,22 @@ impl WarmMemorySystem {
                 .collect(),
             complete: plan.complete,
             total_cost: plan.total_cost,
-        }
+        })
     }
 
     #[napi]
     // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
-    pub fn generate_questions(&self) -> Vec<QuestionJs> {
-        self.core
-            .generate_questions()
-            .into_iter()
-            .map(|q| QuestionJs {
-                text: q.text,
-                goal_relevance: q.goal_relevance,
-            })
-            .collect()
+    pub fn generate_questions(&self) -> Result<Vec<QuestionJs>> {
+        Ok({
+            self.core()?
+                .generate_questions()
+                .into_iter()
+                .map(|q| QuestionJs {
+                    text: q.text,
+                    goal_relevance: q.goal_relevance,
+                })
+                .collect()
+        })
     }
 
     #[napi]
@@ -1064,37 +1243,38 @@ impl WarmMemorySystem {
         input_relations: Vec<String>,
         output_relation: String,
         reason: String,
-    ) -> Option<u32> {
-        self.core
+    ) -> Result<Option<u32>> {
+        Ok(self
+            .core()?
             .propose_rule(&name, input_relations, &output_relation, &reason)
-            .map(|id| id as u32)
+            .map(|id| id as u32))
     }
 
     #[napi]
     // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
-    pub fn approve_proposal(&self, id: u32) -> bool {
-        self.core.approve_proposal(id as usize)
+    pub fn approve_proposal(&self, id: u32) -> Result<bool> {
+        Ok(self.core()?.approve_proposal(id as usize))
     }
 
     #[napi]
     // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
-    pub fn reject_proposal(&self, id: u32) -> bool {
-        self.core.reject_proposal(id as usize)
+    pub fn reject_proposal(&self, id: u32) -> Result<bool> {
+        Ok(self.core()?.reject_proposal(id as usize))
     }
 
     #[napi(getter)]
-    pub fn pending_proposals(&self) -> u32 {
-        self.core.pending_proposals() as u32
+    pub fn pending_proposals(&self) -> Result<u32> {
+        Ok(self.core()?.pending_proposals() as u32)
     }
 
     #[napi(getter)]
-    pub fn goal_count(&self) -> u32 {
-        self.core.goal_count() as u32
+    pub fn goal_count(&self) -> Result<u32> {
+        Ok(self.core()?.goal_count() as u32)
     }
 
     #[napi(getter)]
-    pub fn active_goal_count(&self) -> u32 {
-        self.core.active_goal_count() as u32
+    pub fn active_goal_count(&self) -> Result<u32> {
+        Ok(self.core()?.active_goal_count() as u32)
     }
 
     #[napi]
@@ -1108,7 +1288,7 @@ impl WarmMemorySystem {
         valid_from: Option<f64>,
         valid_to: Option<f64>,
     ) -> Result<()> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || {
             let rel = crate::core::types::Relation {
                 source_id,
@@ -1131,7 +1311,7 @@ impl WarmMemorySystem {
         relation_type: String,
         target_id: String,
     ) -> Result<bool> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || core.remove_relation(&source_id, &relation_type, &target_id)).await
     }
 
@@ -1143,7 +1323,7 @@ impl WarmMemorySystem {
         transitive: Option<bool>,
         symmetric: Option<bool>,
     ) -> Result<()> {
-        self.core
+        self.core()?
             .declare_relation_type(crate::core::types::RelationType {
                 name,
                 transitive: transitive.unwrap_or(false),
@@ -1161,7 +1341,7 @@ impl WarmMemorySystem {
         max_depth: Option<u32>,
         at_time: Option<f64>,
     ) -> Result<Vec<crate::core::types::GraphPath>> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || {
             Ok(core.traverse(
                 &start_id,
@@ -1181,7 +1361,7 @@ impl WarmMemorySystem {
         relation_type: Option<String>,
         at_time: Option<f64>,
     ) -> Result<Vec<crate::core::types::Relation>> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || {
             Ok(core.outgoing_relations(
                 &source_id,
@@ -1200,7 +1380,7 @@ impl WarmMemorySystem {
         relation_type: Option<String>,
         at_time: Option<f64>,
     ) -> Result<Vec<crate::core::types::Relation>> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || {
             Ok(core.incoming_relations(
                 &target_id,
@@ -1212,8 +1392,8 @@ impl WarmMemorySystem {
     }
 
     #[napi(getter)]
-    pub fn relation_count(&self) -> u32 {
-        self.core.relation_count() as u32
+    pub fn relation_count(&self) -> Result<u32> {
+        Ok(self.core()?.relation_count() as u32)
     }
 
     #[napi]
@@ -1224,7 +1404,7 @@ impl WarmMemorySystem {
         text: String,
         k: u32,
     ) -> Result<Vec<RetrievalResult>> {
-        let core = self.core.clone();
+        let core = self.core()?;
         run_async(move || {
             let q_vec = core.try_encode_text(&text)?;
             core.federated_query(&peer_paths, &q_vec, k)

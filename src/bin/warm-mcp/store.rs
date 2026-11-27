@@ -4,6 +4,7 @@
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -40,6 +41,9 @@ pub struct StoreOptions {
     /// Opt out of the encrypted default for a new store (`WARM_ENCRYPTION=off` does the same
     /// for the process).
     pub plaintext: bool,
+    /// Open every store read-only (`WarmCore::open_read_only`): no store lock is taken, so a
+    /// writer elsewhere keeps running, and each call first picks up what it committed.
+    pub read_only: bool,
     #[cfg(feature = "local-models")]
     pub stages: Option<Arc<writerslogic_warm::core::models::ModelStages>>,
     #[cfg(feature = "local-models")]
@@ -58,6 +62,8 @@ struct Store {
     /// Serializes read-modify-write sequences (compare-and-set, create-only, prefix deletes).
     gate: Mutex<()>,
     dir: PathBuf,
+    /// Set while one call opens this store's replacement after a compaction.
+    reopening: AtomicBool,
 }
 
 pub struct WarmBackend {
@@ -163,7 +169,56 @@ impl WarmBackend {
     }
 
     fn store(&self, namespace: &str) -> Res<Arc<Store>> {
-        self.store_with(namespace, |dir| self.open(dir))
+        let store = self.store_with(namespace, |dir| self.open(dir))?;
+        if !self.options.read_only {
+            return Ok(store);
+        }
+        // New commits are applied in place; only a compaction (a generation this engine no
+        // longer reads) needs a fresh engine, which replaces this one for later calls while
+        // calls already running keep the one they hold.
+        if !matches!(
+            store
+                .core
+                .refresh_in_place()
+                .map_err(|e| Fail::internal(format!("{e:#}")))?,
+            writerslogic_warm::Refresh::Reopen
+        ) {
+            return Ok(store);
+        }
+        // One call opens the replacement; the others serve what this engine holds (it reads from
+        // memory, so a compaction under it changes nothing they see) instead of each opening the
+        // whole store again.
+        if store
+            .reopening
+            .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
+            .is_err()
+        {
+            return Ok(store);
+        }
+        let core = match self.open(&store.dir) {
+            Ok(core) => core,
+            Err(error) => {
+                store.reopening.store(false, Ordering::Release);
+                return Err(error);
+            }
+        };
+        let fresh = Arc::new(Store {
+            core,
+            gate: Mutex::new(()),
+            dir: store.dir.clone(),
+            reopening: AtomicBool::new(false),
+        });
+        let key = match &self.options.root {
+            StoreRoot::Single(_) => "",
+            StoreRoot::Namespaced(_) => namespace,
+        };
+        if let Some(slot) = self.stores.lock().get(key) {
+            let mut status = slot.status.lock();
+            if matches!(&*status, StoreStatus::Ready(current) if Arc::ptr_eq(current, &store)) {
+                *status = StoreStatus::Ready(fresh.clone());
+            }
+        }
+        Ok(fresh)
     }
 
     fn store_with(
@@ -171,7 +226,6 @@ impl WarmBackend {
         namespace: &str,
         mut open: impl FnMut(&Path) -> Res<WarmCore>,
     ) -> Res<Arc<Store>> {
-        use std::sync::atomic::Ordering;
         let key = match &self.options.root {
             StoreRoot::Single(_) => "",
             StoreRoot::Namespaced(_) => namespace,
@@ -249,6 +303,7 @@ impl WarmBackend {
                     core,
                     gate: Mutex::new(()),
                     dir,
+                    reopening: AtomicBool::new(false),
                 })
             }));
         }
@@ -270,14 +325,28 @@ impl WarmBackend {
             config.security.encryption_enabled = true;
             config.security.encryption_passphrase_env = Some(env.clone());
         }
-        let core = WarmCore::new(
-            self.options.dim,
-            Some(dir.display().to_string()),
-            Some(config),
-        )
-        .map_err(|e| {
+        let opened = if self.options.read_only {
+            WarmCore::open_read_only(
+                self.options.dim,
+                Some(dir.display().to_string()),
+                Some(config),
+            )
+        } else {
+            WarmCore::new(
+                self.options.dim,
+                Some(dir.display().to_string()),
+                Some(config),
+            )
+        };
+        let core = opened.map_err(|e| {
             let text = format!("{e:#}");
-            if text.contains("already open") {
+            if text.contains("is not a WARM store") {
+                Fail::new(
+                    "store_unavailable",
+                    "the store does not exist; a read-only server never creates one",
+                )
+                .with(json!({"store": dir.display().to_string()}))
+            } else if text.contains("already open") {
                 Fail::new(
                     "store_locked",
                     "the store is open in another process; run one warm-mcp with \
@@ -443,8 +512,21 @@ impl WarmBackend {
         }
     }
 
+    /// Writes are refused up front by a read-only backend, with a code a client can act on.
+    fn writable(&self) -> Res<()> {
+        if self.options.read_only {
+            return Err(Fail::new(
+                "read_only",
+                "this server opens its stores read-only; write through the process that owns the store",
+            ));
+        }
+        Ok(())
+    }
+
     fn committed_write(cause: anyhow::Error, details: Value) -> Fail {
-        if cause.is::<writerslogic_warm::CommittedMutationError>() {
+        if cause.is::<writerslogic_warm::ReadOnlyError>() {
+            Fail::new("read_only", cause.to_string())
+        } else if cause.is::<writerslogic_warm::CommittedMutationError>() {
             Fail::mutation_committed(cause, details)
         } else if cause.is::<writerslogic_warm::IndeterminateMutationError>() {
             Fail::mutation_uncertain(cause, details)
@@ -454,6 +536,7 @@ impl WarmBackend {
     }
 
     pub fn remember(&self, namespace: &str, req: RememberReq) -> Res<RememberOut> {
+        self.writable()?;
         let store = self.store(namespace)?;
         let id = req.id.clone().unwrap_or_else(generated_id);
         let _write = store.gate.lock();
@@ -547,6 +630,7 @@ impl WarmBackend {
 
     /// Stores one observation step in the namespace's experience core.
     pub fn observe(&self, namespace: &str, observation: Value) -> Res<Value> {
+        self.writable()?;
         let store = self.store(namespace)?;
         let _write = store.gate.lock();
         let limits = store.core.experience_limits();
@@ -587,6 +671,7 @@ impl WarmBackend {
 
     /// Removes an episode of observations and scrubs it from the snapshot and journal.
     pub fn forget_episode(&self, namespace: &str, episode: &str) -> Res<Value> {
+        self.writable()?;
         let store = self.store(namespace)?;
         let _write = store.gate.lock();
         // Read first: purging through the writer would create an experience store in a
@@ -776,6 +861,7 @@ impl WarmBackend {
     }
 
     pub fn forget(&self, namespace: &str, req: ForgetReq) -> Res<ForgetOut> {
+        self.writable()?;
         let store = self.store(namespace)?;
         let _write = store.gate.lock();
         let mut ids = req.ids.clone();
@@ -875,6 +961,10 @@ mod tests {
     use crate::memory::test_limits;
 
     fn backend(dir: &Path) -> WarmBackend {
+        backend_with(dir, false)
+    }
+
+    fn backend_with(dir: &Path, read_only: bool) -> WarmBackend {
         WarmBackend::new(
             StoreOptions {
                 root: StoreRoot::Namespaced(dir.to_path_buf()),
@@ -882,6 +972,7 @@ mod tests {
                 max_stores: 2,
                 encrypt: None,
                 plaintext: true,
+                read_only,
                 #[cfg(feature = "local-models")]
                 stages: None,
                 #[cfg(feature = "local-models")]
@@ -919,6 +1010,45 @@ mod tests {
             semantic_weight: None,
             fusion: None,
         }
+    }
+
+    #[test]
+    fn a_read_only_backend_runs_beside_the_writer_and_follows_its_commits() {
+        let dir = tempfile::tempdir().unwrap();
+        let writer = backend(dir.path());
+        put(&writer, "a", "first memory", &[]);
+        let reader = backend_with(dir.path(), true);
+        assert!(reader.get("t", "a").unwrap().is_some());
+
+        put(&writer, "b", "second memory", &[]);
+        assert!(
+            reader.get("t", "b").unwrap().is_some(),
+            "reader did not refresh"
+        );
+        let hits = reader.search("t", search_req("second", None)).unwrap();
+        assert!(hits.iter().any(|hit| hit.memory.id == "b"));
+
+        let error = reader
+            .remember(
+                "t",
+                RememberReq {
+                    text: "denied".into(),
+                    id: Some("c".into()),
+                    title: None,
+                    tags: Vec::new(),
+                    metadata: Map::new(),
+                    if_version: None,
+                    create_only: false,
+                    allow_empty: true,
+                },
+            )
+            .unwrap_err();
+        assert_eq!(error.code, "read_only");
+        assert!(writer.get("t", "c").unwrap().is_none());
+
+        let missing = reader.get("absent", "a").unwrap_err();
+        assert_eq!(missing.code, "store_unavailable");
+        assert!(!dir.path().join("stores").join("absent").exists());
     }
 
     #[test]

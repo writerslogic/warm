@@ -120,6 +120,10 @@ impl WarmCore {
     /// single- and multi-shard stores; multi-shard indices are written to
     /// per-shard files so they reload after a restart.
     pub(in super::super) fn persist_indices(&self, shards: &ShardSet) -> Result<()> {
+        // The index files belong to the writer; a reader keeps what it trains in memory.
+        if self.read_only {
+            return Ok(());
+        }
         // The checkpoint is read before the encoding: an append in between leaves the
         // metadata behind the arena, which the loader treats as stale (see `encode_indices`).
         let checkpoint = self.arena.checkpoint();
@@ -173,6 +177,9 @@ impl WarmCore {
     /// byte-identical metadata (same checkpoint, same file checksums), which makes the
     /// write a no-op.
     pub(in super::super) fn write_indices(&self, encoded: EncodedIndices) -> Result<()> {
+        if self.read_only {
+            return Ok(());
+        }
         if *self.persisted_indices.lock() == encoded.metadata {
             return Ok(());
         }

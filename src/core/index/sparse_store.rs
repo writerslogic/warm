@@ -273,6 +273,9 @@ struct Inner {
     live_bytes: u64,
     file: File,
     file_len: u64,
+    /// A reader's mark on the last record it applied: where it starts and its checksum, so a
+    /// later read can tell that the file still continues the one it parsed.
+    last_frame: Option<(u64, u32)>,
     built: Option<Built>,
 }
 
@@ -287,6 +290,124 @@ impl SparseStore {
     /// Opens the store in `dir`; nothing is created when the file is absent.
     pub fn open(dir: &Path) -> Result<Self> {
         Self::open_with(dir, SparseLimits::default(), SparseTuning::default())
+    }
+
+    /// Opens the store in `dir` for reading beside a writer: nothing is created, truncated or
+    /// removed, and a record the writer is still appending is left for the next
+    /// [`Self::reload`].
+    pub fn open_reader(dir: &Path) -> Result<Self> {
+        let path = dir.join(FILE_NAME);
+        let limits = SparseLimits::default();
+        let inner = Self::read_file(&path, &limits, false)?;
+        Ok(Self {
+            path,
+            limits,
+            tuning: SparseTuning::default(),
+            inner: RwLock::new(inner),
+        })
+    }
+
+    /// Whether the file now differs in length from what a reader last parsed.
+    pub fn changed_on_disk(&self) -> bool {
+        let seen = self.inner.read().as_ref().map(|inner| inner.file_len);
+        let now = std::fs::metadata(&self.path).ok().map(|meta| meta.len());
+        match (seen, now) {
+            (None, None) => false,
+            (Some(seen), Some(now)) => seen != now,
+            _ => true,
+        }
+    }
+
+    /// Re-reads the file into a reader: the writer appends in place and replaces the file by
+    /// rename when it compacts, so the whole file is read again (the cost is the size of this
+    /// store, not of the document journal).
+    pub fn reload(&self) -> Result<()> {
+        if self.extend()? {
+            return Ok(());
+        }
+        let inner = Self::read_file(&self.path, &self.limits, false)?;
+        *self.inner.write() = inner;
+        Ok(())
+    }
+
+    /// Applies the records the writer appended since the last read, if the file still continues
+    /// the one parsed: it did not shrink, and the last record applied is still there with the
+    /// checksum it had (a compaction rewrites the file, which breaks one or the other). Returns
+    /// false when it does not, and the caller reads the whole file.
+    fn extend(&self) -> Result<bool> {
+        let mut guard = self.inner.write();
+        let Some(inner) = guard.as_mut() else {
+            return Ok(false);
+        };
+        let Ok(mut file) = File::open(&self.path) else {
+            return Ok(false);
+        };
+        let length = file.metadata()?.len();
+        let from = inner
+            .last_frame
+            .map_or(HEADER_LEN as u64, |(start, _)| start);
+        if length < inner.file_len {
+            return Ok(false);
+        }
+        use std::io::{Seek, SeekFrom};
+        file.seek(SeekFrom::Start(0))?;
+        let mut header = [0u8; HEADER_LEN];
+        if file.read_exact(&mut header).is_err() || &header[..8] != MAGIC {
+            return Ok(false);
+        }
+        file.seek(SeekFrom::Start(from))?;
+        let mut bytes = Vec::new();
+        file.read_to_end(&mut bytes)?;
+        let mut at = 0usize;
+        if let Some((_, crc)) = inner.last_frame {
+            // The record applied last, still in place and unchanged.
+            let Some(head) = bytes.get(..FRAME_LEN) else {
+                return Ok(false);
+            };
+            let len = u32::from_le_bytes(head[..4].try_into()?) as usize;
+            let seen = u32::from_le_bytes(head[4..].try_into()?);
+            if seen != crc || bytes.len() < FRAME_LEN + len {
+                return Ok(false);
+            }
+            at = FRAME_LEN + len;
+        }
+        let mut pending = Vec::new();
+        let mut last = inner.last_frame;
+        while at < bytes.len() {
+            let Some(head) = bytes.get(at..at + FRAME_LEN) else {
+                break;
+            };
+            let len = u32::from_le_bytes(head[..4].try_into()?) as usize;
+            let crc = u32::from_le_bytes(head[4..].try_into()?);
+            let end = at + FRAME_LEN + len;
+            if end > bytes.len() {
+                break;
+            }
+            let payload = &bytes[at + FRAME_LEN..end];
+            if crc32fast::hash(payload) != crc {
+                if end == bytes.len() {
+                    break;
+                }
+                return Ok(false);
+            }
+            pending.push(decode(payload, &self.limits)?);
+            last = Some((from + at as u64, crc));
+            at = end;
+        }
+        for record in pending {
+            match record {
+                Record::Put(id, row) => inner.apply(id, Some(row)),
+                Record::Delete(id) => inner.apply(id, None),
+            }
+        }
+        ensure!(
+            inner.live_nnz <= self.limits.max_total_nnz
+                && inner.slots.len() <= self.limits.max_rows,
+            "sparse vector file exceeds the store limits"
+        );
+        inner.last_frame = last;
+        inner.file_len = length;
+        Ok(true)
     }
 
     pub fn open_with(dir: &Path, limits: SparseLimits, tuning: SparseTuning) -> Result<Self> {
@@ -305,10 +426,24 @@ impl SparseStore {
     }
 
     fn load(path: &Path, limits: &SparseLimits) -> Result<Option<Inner>> {
+        Self::read_file(path, limits, true)
+    }
+
+    /// `writable` is the writer's open: it repairs the file (drops a torn tail, removes a
+    /// stub) and keeps an append handle. A reader only parses.
+    fn read_file(path: &Path, limits: &SparseLimits, writable: bool) -> Result<Option<Inner>> {
         let mut bytes = Vec::new();
-        File::open(path)?.read_to_end(&mut bytes)?;
+        match File::open(path) {
+            Ok(mut file) => file.read_to_end(&mut bytes)?,
+            Err(error) if !writable && error.kind() == std::io::ErrorKind::NotFound => {
+                return Ok(None)
+            }
+            Err(error) => return Err(error.into()),
+        };
         if bytes.len() < HEADER_LEN {
-            std::fs::remove_file(path)?;
+            if writable {
+                std::fs::remove_file(path)?;
+            }
             return Ok(None);
         }
         ensure!(
@@ -325,6 +460,7 @@ impl SparseStore {
         let mut slots: HashMap<String, u32> = HashMap::new();
         let (mut live_nnz, mut live_bytes) = (0u64, 0u64);
         let mut at = HEADER_LEN;
+        let mut last_frame = None;
         while at < bytes.len() {
             let Some(head) = bytes.get(at..at + FRAME_LEN) else {
                 break;
@@ -369,23 +505,34 @@ impl SparseStore {
                     }
                 }
             }
+            last_frame = Some((at as u64, crc));
             at = end;
         }
-        if at < bytes.len() {
+        if writable && at < bytes.len() {
             // An append-only handle cannot set the length on Windows (access denied), so the torn tail is
             // cut through a plain write handle.
             let trunc = OpenOptions::new().write(true).open(path)?;
             trunc.set_len(at as u64)?;
             trunc.sync_all()?;
         }
-        let file = OpenOptions::new().append(true).read(true).open(path)?;
+        let file = if writable {
+            OpenOptions::new().append(true).read(true).open(path)?
+        } else {
+            File::open(path)?
+        };
         Ok(Some(Inner {
             rows,
             slots,
             live_nnz,
             live_bytes,
             file,
-            file_len: at as u64,
+            // A reader compares this with the file's length to see that the writer appended.
+            file_len: if writable {
+                at as u64
+            } else {
+                bytes.len() as u64
+            },
+            last_frame,
             built: None,
         }))
     }
@@ -554,6 +701,7 @@ impl SparseStore {
                 .read(true)
                 .open(&self.path)?,
             file_len: HEADER_LEN as u64,
+            last_frame: None,
             built: None,
         })
     }

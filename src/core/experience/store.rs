@@ -113,6 +113,24 @@ fn journal_header() -> [u8; HEADER] {
     h
 }
 
+/// What a reader compares to see that the store changed: each file's length and mtime.
+pub(crate) type DiskStamp = Vec<Option<(u64, Option<std::time::SystemTime>)>>;
+
+pub(crate) fn disk_stamp(dir: &Path) -> DiskStamp {
+    [
+        SNAPSHOT_FILE.to_string(),
+        format!("{SNAPSHOT_FILE}{NEXT_SUFFIX}"),
+        JOURNAL_FILE.to_string(),
+    ]
+    .iter()
+    .map(|name| {
+        std::fs::metadata(dir.join(name))
+            .ok()
+            .map(|meta| (meta.len(), meta.modified().ok()))
+    })
+    .collect()
+}
+
 /// Whether the directory holds experience data.
 pub(crate) fn exists(dir: &Path) -> bool {
     [
@@ -132,17 +150,53 @@ impl ExperienceStore {
         cfg: ExperienceConfig,
         sealer: Option<Arc<dyn Sealer>>,
     ) -> Result<Self> {
-        let main = dir.join(SNAPSHOT_FILE);
+        Self::open_with(dir, cfg, sealer, true)
+    }
+
+    /// Reads the store in `dir` without changing anything in it, while a writer may append
+    /// and checkpoint. A checkpoint replaces the snapshot and empties the journal in steps, so
+    /// the files are read again until they hold still across one read.
+    pub(crate) fn open_reader(
+        dir: &Path,
+        cfg: ExperienceConfig,
+        sealer: Option<Arc<dyn Sealer>>,
+    ) -> Result<Self> {
+        const ATTEMPTS: u32 = 20;
+        for attempt in 0..ATTEMPTS {
+            let before = disk_stamp(dir);
+            let read = Self::open_with(dir, cfg.clone(), sealer.clone(), false);
+            if disk_stamp(dir) == before {
+                return read;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(5 * u64::from(attempt + 1)));
+        }
+        // Every read overlapped a write, so none is known to be consistent: not a result.
+        Err(io(format!(
+            "the experience store changed during each of {ATTEMPTS} reads; retry the open"
+        )))
+    }
+
+    fn open_with(
+        dir: &Path,
+        cfg: ExperienceConfig,
+        sealer: Option<Arc<dyn Sealer>>,
+        writable: bool,
+    ) -> Result<Self> {
+        let mut main = dir.join(SNAPSHOT_FILE);
         let next = dir.join(format!("{SNAPSHOT_FILE}{NEXT_SUFFIX}"));
         // A checkpoint stopped before it published its snapshot. The staged file is written
         // atomically, so it is whole and at least as new as the published one, which may by now
         // be partly or fully overwritten by the scrub.
         if next.exists() {
-            if main.exists() {
-                scrub_remove_file(&main).map_err(io)?;
+            if writable {
+                if main.exists() {
+                    scrub_remove_file(&main).map_err(io)?;
+                }
+                std::fs::rename(&next, &main).map_err(io)?;
+                sync_directory(dir).map_err(io)?;
+            } else {
+                main = next;
             }
-            std::fs::rename(&next, &main).map_err(io)?;
-            sync_directory(dir).map_err(io)?;
         }
         let (mut x, snapshot_seq) = match std::fs::read(&main) {
             Ok(bytes) => {
@@ -218,7 +272,7 @@ impl ExperienceStore {
                         snapshot_error(format!("journal record {seq} does not replay: {e}"))
                     })?;
                 }
-                if (valid_len as usize) < bytes.len() {
+                if writable && (valid_len as usize) < bytes.len() {
                     // Drop the cut-short tail; it was never acknowledged.
                     let f = open_rw(&journal_path)?;
                     f.set_len(valid_len).map_err(io)?;
@@ -232,6 +286,18 @@ impl ExperienceStore {
             Err(e) => return Err(io(e)),
         }
 
+        if !writable {
+            return Ok(Self {
+                dir: dir.to_path_buf(),
+                sealer,
+                x,
+                seq,
+                snapshot_seq,
+                journal: None,
+                journal_bytes: valid_len,
+                journal_stale: false,
+            });
+        }
         let mut store = if journal_present {
             Self {
                 dir: dir.to_path_buf(),

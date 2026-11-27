@@ -270,16 +270,50 @@ pub(crate) fn sync_mapped_file(file: &std::fs::File) -> std::io::Result<()> {
     }
 }
 
+/// Whether opening an entry failed because it is gone: not found, or on Windows access denied,
+/// which is how a delete-pending file answers.
+fn already_removed(error: &anyhow::Error) -> bool {
+    use std::io::ErrorKind::{NotFound, PermissionDenied};
+    error
+        .chain()
+        .filter_map(|cause| cause.downcast_ref::<std::io::Error>())
+        .any(|cause| match cause.kind() {
+            NotFound => true,
+            PermissionDenied => cfg!(windows),
+            _ => false,
+        })
+}
+
 /// Overwrites a file with zeros, syncs it, then unlinks it, so the bytes are not left in the
 /// freed blocks of a filesystem that does not zero them. Copy-on-write and wear-levelled
 /// media can still keep prior copies, which no file API controls.
 pub(crate) fn scrub_remove_file(path: &Path) -> Result<()> {
     use std::io::{Seek, SeekFrom};
-    if path.symlink_metadata()?.file_type().is_symlink() {
-        // Never write through a link; the target is not ours to overwrite.
-        return Ok(std::fs::remove_file(path)?);
-    }
-    let mut file = open_regular(path, true)?;
+    // Whether the entry is known to be a regular file, which a refused open of it can only mean
+    // is already deleted. A directory refuses the open too (access denied on Windows) and is an
+    // error.
+    let (regular, opened) = match path.symlink_metadata() {
+        Ok(meta) if meta.file_type().is_symlink() => {
+            // Never write through a link; the target is not ours to overwrite.
+            return Ok(std::fs::remove_file(path)?);
+        }
+        Ok(meta) => (
+            meta.is_file(),
+            open_regular(path, true).map_err(anyhow::Error::from),
+        ),
+        Err(error) => (true, Err(error.into())),
+    };
+    let mut file = match opened {
+        Ok(file) => file,
+        // Already removed (a race), or on Windows deleted while a reader still holds a handle:
+        // the entry stays listed and every open of it is refused. Its content was zeroed
+        // before the unlink that left it pending, so there is nothing left to scrub.
+        Err(error) if regular && already_removed(&error) => {
+            tracing::debug!(%error, path = %path.display(), "scrub skipped an entry that is already deleted");
+            return Ok(());
+        }
+        Err(error) => return Err(error),
+    };
     #[cfg(unix)]
     {
         use std::os::unix::fs::MetadataExt;
@@ -315,7 +349,15 @@ pub(crate) fn scrub_remove_dir(dir: &Path) -> Result<()> {
             scrub_remove_file(&entry.path())?;
         }
     }
-    std::fs::remove_dir(dir)?;
+    if let Err(error) = std::fs::remove_dir(dir) {
+        // Windows keeps a deleted file listed until the last handle to it closes, and a reader
+        // holds one open. The content is already zeroed and unlinked; the empty directory is
+        // removed by the next compaction's `scrub_unreferenced`.
+        if !(cfg!(windows) && dir.exists()) {
+            return Err(error.into());
+        }
+        tracing::warn!(%error, dir = %dir.display(), "directory removal deferred while a reader holds a handle");
+    }
     sync_directory(dir.parent().unwrap_or_else(|| Path::new(".")))
 }
 

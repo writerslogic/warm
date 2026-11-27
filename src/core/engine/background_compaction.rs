@@ -424,6 +424,7 @@ impl WarmCore {
         self: &Arc<Self>,
         options: CompactionOptions,
     ) -> Result<CompactionHandle> {
+        self.ensure_writable()?;
         self.spawn_compaction(options, Box::new(|| {}), Box::new(|| {}))
     }
 
