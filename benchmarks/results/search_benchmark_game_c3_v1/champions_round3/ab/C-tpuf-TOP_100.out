@@ -1,0 +1,4 @@
+  worst regress: [('france president world war res', 7402, 7493), ('arsenal player 1998 forward go', 4701, 4748), ('the who', 1149, 1192)]
+TOP_100 order A (base first=True): union 5702->5700 (-0.0%) | union:num_tokens_2 529->544 (+2.8%) | union:num_tokens_3 632->633 (+0.1%) | intersection 936->927 (-0.9%) | term 18->17 (-5.3%) | ALL 3644->3640 (-0.1%) | differing 0
+  worst regress: [('france president world war res', 7424, 7525), ('arsenal player 1998 forward go', 4704, 4751), ('to be or not to be', 5811, 5840)]
+TOP_100 order B (base first=False): union 5723->5730 (+0.1%) | union:num_tokens_2 541->539 (-0.4%) | union:num_tokens_3 644->630 (-2.1%) | intersection 945->927 (-1.8%) | term 18->18 (-2.3%) | ALL 3660->3657 (-0.1%) | differing 0

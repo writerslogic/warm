@@ -1,0 +1,4 @@
+  worst regress: [('+to +be +or +not +to +be', 10309, 10553), ('what is the name of the chemis', 58716, 58881), ('+the +who', 2536, 2682)]
+TOP_1000 order A (base first=True): union 9539->9558 (+0.2%) | union:num_tokens_2 2181->2209 (+1.3%) | union:num_tokens_3 1420->1438 (+1.3%) | intersection 1817->1859 (+2.3%) | term 1161->120 (-89.7%) | ALL 6258->6217 (-0.7%) | differing 0
+  worst regress: [('what is the name of the chemis', 58467, 58851), ('+to +be +or +not +to +be', 10284, 10520), ('a database index is a data str', 31045, 31260)]
+TOP_1000 order B (base first=False): union 9489->9528 (+0.4%) | union:num_tokens_2 2174->2177 (+0.1%) | union:num_tokens_3 1422->1420 (-0.1%) | intersection 1817->1846 (+1.6%) | term 1164->115 (-90.2%) | ALL 6230->6195 (-0.6%) | differing 0

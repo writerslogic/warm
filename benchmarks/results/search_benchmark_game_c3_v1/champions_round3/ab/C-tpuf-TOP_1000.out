@@ -1,0 +1,4 @@
+  worst regress: [('+san +francisco', 1074, 1088), ('the incredibles', 3051, 3063), ('+united +states +constitution', 668, 672)]
+TOP_1000 order A (base first=True): union 9563->9428 (-1.4%) | union:num_tokens_2 2200->2181 (-0.9%) | union:num_tokens_3 1432->1414 (-1.3%) | intersection 1861->1832 (-1.6%) | term 117->117 (-0.3%) | ALL 6221->6132 (-1.4%) | differing 0
+  worst regress: [('what is the name of the chemis', 58897, 59195), ('kenyan world marathon record o', 6974, 7026), ('+new +york +population', 1194, 1217)]
+TOP_1000 order B (base first=False): union 9543->9455 (-0.9%) | union:num_tokens_2 2184->2177 (-0.3%) | union:num_tokens_3 1428->1413 (-1.0%) | intersection 1855->1833 (-1.2%) | term 112->109 (-3.4%) | ALL 6206->6147 (-1.0%) | differing 0

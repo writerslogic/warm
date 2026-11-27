@@ -1,0 +1,4 @@
+  worst regress: [('the who', 1113, 1187), ('to be or not to be', 5736, 5797), ('new york population', 983, 1023)]
+TOP_100 order A (base first=True): union 5702->5694 (-0.1%) | union:num_tokens_2 515->541 (+5.1%) | union:num_tokens_3 622->638 (+2.5%) | intersection 925->922 (-0.3%) | term 196->179 (-8.8%) | ALL 3651->3645 (-0.2%) | differing 0
+  worst regress: [('+story +of +a +girl', 635, 651), ('law school rankings', 295, 300), ('the incredibles', 60, 63)]
+TOP_100 order B (base first=False): union 5734->5690 (-0.8%) | union:num_tokens_2 549->517 (-5.9%) | union:num_tokens_3 643->628 (-2.4%) | intersection 928->919 (-0.9%) | term 198->179 (-9.5%) | ALL 3672->3642 (-0.8%) | differing 0
