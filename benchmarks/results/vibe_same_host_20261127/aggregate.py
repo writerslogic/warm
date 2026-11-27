@@ -4,8 +4,9 @@ Per config: strict ID recall = minimum over blocks, QPS = median over blocks wit
 (per-block QPS = 1 / mean stored per-query time of VIBE's last of 5 passes). Only configs
 present in every block are kept.
 """
-import csv, re, statistics, collections, sys
-rows = list(csv.DictReader(open("raw_per_block.csv")))
+import csv, re, statistics, collections
+with open("raw_per_block.csv") as fh:
+    rows = list(csv.DictReader(fh))
 SYS = {"new": "warm-541", "base": "warm-pre541", "roar": None, "mlann": None}
 def method(r):
     u, n = r["unit"], r["name"]
@@ -38,7 +39,8 @@ for (ds, m, f, grp, n), rs in g.items():
 full.sort(key=lambda d: (d["dataset"], d["method"], -d["recall_ids_min"]))
 F = ["phase", "dataset", "method", "configuration", "recall_ids_min", "qps_median", "qps_min", "qps_max"]
 def dump(fn, rs):
-    w = csv.DictWriter(open(fn, "w"), F); w.writeheader(); w.writerows(rs)
+    with open(fn, "w") as fh:
+        w = csv.DictWriter(fh, F); w.writeheader(); w.writerows(rs)
 dump("full.csv", full)
 front = []
 for key in {(d["dataset"], d["method"]) for d in full}:
@@ -57,4 +59,5 @@ for ds in sorted({d["dataset"] for d in full}):
             b = max(c, key=lambda d: d["qps_median"]) if c else None
             out.append(dict(dataset=ds, method=m, target=t, recall_ids_min=b and b["recall_ids_min"], qps_median=b and b["qps_median"],
                             qps_min=b and b["qps_min"], qps_max=b and b["qps_max"], configuration=b and b["configuration"]))
-w = csv.DictWriter(open("targets.csv", "w"), list(out[0])); w.writeheader(); w.writerows(out)
+with open("targets.csv", "w") as fh:
+    w = csv.DictWriter(fh, list(out[0])); w.writeheader(); w.writerows(out)

@@ -15,17 +15,24 @@ def get_truth(ds):
     truth[ds] = (top, h5n); return truth[ds]
 def rec(nb, tr):
     return float(np.mean([len(set(a.tolist()) & set(b.tolist())) / 100 for a, b in zip(nb, tr)]))
-out = csv.writer(open(sys.argv[1], "w"))
-out.writerow("block,unit,dataset,file,group,name,recall_f64,recall_h5,qps_last,best_qps,build_time".split(","))
-for d in sorted(glob.glob(f"{root}/b*-*-*")):
-    if open(f"{d}/exit").read().strip() != "0" if os.path.exists(f"{d}/exit") else True: continue
-    b, unit, ds = os.path.basename(d).split("-", 2); b = b[1:]
-    top, h5n = get_truth(ds)
-    for fn in sorted(glob.glob(f"{d}/results/{ds}/100/*/*.hdf5")):
-        f = h5py.File(fn, "r")
-        for g in f:
-            grp = f[g]
-            nb = np.asarray(grp["neighbors"])[:, :100]
-            t = np.asarray(grp["times"], dtype=np.float64)
-            out.writerow([b, unit, ds, os.path.basename(fn), g, grp.attrs["name"], rec(nb, top), rec(nb, h5n),
-                          1.0 / t.mean(), grp.attrs["best_qps"], grp.attrs["build_time"]])
+def finished(d):
+    try:
+        with open(f"{d}/exit") as fh:
+            return fh.read().strip() == "0"
+    except FileNotFoundError:
+        return False
+with open(sys.argv[1], "w", newline="") as fh:
+    out = csv.writer(fh)
+    out.writerow("block,unit,dataset,file,group,name,recall_f64,recall_h5,qps_last,best_qps,build_time".split(","))
+    for d in sorted(glob.glob(f"{root}/b*-*-*")):
+        if not finished(d): continue
+        b, unit, ds = os.path.basename(d).split("-", 2); b = b[1:]
+        top, h5n = get_truth(ds)
+        for fn in sorted(glob.glob(f"{d}/results/{ds}/100/*/*.hdf5")):
+            with h5py.File(fn, "r") as f:
+                for g in f:
+                    grp = f[g]
+                    nb = np.asarray(grp["neighbors"])[:, :100]
+                    t = np.asarray(grp["times"], dtype=np.float64)
+                    out.writerow([b, unit, ds, os.path.basename(fn), g, grp.attrs["name"], rec(nb, top), rec(nb, h5n),
+                                  1.0 / t.mean(), grp.attrs["best_qps"], grp.attrs["build_time"]])
