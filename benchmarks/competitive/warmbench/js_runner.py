@@ -32,7 +32,7 @@ WORK = CACHE / "competitive" / "js"
 K = 10
 ROUNDS = 5
 BUILD_REPEATS = 3
-BM25_QUERIES = 10  # Vectra's BM25 path rebuilds its engine per query and exhausts the heap after about 20 queries
+BM25_QUERIES = int(os.environ.get("WARM_BENCH_JS_BM25_QUERIES", "10"))  # 0 skips the row; default Vectra's BM25 path rebuilds its engine per query and exhausts the heap after about 20 queries
 DATASETS = {"scifact": "beir:scifact", "nfcorpus": "beir:nfcorpus", "fiqa": "beir:fiqa", "memory": "memory"}
 
 # row -> (display, store it reads, contract)
@@ -104,7 +104,7 @@ def build_store(store, data, work):
 def serve_row(row, data, work):
     _, store, _ = ROWS[row]
     result = work / "serve.json"
-    limit = [BM25_QUERIES] if row == "vectra-bm25" else []
+    limit = [BM25_QUERIES] if row == "vectra-bm25" else []  # a fresh process per round, so the heap never accumulates
     _, _, wall, peak = node("serve", row, data, work / f"store-{store}", result, *limit)
     report = json.loads(result.read_text())
     report["wall_seconds"] = wall
@@ -130,14 +130,16 @@ def run(dataset, embed_bin, out_dir=None, rounds=ROUNDS, build_repeats=BUILD_REP
         raise SystemExit(f"{dataset}: input/qrels differ from the pinned digests of the published text results")
     hw = common.hardware()
     log(f"{dataset}: building stores on {hw['class']}")
-    builds = {store: [] for store in STORES}
+    stores = [st for st in STORES if st != "vectra-bm25" or BM25_QUERIES > 0]
+    builds = {store: [] for store in stores}
     for repeat in range(build_repeats):
-        for store in STORES:
+        for store in stores:
             builds[store].append(build_store(store, data, work))
             log(f"  build {store} #{repeat + 1}: {builds[store][-1]['build_seconds']:.2f}s")
     # the last repeat of every store stays on disk for the serve rounds
-    systems = {row: {"display": ROWS[row][0], "contract": ROWS[row][2], "store": ROWS[row][1], "serve_rounds": []} for row in ROWS}
-    order = list(ROWS)
+    active = [row for row in ROWS if row != "vectra-bm25" or BM25_QUERIES > 0]
+    systems = {row: {"display": ROWS[row][0], "contract": ROWS[row][2], "store": ROWS[row][1], "serve_rounds": []} for row in active}
+    order = list(active)
     for r in range(rounds):
         rotated = order[r % len(order):] + order[:r % len(order)]
         for row in rotated:
@@ -154,7 +156,7 @@ def run(dataset, embed_bin, out_dir=None, rounds=ROUNDS, build_repeats=BUILD_REP
             log(f"  round {r + 1} {row}: p50 {report['passes'][0]['p50_ns'] / 1e3:.0f}us")
     for row in systems:
         systems[row].pop("_ids", None)
-    for store in STORES:
+    for store in stores:
         for row, entry in systems.items():
             if entry["store"] == store:
                 entry["build_runs"] = builds[store]
@@ -177,12 +179,13 @@ def run(dataset, embed_bin, out_dir=None, rounds=ROUNDS, build_repeats=BUILD_REP
             "size": "allocated bytes of the store directory (du)", "peak_rss": "wait4 rusage of the serve or build process",
             "interleaving": "each round runs every row once in a fresh process, order rotated per round",
             "vectra_bm25": f"Vectra's isBm25 rebuilds a BM25 engine over every non-selected item per query (about 100 ms at 300 documents) and runs out of heap after "
-                           f"about 20 queries in one process, so each round measures {BM25_QUERIES} queries in a fresh process, one timed pass, no warm-up. "
+                           f"about 20 queries in one process, so each round measures {BM25_QUERIES} queries (set per dataset: its cost grows with the corpus text) in a fresh process, one timed pass, no warm-up. "
                            "Its list is the 10 semantic hits followed by BM25 hits, so nDCG@10 and recall@10 are those of the dense row by construction.",
             "docreader": "Vectra's BM25 path reads each chunk's text through `docReader`; the benchmark supplies it from memory, which favours Vectra (its default reads one file per document per query)",
         },
         "systems": systems,
         "unsupported": UNSUPPORTED,
+        "not_run": {} if BM25_QUERIES > 0 else {"vectra-bm25": "Vectra's isBm25 rebuilds a BM25 engine over every item per query; on this corpus one query takes minutes, so the row was not run (WARM_BENCH_JS_BM25_QUERIES=0)."},
     }
     out = Path(out_dir) if out_dir else common.RESULTS
     name = f"{suite}-js-{dataset}-{hw['class']}.json"

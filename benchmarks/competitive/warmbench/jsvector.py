@@ -136,7 +136,7 @@ def lines(results, cells):
             if not rows and contract != "keyword":
                 continue
             out += [f"**{CONTRACT_TITLE[contract]}**", "", "| System | " + " | ".join(c[1] for c in COLUMNS) + " |", "|---|" + "---|" * len(COLUMNS)]
-            subset = set(systems["vectra-bm25"]["quality"]["per_query_ndcg@10"]) if contract == "hybrid" else None
+            subset = set(systems["vectra-bm25"]["quality"]["per_query_ndcg@10"]) if contract == "hybrid" and "vectra-bm25" in systems else None
             for key, entry in rows:
                 cell = []
                 for metric, label, higher, dec in COLUMNS:
@@ -162,7 +162,9 @@ def lines(results, cells):
             for _, unsupported in data.get("unsupported", {}).items():
                 if contract in unsupported:
                     out += [f"Vectra, {contract}: {unsupported[contract]}", ""]
-        if "vectra-bm25" in systems:
+            if contract == "hybrid" and "vectra-bm25" not in systems:
+                out += [f"Vectra, hybrid: not run. {data['not_run']['vectra-bm25']}", ""]
+        if "vectra-bm25" in systems and "warm-hybrid" in systems:
             out += [f"The hybrid rows compare nDCG@10 on the same {len(systems['vectra-bm25']['quality']['per_query_ndcg@10'])} queries Vectra's BM25 row ran; "
                     f"WARM hybrid over all {systems['warm-hybrid']['quality']['queries']:,} queries is {systems['warm-hybrid']['quality']['ndcg@10']:.4f}, "
                     f"WARM dense {systems['warm-vector']['quality']['ndcg@10']:.4f}, Vectra dense {systems['vectra']['quality']['ndcg@10']:.4f}. "
