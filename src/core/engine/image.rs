@@ -272,9 +272,9 @@ impl WarmCore {
                 && documents::checkpoint_binding(&bytes) == (generation, self.dimensions as u64),
             "checkpoint checksum mismatch"
         );
-        Ok(ServingImage::new(bytes)?
+        ServingImage::new(bytes)?
             .with_text_cache(self.config.document_checkpoint.text_cache_bytes)
-            .with_rank_tables())
+            .with_derived_tables()
     }
 
     /// The sealed checkpoint of `store` for the generation directory `generation`, when this
@@ -592,7 +592,7 @@ mod tests {
                 })
                 .collect()
         };
-        let feature_word = |bytes: &[u8]| u64::from_le_bytes(bytes[32..40].try_into().unwrap());
+        let feature_word = |bytes: &[u8]| u64::from_le_bytes(bytes[32..40].try_into().unwrap()) & 1;
         let expected = {
             let core = WarmCore::new(256, Some(path.clone()), Some(config.clone()))?;
             let documents = (0..600)

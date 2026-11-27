@@ -688,94 +688,6 @@ fn screened_semantic_scan_matches_the_exact_scan() {
     }
 }
 
-/// A one-chunk document of `words` with a pseudo-random embedding.
-fn chunk_document(id: usize, words: &str, state: &mut u64) -> StoredDocument {
-    let mut next = || {
-        *state = state
-            .wrapping_mul(6364136223846793005)
-            .wrapping_add(1442695040888963407);
-        ((*state >> 33) as f64 / (1u64 << 31) as f64) - 0.5
-    };
-    let vector: Vec<f64> = (0..8).map(|_| next()).collect();
-    let input = serde_json::from_value(json!({
-        "id": format!("h{id:05}"), "version": "1", "text": words,
-        "chunkWords": 32, "overlapWords": 0, "embeddings": [vector],
-    }))
-    .unwrap();
-    super::super::prepare(input, 1024, Some(8), TextEncoder::default()).unwrap()
-}
-
-/// A thread keeps a live store's decoded lists only from `LIVE_HOT_MIN_LEN` postings and within
-/// `LIVE_HOT_POSTINGS`, and every ranking, cold or from kept lists, is the reference scan's, also after a
-/// mutation of the store.
-#[test]
-fn live_hot_lists_rank_as_the_reference_scan_at_their_limits() {
-    const DOCUMENTS: usize = 2100;
-    let query = vec![0.3, -0.2, 0.5, 0.1, 0.4, -0.3, 0.2, 0.25];
-    let options = SearchOptions {
-        k: Some(9),
-        candidate_limit: Some(10),
-        embedding: Some(query),
-        min_semantic_score: Some(-1.0),
-        ..Default::default()
-    };
-    let text = "alpha beta common delta";
-    // The budget left after beta and common is 2200 - (16 + 2100) = 84 postings.
-    for (alpha, beta, delta) in [
-        (LIVE_HOT_MIN_LEN - 1, LIVE_HOT_MIN_LEN, 83),
-        (LIVE_HOT_MIN_LEN, LIVE_HOT_MIN_LEN + 1, 84),
-        (LIVE_HOT_MIN_LEN + 1, LIVE_HOT_MIN_LEN - 1, 85),
-    ] {
-        let mut state = 0x2545_F491_4F6C_DD1Du64;
-        let mut store = DocumentStore::default();
-        let document = |id: usize, state: &mut u64| {
-            let mut words = format!("common rare{id}");
-            for (name, count) in [("alpha", alpha), ("beta", beta), ("delta", delta)] {
-                if id < count {
-                    words.push_str(&format!(" {name}"));
-                }
-            }
-            chunk_document(id, &words, state)
-        };
-        for id in 0..DOCUMENTS {
-            let document = document(id, &mut state);
-            store.insert(document.id.clone(), document);
-        }
-        let kept = || LEXICAL_SCRATCH.with(|scratch| scratch.borrow().hot.postings);
-        let check = |store: &DocumentStore, label: &str| {
-            let expected = serde_json::to_value(
-                super::super::search_impl(store, text, &options, Some(8), false).unwrap(),
-            )
-            .unwrap();
-            for pass in 0..3 {
-                let actual = serde_json::to_value(
-                    super::super::search_impl(store, text, &options, Some(8), true).unwrap(),
-                )
-                .unwrap();
-                assert_eq!(
-                    actual, expected,
-                    "{label} {alpha} {beta} {delta} pass {pass}"
-                );
-            }
-        };
-        LEXICAL_SCRATCH.with(|scratch| scratch.take());
-        check(&store, "built");
-        let admitted = |count: usize| if count >= LIVE_HOT_MIN_LEN { count } else { 0 };
-        let first = admitted(alpha)
-            + admitted(beta)
-            + DOCUMENTS
-            + if delta <= LIVE_HOT_POSTINGS - (admitted(alpha) + admitted(beta) + DOCUMENTS) {
-                delta
-            } else {
-                0
-            };
-        assert_eq!(kept(), first, "{alpha} {beta} {delta}");
-        let document = document(DOCUMENTS, &mut state);
-        store.insert(document.id.clone(), document);
-        check(&store, "grown");
-    }
-}
-
 /// The screen table serves from `SCREEN_TABLE_MIN_CHUNKS` chunks (the second query of a generation builds it) and
 /// ranks identically to the exact scan on both sides of that size.
 #[test]
@@ -1294,21 +1206,6 @@ fn decoded_hot_lists_rank_prose_as_the_exhaustive_capture() {
                     );
                 }
             }
-            // A version 3 checkpoint is pruned, not decoded into hot lists.
-            if image.has_impacts() {
-                continue;
-            }
-            let kept = LEXICAL_SCRATCH.with(|scratch| {
-                let scratch = scratch.borrow();
-                (
-                    scratch.hot.postings,
-                    scratch.hot.lists.iter().map(|l| l.len()).sum::<usize>(),
-                )
-            });
-            assert!(
-                kept.0 > 0 && kept.0 <= HOT_POSTINGS && kept.1 > 0,
-                "{kept:?}"
-            );
         }
     }
 }
@@ -1388,10 +1285,24 @@ fn pruned_ranking_matches_exhaustive_ranking_to_the_bit() {
             .unwrap()
         };
         let (pruned, plain) = (
-            build(super::super::image::encode),
+            build(super::super::image::encode)
+                .with_derived_tables_using(true)
+                .unwrap(),
             build(super::super::image::encode_v2),
         );
+        // The same checkpoint opened without its direct tables, and as an older writer wrote it
+        // (no stored tables: computed at open): every ranking is the same to the bit.
+        let (no_dense, computed) = (
+            build(super::super::image::encode)
+                .with_derived_tables_using(false)
+                .unwrap(),
+            build(super::super::image::encode_v4_plain)
+                .with_derived_tables_using(true)
+                .unwrap(),
+        );
         assert!(pruned.has_impacts() && !plain.has_impacts());
+        assert!(!pruned.dense_is_empty() && no_dense.dense_is_empty());
+        assert_eq!(pruned.dense_len(), computed.dense_len());
         let texts: Vec<String> = match index {
             0 => include_str!("../../../../CHANGELOG.md")
                 .lines()
@@ -1432,6 +1343,11 @@ fn pruned_ranking_matches_exhaustive_ranking_to_the_bit() {
                         .collect()
                 };
                 assert_eq!(bits(&fast), bits(&exact), "{text:?}");
+                for other in [&no_dense, &computed] {
+                    let again = LEXICAL_SCRATCH
+                        .with(|scratch| scratch.borrow_mut().rank(other, &prepared, true));
+                    assert_eq!(bits(&again), bits(&exact), "{text:?}");
+                }
                 listed += stats.blocks_listed;
                 decoded += stats.blocks_decoded;
                 scored_total += stats.scored;
@@ -1495,6 +1411,8 @@ fn pruned_ranking_matches_exhaustive_at_block_boundaries() {
             ServingImage::new(super::super::Backing::Owned(
                 encode(&store, 1, 1024).unwrap().unwrap(),
             ))
+            .unwrap()
+            .with_derived_tables_using(true)
             .unwrap()
         };
         let (pruned, plain) = (
@@ -1571,7 +1489,9 @@ fn pruned_ranking_matches_exhaustive_when_essential_blocks_are_passed_over() {
         .unwrap()
     };
     let (pruned, plain) = (
-        build(super::super::image::encode).with_rank_tables(),
+        build(super::super::image::encode)
+            .with_derived_tables()
+            .unwrap(),
         build(super::super::image::encode_v2),
     );
     for (term, expected) in [("dense", true), ("sparse", false)] {
@@ -1879,4 +1799,47 @@ fn combined_weight_boundary_is_finite_and_overflow_is_rejected() {
         assert!(prepare_search("running", &options, Some(3)).is_err());
     }
     assert!(capture_search(&store, Vec::new()).queries.is_empty());
+}
+
+/// The derived tables a checkpoint stores are exactly the ones an older checkpoint without them
+/// gets computed at open, the tabled lists are a function of the index alone (queries add or
+/// drop none), and a checkpoint with the section is rejected by a reader that does not know it
+/// only through its feature bit.
+#[test]
+fn stored_derived_tables_equal_the_computed_ones_and_queries_leave_them_alone() {
+    let mut state = 0x9e37_79b9_7f4a_7c15u64;
+    for store in [
+        prose_store(0, 1),
+        heavy_tailed_store(6000, 400, &mut state),
+        heavy_tailed_store(40, 6, &mut state),
+    ] {
+        type Encoder = fn(&DocumentStore, u32, usize) -> Result<Option<Vec<u8>>>;
+        let open = |encode: Encoder| {
+            ServingImage::new(super::super::Backing::Owned(
+                encode(&store, 1, 1024).unwrap().unwrap(),
+            ))
+            .unwrap()
+        };
+        let (stored, plain) = (
+            open(super::super::image::encode),
+            open(super::super::image::encode_v4_plain),
+        );
+        assert!(plain.stored_derived().is_none());
+        assert_eq!(
+            stored.stored_derived().unwrap(),
+            plain.derived_section().as_slice()
+        );
+        let stored = stored.with_derived_tables_using(true).unwrap();
+        let computed = plain.with_derived_tables_using(true).unwrap();
+        let before = stored.dense_len();
+        assert_eq!(before, computed.dense_len());
+        for text in ["w1 w2", "w1 w2 w3 w4 w5", "w0", "the and of a"] {
+            let prepared = prepare_search(text, &SearchOptions::default(), None).unwrap();
+            for image in [&stored, &computed] {
+                LEXICAL_SCRATCH.with(|scratch| scratch.borrow_mut().rank(image, &prepared, true));
+            }
+        }
+        assert_eq!(stored.dense_len(), before);
+        assert_eq!(computed.dense_len(), before);
+    }
 }

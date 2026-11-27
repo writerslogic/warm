@@ -56,6 +56,7 @@ const MAGIC_V1: &[u8; 8] = b"HMSCKP\x00\x01";
 pub(crate) fn known_magic(magic: &[u8]) -> bool {
     magic == MAGIC || magic == MAGIC_V3 || magic == MAGIC_V2 || magic == MAGIC_V1
 }
+mod derived;
 mod merge;
 pub(crate) use merge::{bisection_order, can_merge, merge, SlotOrder, REORDER_MAX_EDGES};
 
@@ -86,6 +87,8 @@ const H_TERMS: usize = 12; // and 13
 const H_FEATURES: usize = 3;
 /// Chunk text is in compressed blocks ([`super::text_blocks`]); three more sections.
 const FEATURE_TEXT_BLOCKS: u64 = 1;
+/// Version 4: the index-derived tables are stored in the last section ([`derived`]).
+const FEATURE_DERIVED: u64 = 2;
 const H_SECTIONS: usize = 14;
 
 #[derive(Clone, Copy)]
@@ -111,6 +114,8 @@ impl Section {
     /// sections; a version 4 checkpoint keeps its text inline.
     const Skips: Section = Section::TextDict;
     const Positions: Section = Section::TextTable;
+    /// Version 4's stored derived tables, when [`FEATURE_DERIVED`] is set.
+    const Derived: Section = Section::TextBlocks;
 }
 const SECTIONS: usize = 13;
 /// Sections of version 4: the skip tables and positions take the disk slots the compressed text
@@ -183,7 +188,7 @@ pub(crate) fn encode(
     generation: u32,
     dimensions: usize,
 ) -> Result<Option<Vec<u8>>> {
-    encode_as(store, generation, dimensions, 4, false)
+    encode_as(store, generation, dimensions, 4, false, true)
 }
 
 /// [`encode`] with the chunk text in compressed blocks (feature bit 0).
@@ -192,7 +197,7 @@ pub(crate) fn encode_compressed(
     generation: u32,
     dimensions: usize,
 ) -> Result<Option<Vec<u8>>> {
-    encode_as(store, generation, dimensions, 3, true)
+    encode_as(store, generation, dimensions, 3, true, false)
 }
 
 /// [`encode`] in version 1, for tests of reading it.
@@ -202,7 +207,7 @@ pub(crate) fn encode_v1(
     generation: u32,
     dimensions: usize,
 ) -> Result<Option<Vec<u8>>> {
-    encode_as(store, generation, dimensions, 1, false)
+    encode_as(store, generation, dimensions, 1, false, false)
 }
 
 /// [`encode`] in version 2, for tests of reading it.
@@ -212,7 +217,7 @@ pub(crate) fn encode_v2(
     generation: u32,
     dimensions: usize,
 ) -> Result<Option<Vec<u8>>> {
-    encode_as(store, generation, dimensions, 2, false)
+    encode_as(store, generation, dimensions, 2, false, false)
 }
 
 /// [`encode`] in version 3, for tests of reading it.
@@ -222,7 +227,7 @@ pub(crate) fn encode_v3(
     generation: u32,
     dimensions: usize,
 ) -> Result<Option<Vec<u8>>> {
-    encode_as(store, generation, dimensions, 3, false)
+    encode_as(store, generation, dimensions, 3, false, false)
 }
 
 /// Appends one block of postings' position bytes to `out`, recording where it starts (from
@@ -453,12 +458,23 @@ fn pack_frontiers(infos: &[super::postings::BlockInfo], skips: &mut Vec<u8>) -> 
 /// [`encode`] with a skip table and word positions per list (version 4), impact-carrying block
 /// postings (version 3), plain block postings (version 2) or flat ones (version 1); the chunk
 /// text is in compressed blocks (version 3 only) or inline.
+/// Version 4 without the stored derived tables, as an older writer wrote it.
+#[cfg(test)]
+pub(crate) fn encode_v4_plain(
+    store: &DocumentStore,
+    generation: u32,
+    dimensions: usize,
+) -> Result<Option<Vec<u8>>> {
+    encode_as(store, generation, dimensions, 4, false, false)
+}
+
 fn encode_as(
     store: &DocumentStore,
     generation: u32,
     dimensions: usize,
     version: u8,
     text_blocks: bool,
+    derived: bool,
 ) -> Result<Option<Vec<u8>>> {
     let (blocked, impacts, extended) = (version >= 2, version >= 3, version >= 4);
     if !representable(store) {
@@ -667,6 +683,9 @@ fn encode_as(
     }
     let crc = crc32fast::hash(&out[CRC_START..]);
     out[8..16].copy_from_slice(&u64::from(crc).to_le_bytes());
+    if extended && derived {
+        return derived::attach(out).map(Some);
+    }
     Ok(Some(out))
 }
 
@@ -764,6 +783,7 @@ impl ServingImage {
             .len()
             .saturating_sub(self.section(Section::Skips).len())
             .saturating_sub(self.section(Section::Positions).len())
+            .saturating_sub(self.section(Section::Derived).len())
             .saturating_sub(extra)
     }
 }
@@ -860,14 +880,21 @@ pub(crate) struct ServingImage {
     ordered: usize,
     /// The lists of at least [`RANKED_RUNS`] runs, found when the dictionaries are checked.
     ranked: Vec<ListSpan>,
-    /// Their rank tables, built by [`Self::with_rank_tables`] at open, or else by the first
-    /// query that asks for one.
+    /// The lists long enough for a direct frequency table, found when the dictionaries are
+    /// checked.
+    tabled: Vec<ListSpan>,
+    /// Whether the checkpoint stores its derived tables.
+    derived: bool,
+    /// Length normalization by word count under the default BM25 constants, set at open.
+    norms: Vec<f64>,
+    /// The rank tables of `ranked`, set by [`Self::with_derived_tables`] when the checkpoint
+    /// is opened (the getter computes them for an image used without it, as tests do).
     ranks: std::sync::OnceLock<Ranks>,
-    /// Direct frequency tables of the longest lists, built by queries (see `impact`).
+    /// Direct frequency tables of the longest lists, fixed at open (see `impact`).
     dense: super::impact::DenseTables,
-    /// Per slot, the class of its word count (see `impact`), built by the first pruned query.
+    /// Per slot, the class of its word count (see `impact`), set at open.
     word_classes: std::sync::OnceLock<Vec<u8>>,
-    /// Per slot, its word count capped at `u16::MAX`, built by the first pruned query.
+    /// Per slot, its word count capped at `u16::MAX`, set at open.
     word_counts: std::sync::OnceLock<Vec<u16>>,
     /// Chunk text may be in the compressed blocks (the feature word says so).
     text_blocks: bool,
@@ -994,18 +1021,23 @@ impl ServingImage {
         let count = |index: usize| usize::try_from(word(&bytes, index)).ok();
         let features = word(&bytes, H_FEATURES);
         ensure!(
-            features & !FEATURE_TEXT_BLOCKS == 0,
+            features & !(FEATURE_TEXT_BLOCKS | FEATURE_DERIVED) == 0,
             "checkpoint feature bits {features:#x} are newer than supported"
         );
         let text_blocks = features & FEATURE_TEXT_BLOCKS != 0;
+        let derived = features & FEATURE_DERIVED != 0;
         ensure!(
             !(extended && text_blocks),
             "a version 4 checkpoint holds no compressed text"
         );
+        ensure!(
+            extended || !derived,
+            "only a version 4 checkpoint stores derived tables"
+        );
         let mut sections = [(0usize, 0usize); SECTIONS];
         let mut end = HEADER_LEN;
         let present = if extended {
-            V4_SECTIONS
+            V4_SECTIONS + usize::from(derived)
         } else if text_blocks {
             SECTIONS
         } else {
@@ -1051,6 +1083,9 @@ impl ServingImage {
             dictionaries: [Dictionary::default(); 2],
             block_keys: Default::default(),
             ranked: Vec::new(),
+            tabled: Vec::new(),
+            derived,
+            norms: Vec::new(),
             ranks: std::sync::OnceLock::new(),
             sections,
             blocked,
@@ -1073,11 +1108,13 @@ impl ServingImage {
         image.check_slots()?;
         let mut totals = (0usize, 0usize);
         let mut ranked = Vec::new();
+        let mut tabled = Vec::new();
         for form in 0..2 {
             (image.dictionaries[form], image.block_keys[form]) =
-                image.check_dictionary(form, &mut totals, &mut ranked)?;
+                image.check_dictionary(form, &mut totals, &mut ranked, &mut tabled)?;
         }
         image.ranked = ranked;
+        image.tabled = tabled;
         ensure!(
             totals
                 == if extended {
@@ -1305,6 +1342,7 @@ impl ServingImage {
         form: usize,
         totals: &mut (usize, usize),
         ranked: &mut Vec<ListSpan>,
+        tabled: &mut Vec<ListSpan>,
     ) -> Result<(Dictionary, Vec<u64>)> {
         let (dict_section, block_section) = if form == 0 {
             (Section::Dict0, Section::Blocks0)
@@ -1383,6 +1421,14 @@ impl ServingImage {
                     .is_some_and(|end| end <= postings),
                 "checkpoint posting range"
             );
+            if super::impact::tabled(entry.count as usize, self.slots) {
+                tabled.push(ListSpan {
+                    posting: base.posting,
+                    skip: base.skip,
+                    pos: base.pos,
+                    entry,
+                });
+            }
             if self.extended
                 && entry.count
                     >= (RANKED_RUNS * RUN_BLOCKS * super::postings::CHECKPOINT_BLOCK) as u64
@@ -2190,12 +2236,6 @@ impl ServingImage {
         Some((postings, self.extended.then_some(list)))
     }
 
-    /// Builds the rank tables now, at open, so that no query pays for them.
-    pub(crate) fn with_rank_tables(mut self) -> Self {
-        self.union_windows = self.build_union_windows(self.ranks());
-        self
-    }
-
     fn build_union_windows(&self, ranks: &Ranks) -> Box<[(usize, WindowBounds)]> {
         let min_count = self.slots.div_ceil(16);
         let (postings, skips, positions) = (
@@ -2233,7 +2273,11 @@ impl ServingImage {
     }
 
     fn ranks(&self) -> &Ranks {
-        self.ranks.get_or_init(|| {
+        self.ranks.get_or_init(|| self.compute_ranks())
+    }
+
+    fn compute_ranks(&self) -> Ranks {
+        {
             let average = (self.words as f64 / (self.chunks as f64).max(1.0)).max(1.0);
             let unit = super::lexical::wand::Bound::new(1.0, average, super::Bm25::DEFAULT);
             let (postings, skips, positions) = (
@@ -2258,7 +2302,32 @@ impl ServingImage {
                 })
                 .unwrap_or_default();
             Ranks { average, tables }
-        })
+        }
+    }
+
+    #[cfg(test)]
+    pub(super) fn dense_is_empty(&self) -> bool {
+        self.dense.len() == 0
+    }
+
+    #[cfg(test)]
+    pub(super) fn stored_derived(&self) -> Option<&[u8]> {
+        self.derived.then(|| self.section(Section::Derived))
+    }
+
+    #[cfg(test)]
+    pub(super) fn dense_len(&self) -> usize {
+        self.dense.len()
+    }
+
+    /// The length normalization by word count under the default constants and the image's
+    /// average chunk length.
+    pub(super) fn norm_table(&self) -> &[f64] {
+        &self.norms
+    }
+
+    pub(super) fn norm_average(&self) -> f64 {
+        (self.words as f64 / (self.chunks as f64).max(1.0)).max(1.0)
     }
 
     pub(super) fn dense(&self) -> &super::impact::DenseTables {
@@ -2280,7 +2349,7 @@ impl ServingImage {
             blocked: self.blocked,
             impacts: self.impacts,
         };
-        self.dense.get(self.slots, &postings)
+        self.dense.get(&postings)
     }
 }
 

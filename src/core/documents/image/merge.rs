@@ -570,20 +570,42 @@ pub(crate) fn merge(
     for value in words {
         header.extend_from_slice(&value.to_le_bytes());
     }
+    // The tables derived from the finished checkpoint are computed from it, so it is written
+    // first as a run, mapped, and then copied with them after it.
+    let mut base_run = BlockWriter::create_in(directory)?;
+    base_run.write(&header)?;
+    for spool in &spools {
+        spool.for_each_block(|block| base_run.write(block))?;
+    }
+    drop(spools);
+    let base_run = base_run.finish_spool()?;
+    let derived = {
+        // SAFETY: the run is a temporary file private to this call; nothing writes it while
+        // it is mapped.
+        let map = unsafe { memmap2::Mmap::map(base_run.file())? };
+        super::ServingImage::new(super::Backing::Mapped(map))?.derived_section()
+    };
+    let mut header = super::derived::attached_header(&header, base_run.len(), derived.len() as u64);
     let mut hasher = crc32fast::Hasher::new();
     hasher.update(&header[super::CRC_START..]);
-    for spool in &spools {
-        spool.for_each_block(|block| {
-            hasher.update(block);
-            Ok(())
-        })?;
-    }
+    let mut skipped = 0usize;
+    base_run.for_each_block(|block| {
+        let from = (super::HEADER_LEN - skipped).min(block.len());
+        skipped += from;
+        hasher.update(&block[from..]);
+        Ok(())
+    })?;
+    hasher.update(&derived);
     header[8..16].copy_from_slice(&u64::from(hasher.finalize()).to_le_bytes());
     let mut file = BlockWriter::create_in(directory)?;
     file.write(&header)?;
-    for spool in &spools {
-        spool.for_each_block(|block| file.write(block))?;
-    }
+    let mut skipped = 0usize;
+    base_run.for_each_block(|block| {
+        let from = (super::HEADER_LEN - skipped).min(block.len());
+        skipped += from;
+        file.write(&block[from..])
+    })?;
+    file.write(&derived)?;
     let written = file.finish_synced(destination)?;
     #[cfg(test)]
     crate::core::storage::compaction_crash_point("fold-written");
