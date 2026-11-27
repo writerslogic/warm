@@ -1,7 +1,7 @@
 const assert = require('node:assert/strict')
 const { test } = require('node:test')
 const { spawnSync } = require('node:child_process')
-const { mkdtempSync, rmSync, readdirSync, existsSync } = require('node:fs')
+const { mkdtempSync, rmSync, existsSync } = require('node:fs')
 const { tmpdir } = require('node:os')
 const { join } = require('node:path')
 const { WarmMemorySystem } = require('../../index.js')
