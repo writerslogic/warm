@@ -15,4 +15,6 @@ Headline (TOP_1000, both orders agree, differing 0): term 1900 -> 105 (-94%), ne
 
 Known gate failures (cells that move the wrong way in both orders): A at TOP_10, negated 38 -> 39 us (+4.0%, +5.4%); B at tpuf TOP_100/TOP_1000, intersection +1.6% to +2.5% (B does not touch intersection; C reverses it). Cells under 5 us at 5 passes are quantised; at 3000 passes the term cell at TOP_100 reads 1.8 us in both builds.
 
+Tried and dropped: seeding the heap floor from the lone required term's champions in `required_optional` (intersection_union). Same-session A/B against the final tree, both orders, 0 differing: TOP_1000 intersection_union 2487 -> 2530 (+1.7%) and 2488 -> 2531 (+1.8%), TOP_100 1250 -> 1269 (+1.5%) and 1253 -> 1268 (+1.2%), every other cell within 1%. It regresses the target cell in both orders, so it is not in any PR. Only 10 of the 40 intersection_union queries have two tokens, the shape where the lacking class is a pure champion read.
+
 Not done: persisting champions in the index; intersection_union restructuring (lever 2); COUNT union (lever 4: `union_count` already counts by inclusion-exclusion and bitmap popcount).
