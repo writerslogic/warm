@@ -67,6 +67,9 @@ impl TopK {
     }
 }
 
+/// Fewer rows are scored exactly outright; screening them saves nothing.
+pub(super) const SCREEN_MIN_ROWS: usize = 256;
+
 /// Dot product with eight independent accumulators so the loop vectorises.
 #[inline]
 pub(super) fn dot(a: &[f32], b: &[f32]) -> f32 {
@@ -132,13 +135,10 @@ impl ExactScan {
         tests::before_canonical_scoring();
         let k = k.min(self.rows.len());
         let mut best = BinaryHeap::<Candidate>::with_capacity(k);
-        for (row, values) in self.rows.iter().enumerate() {
-            if !include(row) {
-                continue;
-            }
+        let mut offer = |row: usize, score: f64| {
             let candidate = Candidate {
                 row: row as u32,
-                score: values.cosine(query),
+                score,
             };
             if best.len() < k {
                 best.push(candidate);
@@ -147,10 +147,69 @@ impl ExactScan {
                     *worst = candidate;
                 }
             }
+        };
+        if k > 0 && k < self.rows.len() && self.rows.len() >= SCREEN_MIN_ROWS {
+            for row in self.screened_candidates(query, k, &include) {
+                offer(row, self.rows[row].cosine(query));
+            }
+        } else {
+            for (row, values) in self.rows.iter().enumerate() {
+                if include(row) {
+                    offer(row, values.cosine(query));
+                }
+            }
         }
         best.into_sorted_vec()
             .into_iter()
             .map(|hit| (hit.row, hit.score))
+            .collect()
+    }
+
+    /// The included rows, in row order, that can rank among the `k` best canonical scores.
+    ///
+    /// Every row is screened with the `f32` kernel whose error against [`Embedding::cosine`] is bounded
+    /// ([`ScreenBound`]). At least `k` included rows score at least their lower bound, so a row whose upper bound is
+    /// below the `k`-th largest lower bound is outranked by `k` rows and cannot be kept. Ties are not pruned, so the
+    /// survivors, scored exactly and ranked with the unchanged order, give the unscreened result bit for bit.
+    fn screened_candidates(
+        &self,
+        query: &[f64],
+        k: usize,
+        include: &impl Fn(usize) -> bool,
+    ) -> Vec<usize> {
+        const BLOCK: usize = 1024;
+        let query32: Vec<f32> = query.iter().map(|&q| q as f32).collect();
+        let bound = ScreenBound::new(query);
+        let mut spans: Vec<(f64, f64)> = Vec::with_capacity(self.rows.len());
+        let mut refs: Vec<&Embedding> = Vec::with_capacity(BLOCK);
+        let mut screened = Vec::with_capacity(BLOCK);
+        for block in self.rows.chunks(BLOCK) {
+            refs.clear();
+            refs.extend(block);
+            Embedding::screen(&refs, &query32, &mut screened);
+            spans.extend(screened.iter().map(|&(dot, norm)| {
+                let (dot, slack) = (f64::from(dot), bound.of(norm));
+                if dot.is_finite() && slack.is_finite() {
+                    ((dot - slack).max(-1.0), (dot + slack).min(1.0))
+                } else {
+                    (f64::NEG_INFINITY, f64::INFINITY)
+                }
+            }));
+        }
+        let included: Vec<bool> = (0..spans.len()).map(include).collect();
+        let mut lower: Vec<f64> = spans
+            .iter()
+            .zip(&included)
+            .filter(|(_, &keep)| keep)
+            .map(|(span, _)| span.0)
+            .collect();
+        let threshold = if lower.len() > k {
+            *lower.select_nth_unstable_by(k - 1, |a, b| b.total_cmp(a)).1
+        } else {
+            f64::NEG_INFINITY
+        };
+        (0..spans.len())
+            .filter(|&row| included[row] && spans[row].1 >= threshold)
             .collect()
     }
 }

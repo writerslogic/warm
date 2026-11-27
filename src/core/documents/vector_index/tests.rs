@@ -1164,3 +1164,56 @@ fn snapshot_rows_share_the_store_embeddings() {
         assert!((hits[0].1 - 1.0).abs() < 1e-6);
     }
 }
+
+/// Screening must never change the canonical result: the best `k` rows, their order (ties by row) and their scores
+/// are those of scoring every included row exactly, at the sizes either side of the screening threshold, with
+/// duplicated rows (exact ties) and an eligibility filter.
+#[test]
+fn screened_canonical_search_equals_the_unscreened_ranking() {
+    let mut state = 0x9e37_79b9_u32;
+    let mut next = move || {
+        state = state.wrapping_mul(1_664_525).wrapping_add(1_013_904_223);
+        (state >> 8) as f32 / 16_777_216.0 - 0.5
+    };
+    for rows in [
+        SCREEN_MIN_ROWS - 1,
+        SCREEN_MIN_ROWS,
+        SCREEN_MIN_ROWS + 1,
+        1500,
+    ] {
+        let mut data: Vec<Vec<f32>> = (0..rows)
+            .map(|_| {
+                let row: Vec<f32> = (0..24).map(|_| next()).collect();
+                let norm = row.iter().map(|v| v * v).sum::<f32>().sqrt();
+                row.iter().map(|v| v / norm).collect()
+            })
+            .collect();
+        for row in (0..rows).step_by(7).skip(1) {
+            data[row] = data[row - 1].clone();
+        }
+        let scan = ExactScan {
+            dim: 24,
+            rows: data.iter().cloned().map(Embedding::from_f32).collect(),
+        };
+        let query: Vec<f64> = {
+            let raw: Vec<f64> = (0..24).map(|_| f64::from(next())).collect();
+            let norm = raw.iter().map(|v| v * v).sum::<f64>().sqrt();
+            raw.iter().map(|v| v / norm).collect()
+        };
+        for k in [1, 10, 100.min(rows)] {
+            for include in [(|_: usize| true) as fn(usize) -> bool, |row| row % 3 != 0] {
+                let mut expected: Vec<(u32, f64)> = (0..rows)
+                    .filter(|&row| include(row))
+                    .map(|row| (row as u32, scan.rows[row].cosine(&query)))
+                    .collect();
+                expected.sort_by(|a, b| b.1.total_cmp(&a.1).then(a.0.cmp(&b.0)));
+                expected.truncate(k);
+                assert_eq!(
+                    scan.search_canonical(&query, k, include),
+                    expected,
+                    "rows {rows} k {k}"
+                );
+            }
+        }
+    }
+}
