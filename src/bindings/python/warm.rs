@@ -92,10 +92,15 @@ impl PyWarm {
     /// `accessibilityTree` text it carries and stores them with the step (see
     /// `experience_form_tables`); off, that text is not parsed but is still refused over
     /// 4 MiB.
+    ///
+    /// `master_key_path` is the file holding the master key of an encrypted store; it falls
+    /// back to `WARM_MASTER_KEY_PATH`, then `<path>/master.key`. A new store creates it (mode
+    /// 0600); an existing store refuses a missing or different key.
     #[new]
     #[pyo3(signature = (
         dimensions=16384, path=None, *, embedder=None, embedding_dimensions=None,
-        embedding_model="external", embedding_revision="1", experience_form_state=true
+        embedding_model="external", embedding_revision="1", experience_form_state=true,
+        master_key_path=None
     ))]
     #[allow(clippy::too_many_arguments)]
     fn new(
@@ -107,6 +112,7 @@ impl PyWarm {
         embedding_model: &str,
         embedding_revision: &str,
         experience_form_state: bool,
+        master_key_path: Option<String>,
     ) -> PyResult<Self> {
         if embedder.is_some() && embedding_dimensions.is_some() {
             return Err(err(
@@ -115,6 +121,7 @@ impl PyWarm {
         }
         let mut config = WarmConfig::default();
         config.experience.form_state = experience_form_state;
+        config.security.master_key_file = master_key_path;
         #[cfg(feature = "local-embed")]
         let mut text_embedder = None;
         if let Some(embedder) = embedder {

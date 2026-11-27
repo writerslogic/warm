@@ -182,6 +182,74 @@ fn master_key_file_may_live_outside_the_store() {
     assert_eq!(hit(&open(&path, config).unwrap()).as_deref(), Some(TEXT));
 }
 
+fn keyed(path: &Path) -> WarmConfig {
+    let mut config = WarmConfig::default();
+    config.security.master_key_file = Some(path.to_string_lossy().to_string());
+    config
+}
+
+#[test]
+fn external_master_key_is_created_private_with_parents_and_never_regenerated() {
+    let dir = tempfile::tempdir().unwrap();
+    let keys = tempfile::tempdir().unwrap();
+    let path = dir.path().to_string_lossy().to_string();
+    let key_path = keys.path().join("nested/deeper/k.key");
+    {
+        let core = open(&path, keyed(&key_path)).unwrap();
+        core.memorize_document(document()).unwrap();
+    }
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let mode = std::fs::metadata(&key_path).unwrap().permissions().mode();
+        assert_eq!(mode & 0o777, 0o600);
+    }
+    let key = std::fs::read(&key_path).unwrap();
+    assert_eq!(key.len(), 32);
+
+    // Missing key at the configured path: an error, and no fresh key appears.
+    std::fs::remove_file(&key_path).unwrap();
+    let error = format!("{:#}", open(&path, keyed(&key_path)).err().unwrap());
+    assert!(error.contains("master key"), "{error}");
+    assert!(!key_path.exists());
+
+    // A different key at the configured path is refused, naming the path, not the key.
+    write_key(&key_path, &[9u8; 32]);
+    let error = format!("{:#}", open(&path, keyed(&key_path)).err().unwrap());
+    assert!(error.contains("does not open this store"), "{error}");
+    assert!(error.contains("k.key"), "{error}");
+
+    write_key(&key_path, &key);
+    assert_eq!(
+        hit(&open(&path, keyed(&key_path)).unwrap()).as_deref(),
+        Some(TEXT)
+    );
+}
+
+#[test]
+fn configured_path_never_shadows_the_stores_own_key() {
+    let dir = tempfile::tempdir().unwrap();
+    let keys = tempfile::tempdir().unwrap();
+    let path = dir.path().to_string_lossy().to_string();
+    drop(open(&path, WarmConfig::default()).unwrap());
+    let elsewhere = keys.path().join("other.key");
+    let error = format!("{:#}", open(&path, keyed(&elsewhere)).err().unwrap());
+    assert!(error.contains("holds its own master.key"), "{error}");
+    assert!(!elsewhere.exists());
+}
+
+#[test]
+fn master_key_path_rejects_empty_and_directories() {
+    let dir = tempfile::tempdir().unwrap();
+    let keys = tempfile::tempdir().unwrap();
+    let path = dir.path().to_string_lossy().to_string();
+    for bad in ["", "   ", &keys.path().to_string_lossy()] {
+        let error = format!("{:#}", open(&path, keyed(Path::new(bad))).err().unwrap());
+        assert!(error.contains("master key path"), "{bad:?}: {error}");
+    }
+    assert!(!dir.path().join("master.key").exists());
+}
+
 #[test]
 fn tampered_encrypted_store_is_detected() {
     let dir = tempfile::tempdir().unwrap();
