@@ -110,6 +110,32 @@ function unwrap(record, includeVector = true) {
   if (includeVector && !Array.isArray(record.vector)) throw new Error('native record omitted its original vector')
   return { id: record.id, ...(includeVector ? { vector: record.vector } : {}), metadata: envelope.metadata }
 }
+// The vector of a query hit is decoded on first read: most callers read only ids and scores, and decoding 384 doubles into a JS
+// array per hit costs more than scoring a small corpus.
+function lazyVector(item, f64le) {
+  let value
+  Object.defineProperty(item, 'vector', {
+    enumerable: true,
+    configurable: true,
+    get() {
+      if (value === undefined) {
+        const bytes = Buffer.from(f64le, 'base64')
+        if (bytes.length === 0 || bytes.length % 8 !== 0) throw new Error('native hit has an invalid vector')
+        value = Array.from(new Float64Array(bytes.buffer, bytes.byteOffset, bytes.length / 8))
+      }
+      return value
+    },
+    set(next) { value = next },
+  })
+  return item
+}
+function unwrapHit(hit) {
+  if (typeof hit.vectorBase64 !== 'string') return unwrap(hit.item)
+  const { id, metadata } = unwrap(hit.item, false)
+  const item = lazyVector({ id }, hit.vectorBase64)
+  item.metadata = metadata
+  return item
+}
 function cleanConflict(error) {
   return typeof error?.message === 'string' && /^vector record revision conflict\b/.test(error.message)
 }
@@ -495,12 +521,13 @@ class VectraMigrationIndex {
     }, true)
   }
   async #query(query, options, filter) {
-    const { k, ...nativeOptions } = options
+    const { k, ...rest } = options
+    const nativeOptions = { ...rest, rawVectors: true }
     const result = filter === undefined
       ? await this.#system.queryVectorRecords(query, k, nativeOptions)
       : await this.#system.queryVectraRecords(query, k, filter, nativeOptions)
     if (options.ifRevision !== undefined && result.revision !== options.ifRevision) throw new Error('native query returned an inconsistent revision')
-    return { ...result, results: result.results.map(hit => ({ item: unwrap(hit.item), score: hit.score })) }
+    return { ...result, results: result.results.map(hit => ({ item: unwrapHit(hit), score: hit.score })) }
   }
   flush() { return this.#enqueue(() => { this.#committed(); return this.#system.flush() }) }
   maintainIndices() { return this.#enqueue(() => { this.#committed(); return this.#system.maintainIndices() }) }
