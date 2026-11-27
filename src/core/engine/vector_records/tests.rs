@@ -1,4 +1,5 @@
 use super::*;
+use base64::{engine::general_purpose::STANDARD, Engine as _};
 use serde_json::json;
 use std::sync::Barrier;
 
@@ -220,6 +221,39 @@ fn metadata_and_operation_limits_are_exact_and_atomic() -> Result<()> {
         assert!(upsert(&core, item).is_err());
         assert_eq!(core.revision(), before);
     }
+    Ok(())
+}
+
+#[test]
+fn raw_vectors_return_the_stored_bytes_instead_of_the_array() -> Result<()> {
+    let root = tempfile::tempdir()?;
+    let core = open(root.path())?;
+    upsert(&core, record("a"))?;
+    let plain = core.query_vector_records(&[0.0, 1.0, 0.0], 1, &Default::default())?;
+    let raw = core.query_vector_records(
+        &[0.0, 1.0, 0.0],
+        1,
+        &VectorRecordQueryOptions {
+            raw_vectors: Some(true),
+            ..Default::default()
+        },
+    )?;
+    let (hit, raw_hit) = (&plain.results[0], &raw.results[0]);
+    assert!(hit.vector_base64.is_none() && !hit.item.vector.is_empty());
+    assert!(raw_hit.item.vector.is_empty());
+    let bytes = STANDARD.decode(raw_hit.vector_base64.as_ref().expect("raw vector"))?;
+    let decoded: Vec<f64> = bytes
+        .as_chunks::<8>()
+        .0
+        .iter()
+        .map(|b| f64::from_le_bytes(*b))
+        .collect();
+    assert_eq!(decoded, hit.item.vector);
+    assert_eq!(
+        (raw_hit.item.id.as_str(), raw_hit.score),
+        (hit.item.id.as_str(), hit.score)
+    );
+    assert_eq!(raw_hit.item.metadata, hit.item.metadata);
     Ok(())
 }
 
