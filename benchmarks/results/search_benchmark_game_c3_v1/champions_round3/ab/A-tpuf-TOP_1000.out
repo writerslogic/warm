@@ -1,0 +1,4 @@
+  worst regress: [('a database index is a data str', 31100, 31250), ('what is the name of the chemis', 58561, 58665), ('lord of the rings', 2747, 2788)]
+TOP_1000 order A (base first=True): union 9545->9512 (-0.3%) | union:num_tokens_2 2379->2169 (-8.8%) | union:num_tokens_3 1423->1415 (-0.6%) | intersection 1881->1815 (-3.5%) | term 1290->1162 (-9.9%) | ALL 6293->6242 (-0.8%) | differing 0
+  worst regress: [('to be or not to be', 9761, 9968), ('world bank president', 1824, 1837), ('story of a girl', 1856, 1862)]
+TOP_1000 order B (base first=False): union 9564->9488 (-0.8%) | union:num_tokens_2 2384->2143 (-10.1%) | union:num_tokens_3 1420->1416 (-0.3%) | intersection 1879->1810 (-3.7%) | term 1291->1116 (-13.5%) | ALL 6303->6223 (-1.3%) | differing 0

@@ -875,7 +875,22 @@ pub(crate) struct ServingImage {
     decoded: DecodedBlocks,
     /// Aligned bounds for dense union terms, sorted by skip-table offset.
     union_windows: Box<[(usize, WindowBounds)]>,
+    /// The best postings of each long list, built by the first query that wants them, by
+    /// skip-table offset.
+    champions: Box<[(usize, std::sync::OnceLock<Option<Champions>>)]>,
 }
+
+/// The first postings of a list in ranking order (score descending, then the tie order) under
+/// one BM25 shape: the exact top of any query whose only scoring term is that list.
+pub(super) struct Champions {
+    /// Bits of the average chunk length the scores were computed at.
+    pub(super) average: u64,
+    pub(super) hits: Box<[(f64, u32)]>,
+}
+
+/// Postings kept per champion list, and the shortest list that has one.
+pub(super) const CHAMPIONS: usize = 4096;
+const CHAMPION_MIN_POSTINGS: u64 = 8 * CHAMPIONS as u64;
 
 /// Where a chunk's text is.
 #[derive(Clone, Copy)]
@@ -1065,6 +1080,7 @@ impl ServingImage {
             text_blocks,
             decoded: DecodedBlocks::default(),
             union_windows: Box::default(),
+            champions: Box::default(),
         };
         if text_blocks {
             image.text_stream()?;
@@ -2193,7 +2209,78 @@ impl ServingImage {
     /// Builds the rank tables now, at open, so that no query pays for them.
     pub(crate) fn with_rank_tables(mut self) -> Self {
         self.union_windows = self.build_union_windows(self.ranks());
+        let mut champions: Vec<_> = self
+            .ranked
+            .iter()
+            .filter(|span| span.entry.count >= CHAMPION_MIN_POSTINGS)
+            .map(|span| (span.skip, std::sync::OnceLock::new()))
+            .collect();
+        champions.sort_unstable_by_key(|(offset, _)| *offset);
+        self.champions = champions.into_boxed_slice();
+        self.build_champions();
         self
+    }
+
+    /// Builds every champion list now, in parallel, so that no query pays for one. A list that
+    /// fails to build is left for the first query that wants it, which reports the error.
+    fn build_champions(&self) {
+        let (postings, skips, positions) = (
+            self.section(Section::Postings),
+            self.section(Section::Skips),
+            self.section(Section::Positions),
+        );
+        let n = self.chunks as f64;
+        let average = (self.words as f64 / n.max(1.0)).max(1.0);
+        let spans: Vec<&ListSpan> = self
+            .ranked
+            .iter()
+            .filter(|span| span.entry.count >= CHAMPION_MIN_POSTINGS)
+            .collect();
+        let threads = std::thread::available_parallelism()
+            .map_or(1, |n| n.get())
+            .min(8);
+        let next = std::sync::atomic::AtomicUsize::new(0);
+        std::thread::scope(|scope| {
+            for _ in 0..threads {
+                scope.spawn(|| loop {
+                    let at = next.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                    let Some(span) = spans.get(at) else { break };
+                    let list = ListRef {
+                        bytes: &postings[span.posting..span.posting + span.entry.len],
+                        count: span.entry.count as u32,
+                        skips: &skips[span.skip..span.skip + span.entry.skip_len],
+                        positions: &positions[span.pos..span.pos + span.entry.pos_len],
+                    };
+                    let idf = super::Bm25::idf(n, span.entry.count as f64);
+                    let _ = super::lexical::served::champions_of(self, list, idf, average);
+                });
+            }
+        });
+    }
+
+    /// The champions of the list whose skip table is `skips`, built by `build` on first use;
+    /// `None` for a list without them.
+    pub(super) fn champions<E>(
+        &self,
+        skips: &[u8],
+        build: impl FnOnce() -> Result<Option<Champions>, E>,
+    ) -> Result<Option<&Champions>, E> {
+        let section = self.section(Section::Skips);
+        let Some(offset) = (skips.as_ptr() as usize).checked_sub(section.as_ptr() as usize) else {
+            return Ok(None);
+        };
+        let Ok(index) = self
+            .champions
+            .binary_search_by_key(&offset, |(offset, _)| *offset)
+        else {
+            return Ok(None);
+        };
+        let cell = &self.champions[index].1;
+        if let Some(found) = cell.get() {
+            return Ok(found.as_ref());
+        }
+        let built = build()?;
+        Ok(cell.get_or_init(|| built).as_ref())
     }
 
     fn build_union_windows(&self, ranks: &Ranks) -> Box<[(usize, WindowBounds)]> {
