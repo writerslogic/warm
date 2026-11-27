@@ -156,6 +156,17 @@ impl WarmCore {
         inputs: Vec<DocumentInput>,
         options: &IngestOptions,
     ) -> Result<(Vec<Mutation>, Vec<u8>)> {
+        let mutations = self.prepare_documents(inputs, options)?;
+        let payload = super::document_batch::serialize_transaction(self, &mutations)?;
+        Ok((mutations, payload))
+    }
+
+    /// The prepared documents of a batch, in input order, without their journal payload.
+    pub(super) fn prepare_documents(
+        &self,
+        inputs: Vec<DocumentInput>,
+        options: &IngestOptions,
+    ) -> Result<Vec<Mutation>> {
         #[cfg(feature = "local-models")]
         let stages = self.model_stages();
         #[cfg(feature = "local-models")]
@@ -286,8 +297,7 @@ impl WarmCore {
                 }
             }
         }
-        let payload = super::document_batch::serialize_transaction(self, &mutations)?;
-        Ok((mutations, payload))
+        Ok(mutations)
     }
 
     pub fn search_documents(
