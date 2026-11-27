@@ -1232,7 +1232,9 @@ impl PersistentArena {
                 let entry = entry?;
                 let name = entry.file_name();
                 let name = name.to_string_lossy();
-                if name.starts_with("seg_") && name.ends_with(".bin") {
+                if (name.starts_with("seg_") && name.ends_with(".bin"))
+                    || name == committed::COMMITTED_FILE
+                {
                     let removed = if scrub {
                         super::durable_file::scrub_remove_file(&entry.path())
                     } else {
@@ -1267,8 +1269,8 @@ impl PersistentArena {
                 super::durable_file::scrub_remove_dir(&path)?;
             } else if meta.is_file()
                 && live != self.base_path.as_path()
-                && name.starts_with("seg_")
-                && name.ends_with(".bin")
+                && ((name.starts_with("seg_") && name.ends_with(".bin"))
+                    || name == committed::COMMITTED_FILE)
             {
                 super::durable_file::scrub_remove_file(&path)?;
             }
