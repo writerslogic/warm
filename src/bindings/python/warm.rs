@@ -312,8 +312,8 @@ impl PyWarm {
         self.slot().is_none()
     }
 
-    /// Moves a read-only store to the writer's latest commit. Returns False when nothing was
-    /// committed since the current snapshot.
+    /// Moves a read-only store to the writer's latest commit, reading only what was appended
+    /// since (a compaction is read once, afresh). Returns False when nothing was committed.
     fn refresh(&self, py: Python<'_>) -> PyResult<bool> {
         if !self.reopen.read_only {
             return Err(err("refresh applies to a store opened read-only"));
@@ -322,13 +322,19 @@ impl PyWarm {
         let reopen = &self.reopen;
         let fresh = py
             .detach(|| {
-                if !current.has_newer_commits()? {
-                    return anyhow::Ok(None);
+                match current.refresh_in_place()? {
+                    crate::core::Refresh::Unchanged => anyhow::Ok(Some(None)),
+                    crate::core::Refresh::Advanced => Ok(None),
+                    // A compaction replaced the generation this store reads: open it afresh.
+                    crate::core::Refresh::Reopen => Ok(Some(Some(Self::open_engine(reopen)?))),
                 }
-                Ok(Some(Self::open_engine(reopen)?))
             })
             .map_err(err)?;
-        let Some(fresh) = fresh else { return Ok(false) };
+        let fresh = match fresh {
+            None => return Ok(true),
+            Some(None) => return Ok(false),
+            Some(Some(fresh)) => fresh,
+        };
         match &mut *self.slot.write().unwrap_or_else(|e| e.into_inner()) {
             Some(open) => {
                 *open = fresh;

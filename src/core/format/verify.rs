@@ -1195,10 +1195,7 @@ fn check_ancillary(store: &Path, schema: &Schema, report: &mut Report) {
             let name = entry.file_name().to_string_lossy().into_owned();
             let cache = (name.starts_with("nsg_index") || name.starts_with("ivf_index"))
                 && name.ends_with(".bin");
-            if !cache
-                && name != crate::core::reader_snapshot::READERS_DIR
-                && !KNOWN.contains(&name.as_str())
-            {
+            if !cache && !KNOWN.contains(&name.as_str()) {
                 unknown.push(name);
             }
         }
@@ -1220,9 +1217,7 @@ fn copy_store(source: &Path, destination: &Path) -> Result<()> {
     for entry in std::fs::read_dir(source)? {
         let entry = entry?;
         let name = entry.file_name();
-        if name == crate::core::store_lock::LOCK_FILE
-            || name == crate::core::reader_snapshot::READERS_DIR
-        {
+        if name == crate::core::store_lock::LOCK_FILE {
             continue;
         }
         let target: PathBuf = destination.join(&name);

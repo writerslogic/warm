@@ -714,6 +714,27 @@ pub(super) fn frame(ops: &[Operation], sequence: u64, dim: usize) -> Result<Vec<
 pub(super) fn replay(
     path: &Path,
     manifest: &Manifest,
+    apply: impl FnMut(Vec<Operation>) -> Result<(), UpdateError>,
+) -> Result<(u64, u64), UpdateError> {
+    replay_from(path, manifest, None, false, apply)
+}
+
+/// Where a reader resumes the log: the byte after the last frame it applied, and that frame's
+/// sequence number.
+#[derive(Clone, Copy)]
+pub(super) struct Resume {
+    pub(super) at: u64,
+    pub(super) sequence: u64,
+}
+
+/// [`replay`] from `resume` instead of the log's start. A `tolerant` replay (a reader's, over a
+/// log the writer may be appending to) stops before a final frame that fails its checksum
+/// rather than calling it damage.
+pub(super) fn replay_from(
+    path: &Path,
+    manifest: &Manifest,
+    resume: Option<Resume>,
+    tolerant: bool,
     mut apply: impl FnMut(Vec<Operation>) -> Result<(), UpdateError>,
 ) -> Result<(u64, u64), UpdateError> {
     let mut file = File::open(path)?;
@@ -743,6 +764,17 @@ pub(super) fn replay(
         return Err(corrupt(0, "log origin exceeds base checkpoint"));
     }
     let mut at = LOG_HEADER;
+    if let Some(resume) = resume {
+        if resume.at < LOG_HEADER || resume.at > length || resume.sequence < sequence {
+            return Err(corrupt(
+                resume.at,
+                "log shorter than the position resumed from",
+            ));
+        }
+        file.seek(SeekFrom::Start(resume.at))?;
+        at = resume.at;
+        sequence = resume.sequence;
+    }
     while length - at >= FRAME_HEADER as u64 {
         let mut h = [0u8; FRAME_HEADER];
         file.read_exact(&mut h)?;
@@ -765,6 +797,9 @@ pub(super) fn replay(
         crc.update(&h[..20]);
         crc.update(&payload);
         if crc.finalize() != small(&h[20..24]) {
+            if tolerant && length - at == FRAME_HEADER as u64 + len as u64 {
+                break;
+            }
             return Err(corrupt(at, "frame checksum mismatch"));
         }
         let next = word(&h[8..16]);

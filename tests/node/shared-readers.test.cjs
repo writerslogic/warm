@@ -23,10 +23,8 @@ test('a reader sees a snapshot, refresh picks up commits, and it cannot write', 
     await assert.rejects(() => reader.memorizeDocument({ id: 'x', text: 'denied' }), /\[read_only\]/)
     assert.equal(reader.refresh(), true)
     assert.equal(reader.refresh(), false)
-    assert.ok(readdirSync(join(directory, '.hms.readers')).length === 1)
-
     reader.close()
-    assert.equal(readdirSync(join(directory, '.hms.readers')).length, 0)
+    assert.equal(existsSync(join(directory, '.hms.readers')), false)
     writer.close()
   } finally {
     rmSync(directory, { recursive: true, force: true })

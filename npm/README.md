@@ -58,8 +58,8 @@ and [API documentation](https://writerslogic.com/warm/docs/latest/).
 
 `new WarmMemorySystem(...)` is the writer: a second one, in any process, throws
 `[store_locked]` naming the holder. `WarmMemorySystem.openReadOnly(...)` takes no lock, so a
-reader runs beside the writer and sees one consistent snapshot of what it committed;
-`refresh()` moves to newer commits (false when nothing changed). Mutations on a reader reject
+reader runs beside the writer without copying the store and sees only what it committed;
+`refresh()` moves to newer commits, reading only the new ones (false when nothing changed). Mutations on a reader reject
 with `[read_only]`. `close()` flushes, releases the lock and is safe to repeat; later calls
 reject with `[store_closed]`.
 

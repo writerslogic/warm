@@ -10,6 +10,7 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::Arc;
 
+mod read_only;
 #[cfg(test)]
 #[path = "storage/recovery_tests.rs"]
 mod recovery_tests;
@@ -176,6 +177,9 @@ pub(crate) struct PersistentArena {
     commit_uncertain: AtomicBool,
     /// Set for a read-only engine: no frame is written and no generation published.
     read_only: AtomicBool,
+    /// Present for a reader of a live store (see `read_only.rs`): segments are plain file
+    /// handles read by position, and `active_segment` is an unused placeholder.
+    view: Option<read_only::ReadView>,
 }
 
 pub(crate) struct PreparedCompaction {
@@ -299,7 +303,41 @@ impl PersistentArena {
             rotation_pending: AtomicBool::new(false),
             commit_uncertain: AtomicBool::new(false),
             read_only: AtomicBool::new(false),
+            view: None,
         })
+    }
+
+    /// Parses and checks the manifest at `source`.
+    fn parse_manifest(source: &Path) -> Result<(FormatManifest, Vec<u8>)> {
+        let bytes = std::fs::read(source)?;
+        let manifest: FormatManifest = serde_json::from_slice(&bytes)
+            .map_err(|e| anyhow!("Invalid WARM storage manifest {}: {}", source.display(), e))?;
+        if manifest.magic != FORMAT_MAGIC {
+            return Err(anyhow!(
+                "Storage manifest has unknown magic: {}",
+                manifest.magic
+            ));
+        }
+        if manifest.version > STORAGE_FORMAT_VERSION {
+            return Err(anyhow!(
+                "Storage format {} is newer than supported format {}",
+                manifest.version,
+                STORAGE_FORMAT_VERSION
+            ));
+        }
+        let expected = if manifest.version == 3 {
+            SEGMENT_SIZE
+        } else {
+            LEGACY_SEGMENT_SIZE
+        };
+        if manifest.segment_size != expected {
+            return Err(anyhow!(
+                "Storage segment size mismatch: manifest={}, runtime={}",
+                manifest.segment_size,
+                expected
+            ));
+        }
+        Ok((manifest, bytes))
     }
 
     fn validate_or_create_manifest(base: &Path) -> Result<FormatManifest> {
@@ -310,35 +348,7 @@ impl PersistentArena {
             super::durable_file::arena_generation(base)?.join(FORMAT_MANIFEST)
         };
         if source.exists() {
-            let bytes = std::fs::read(&source)?;
-            let manifest: FormatManifest = serde_json::from_slice(&bytes).map_err(|e| {
-                anyhow!("Invalid WARM storage manifest {}: {}", source.display(), e)
-            })?;
-            if manifest.magic != FORMAT_MAGIC {
-                return Err(anyhow!(
-                    "Storage manifest has unknown magic: {}",
-                    manifest.magic
-                ));
-            }
-            if manifest.version > STORAGE_FORMAT_VERSION {
-                return Err(anyhow!(
-                    "Storage format {} is newer than supported format {}",
-                    manifest.version,
-                    STORAGE_FORMAT_VERSION
-                ));
-            }
-            let expected = if manifest.version == 3 {
-                SEGMENT_SIZE
-            } else {
-                LEGACY_SEGMENT_SIZE
-            };
-            if manifest.segment_size != expected {
-                return Err(anyhow!(
-                    "Storage segment size mismatch: manifest={}, runtime={}",
-                    manifest.segment_size,
-                    expected
-                ));
-            }
+            let (manifest, bytes) = Self::parse_manifest(&source)?;
             if source != path {
                 super::durable_file::atomic_write(&path, &bytes)?;
             }
@@ -493,7 +503,10 @@ impl PersistentArena {
     }
 
     pub(crate) fn read_slice(&self, global_offset: usize, len: usize) -> Result<Vec<u8>> {
-        self.with_slice(global_offset, len, <[u8]>::to_vec)
+        match &self.view {
+            Some(view) => view.read(self.segment_size, global_offset, len),
+            None => self.with_slice(global_offset, len, <[u8]>::to_vec),
+        }
     }
 
     /// Runs `read` on the mapped bytes `[global_offset, global_offset + len)` under one
@@ -539,51 +552,76 @@ impl PersistentArena {
         read(rest)
     }
 
+    /// Decodes the frame at the start of `rest` into its payload, header checksum and version.
+    fn decode_frame(rest: &[u8], global_offset: usize) -> Result<(Vec<u8>, u32, u32)> {
+        let [expected_crc, raw_len, comp_len, version] = header_words(rest)
+            .ok_or_else(|| anyhow!("Truncated header at offset {}", global_offset))?;
+        let (raw_len, comp_len) = (raw_len as usize, comp_len as usize);
+        if raw_len == 0 {
+            return Err(anyhow!("Empty frame at offset {}", global_offset));
+        }
+        if raw_len > MAX_RAW_FRAME_SIZE {
+            return Err(anyhow!(
+                "Suspiciously large raw frame length: {} at {}",
+                raw_len,
+                global_offset
+            ));
+        }
+        // Compressed data cannot exceed a full segment; reject to prevent OOM.
+        if comp_len == 0 || comp_len > raw_len {
+            return Err(anyhow!(
+                "Suspiciously large compressed frame length: {} at {}",
+                comp_len,
+                global_offset
+            ));
+        }
+        let payload = rest
+            .get(HEADER_SIZE..HEADER_SIZE + comp_len)
+            .ok_or_else(|| {
+                anyhow!(
+                    "Truncated payload at offset {}",
+                    global_offset + HEADER_SIZE
+                )
+            })?;
+        let data = if comp_len < raw_len {
+            lz4_flex::decompress(payload, raw_len)
+                .map_err(|e| anyhow!("LZ4 decompression failed: {}", e))?
+        } else {
+            payload.to_vec()
+        };
+        ensure!(
+            data.len() == raw_len,
+            "frame payload length differs from its header"
+        );
+        Ok((data, expected_crc, version))
+    }
+
     pub(crate) fn read_frame(&self, global_offset: usize) -> Result<(Vec<u8>, u32)> {
         // Header and payload come from one mapping under one lock acquisition; the payload is
         // decompressed (or copied) straight from it.
-        let (data, expected_crc, version) = self.with_mapping(global_offset, |rest| {
-            let [expected_crc, raw_len, comp_len, version] = header_words(rest)
-                .ok_or_else(|| anyhow!("Truncated header at offset {}", global_offset))?;
-            let (raw_len, comp_len) = (raw_len as usize, comp_len as usize);
-            if raw_len == 0 {
-                return Err(anyhow!("Empty frame at offset {}", global_offset));
+        let (data, expected_crc, version) = match &self.view {
+            Some(view) => {
+                let head = view.read(self.segment_size, global_offset, HEADER_SIZE)?;
+                match header_words(&head) {
+                    Some([_, raw_len, comp_len, _])
+                        if comp_len != 0
+                            && comp_len <= raw_len
+                            && raw_len as usize <= MAX_RAW_FRAME_SIZE =>
+                    {
+                        let whole = view.read(
+                            self.segment_size,
+                            global_offset,
+                            HEADER_SIZE + comp_len as usize,
+                        )?;
+                        Self::decode_frame(&whole, global_offset)?
+                    }
+                    _ => Self::decode_frame(&head, global_offset)?,
+                }
             }
-            if raw_len > MAX_RAW_FRAME_SIZE {
-                return Err(anyhow!(
-                    "Suspiciously large raw frame length: {} at {}",
-                    raw_len,
-                    global_offset
-                ));
-            }
-            // Compressed data cannot exceed a full segment; reject to prevent OOM.
-            if comp_len == 0 || comp_len > raw_len {
-                return Err(anyhow!(
-                    "Suspiciously large compressed frame length: {} at {}",
-                    comp_len,
-                    global_offset
-                ));
-            }
-            let payload = rest
-                .get(HEADER_SIZE..HEADER_SIZE + comp_len)
-                .ok_or_else(|| {
-                    anyhow!(
-                        "Truncated payload at offset {}",
-                        global_offset + HEADER_SIZE
-                    )
-                })?;
-            let data = if comp_len < raw_len {
-                lz4_flex::decompress(payload, raw_len)
-                    .map_err(|e| anyhow!("LZ4 decompression failed: {}", e))?
-            } else {
-                payload.to_vec()
-            };
-            ensure!(
-                data.len() == raw_len,
-                "frame payload length differs from its header"
-            );
-            Ok((data, expected_crc, version))
-        })?;
+            None => self.with_mapping(global_offset, |rest| {
+                Self::decode_frame(rest, global_offset)
+            })?,
+        };
 
         let mut hasher = Hasher::new();
         hasher.update(&data);
@@ -625,10 +663,6 @@ impl PersistentArena {
 
     pub(crate) fn write_slice(&self, data: &[u8]) -> Result<usize> {
         self.write_frame(data, true)
-    }
-
-    pub(crate) fn set_read_only(&self, read_only: bool) {
-        self.read_only.store(read_only, Ordering::Release);
     }
 
     fn ensure_writable(&self) -> Result<()> {
@@ -760,7 +794,7 @@ impl PersistentArena {
     /// are copied out (replay) or committed; the next read refaults them from the file. A
     /// hint, so an out-of-range span is ignored. Off with `WARM_RELEASE_JOURNAL_PAGES=0`.
     pub(crate) fn release_pages(&self, global_offset: usize, len: usize) {
-        if len == 0 || !super::os_memory::release_journal_pages_enabled() {
+        if len == 0 || self.view.is_some() || !super::os_memory::release_journal_pages_enabled() {
             return;
         }
         let active = self.active_segment.read();
@@ -1234,7 +1268,9 @@ impl Drop for PersistentArena {
     fn drop(&mut self) {
         // Drop cannot report a failure, and nothing depends on this write-back: every
         // acknowledged frame was already synced by its commit or by `flush`.
-        let _ = self.active_segment.write().write_back();
+        if self.view.is_none() {
+            let _ = self.active_segment.write().write_back();
+        }
     }
 }
 

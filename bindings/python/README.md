@@ -141,8 +141,9 @@ reopened with the same `embedder` or `embedding_dimensions`.
 
 A store has one writer at a time. `Warm(...)` is the writer: a second one fails at open with
 `StoreLockedError` naming the holder. `Warm.open_read_only(...)` takes no lock, so a reader
-runs beside the writer, sees one consistent snapshot of what the writer committed, and moves
-to newer commits on `refresh()` (False when nothing changed). Mutations on a reader raise
+runs beside the writer without copying the store, sees only what the writer committed, and
+moves to newer commits on `refresh()` (False when nothing changed; it reads only the new
+commits). Mutations on a reader raise
 `ReadOnlyError`; `close()` (or `with Warm(...) as store:`) flushes, releases the lock and is
 safe to repeat; later calls raise `StoreClosedError`.
 
@@ -154,7 +155,7 @@ with hm.Warm(1024, "./store") as writer:
     reader.refresh()  # True: the reader now sees "b"
 ```
 
-The consistency guarantee, the cost of a snapshot and the Windows locking differences are in
+The consistency guarantee, the cost of a reader, the erasure bound and the Windows differences are in
 [one writer, many readers](https://github.com/writerslogic/warm/blob/main/docs/reference/concurrency.md).
 
 ## Choosing the right Python package

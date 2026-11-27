@@ -171,7 +171,7 @@ def test_read_only_reader_refresh_and_context_manager(tmp_path):
         hits = reader.search_documents("second committed", {"k": 2})
         assert "two" in {hit["documentId"] for hit in hits}
         reader.close()
-        assert os.listdir(os.path.join(path, ".hms.readers")) == []
+        assert not os.path.exists(os.path.join(path, ".hms.readers"))
 
 
 def test_close_releases_the_lock_and_later_calls_fail(tmp_path):

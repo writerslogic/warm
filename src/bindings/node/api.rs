@@ -227,8 +227,8 @@ impl WarmMemorySystem {
     }
 
     /// Opens an existing store without the writer lock, so another process can hold it for
-    /// writing. Reads see one committed snapshot; `refresh()` moves to a newer one. Every
-    /// mutation fails with code `read_only`.
+    /// writing. Reads see the journal up to its last complete frame; `refresh()` moves to a
+    /// newer one. Every mutation fails with code `read_only`.
     #[napi(factory)]
     pub fn open_read_only(
         dimensions: u32,
@@ -256,8 +256,8 @@ impl WarmMemorySystem {
         self.slot.read().is_none()
     }
 
-    /// Moves a read-only store to the writer's latest commit. Returns false when nothing
-    /// was committed since the current snapshot.
+    /// Moves a read-only store to the writer's latest commit, reading only what was appended
+    /// since (a compaction is read once, afresh). Returns false when nothing was committed.
     #[napi]
     pub fn refresh(&self) -> Result<bool> {
         if !self.reopen.read_only {
@@ -266,8 +266,11 @@ impl WarmMemorySystem {
             ));
         }
         let current = self.core()?;
-        if !current.has_newer_commits().map_err(napi_err)? {
-            return Ok(false);
+        match current.refresh_in_place().map_err(napi_err)? {
+            crate::core::Refresh::Unchanged => return Ok(false),
+            crate::core::Refresh::Advanced => return Ok(true),
+            // A compaction replaced the generation this store reads: open it afresh.
+            crate::core::Refresh::Reopen => {}
         }
         let core = Arc::new(
             WarmCore::open_read_only(

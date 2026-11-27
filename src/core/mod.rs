@@ -92,7 +92,6 @@ pub use index::sparse_store;
 pub use security::scrub_stack;
 pub(crate) mod os_memory;
 #[cfg(not(target_arch = "wasm32"))]
-pub(crate) mod reader_snapshot;
 #[cfg(target_arch = "x86_64")]
 pub(crate) mod simd_math;
 pub mod sparse;
@@ -110,8 +109,6 @@ pub(crate) mod types;
 pub use config::WarmConfig as HmsConfig;
 pub use config::{VectorCandidateConfig, WarmConfig};
 #[cfg(not(target_arch = "wasm32"))]
-pub use engine::WarmCore;
-#[cfg(not(target_arch = "wasm32"))]
 pub use engine::WarmCore as HmsCore;
 #[cfg(not(target_arch = "wasm32"))]
 pub use engine::{
@@ -120,6 +117,8 @@ pub use engine::{
 };
 #[cfg(not(target_arch = "wasm32"))]
 pub use engine::{PurgeStatus, PurgeTicket};
+#[cfg(not(target_arch = "wasm32"))]
+pub use engine::{Refresh, WarmCore};
 pub use phase_hvec::PhaseHVec;
 pub use phase_resonator::{
     phase_resonator_factorize, FactorResult, PhaseResonator, ResonatorConfig,

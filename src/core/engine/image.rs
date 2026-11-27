@@ -174,7 +174,13 @@ impl WarmCore {
             .context("store served from a checkpoint without it")?;
         // The dead documents' postings are left out of the rebuilt lists rather than removed
         // from them one document at a time (each removal re-encodes every list it touches).
-        let mut store = image.hydrate_excluding(Some(self.fresh_text_segment()?), &dead)?;
+        // A reader keeps chunk text in memory: the text segment file belongs to the writer.
+        let text = if self.read_only {
+            None
+        } else {
+            Some(self.fresh_text_segment()?)
+        };
+        let mut store = image.hydrate_excluding(text, &dead)?;
         for id in &dead {
             store.remove_unindexed_scrubbed(id)?;
         }

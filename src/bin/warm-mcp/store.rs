@@ -167,10 +167,21 @@ impl WarmBackend {
 
     fn store(&self, namespace: &str) -> Res<Arc<Store>> {
         let store = self.store_with(namespace, |dir| self.open(dir))?;
-        if !self.options.read_only || !store.core.has_newer_commits().unwrap_or(false) {
+        if !self.options.read_only {
             return Ok(store);
         }
-        // Swap in a fresh snapshot; calls already running keep the one they hold.
+        // New commits are applied in place; only a compaction (a generation this engine no
+        // longer reads) needs a fresh engine, which replaces this one for later calls while
+        // calls already running keep the one they hold.
+        if !matches!(
+            store
+                .core
+                .refresh_in_place()
+                .map_err(|e| Fail::internal(format!("{e:#}")))?,
+            writerslogic_warm::Refresh::Reopen
+        ) {
+            return Ok(store);
+        }
         let fresh = Arc::new(Store {
             core: self.open(&store.dir)?,
             gate: Mutex::new(()),

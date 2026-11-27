@@ -60,6 +60,7 @@ impl StoreLock {
 impl StoreLock {
     /// True if no engine holds the lock of the store directory `store_path` (or it has no
     /// lock file). Takes and releases the lock without writing anything.
+    #[cfg(test)]
     pub(crate) fn try_probe(store_path: &Path) -> Result<bool> {
         let path = store_path.join(LOCK_FILE);
         let file = match super::durable_file::open_regular_read_write(&path) {

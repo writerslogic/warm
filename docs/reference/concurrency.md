@@ -30,54 +30,88 @@ because releasing the lock under a running write would let a second writer in.
 
 ## Reader
 
-A reader never takes `.hms.lock` and never writes to the store. It copies a consistent
-snapshot of the committed state into `<store>/.hms.readers/<id>/` and runs an ordinary engine
-over the copy, so recovery work on open (tail repair, caches, checkpoints) cannot touch the
-writer's files. Every mutation, compaction and checkpoint on a reader returns `ReadOnlyError`.
-The store must exist: a read-only open never creates one. Pass a snapshot directory
-(`WarmCore::open_read_only_at`) when the store directory is not writable for the reader.
+A reader takes no lock and writes nothing. It opens the writer's files where they are and
+reads them, the way a SQLite WAL reader does: no copy of the store is made, so opening and
+refreshing cost no disk space and a refresh costs only what the writer appended. Every
+mutation, compaction and checkpoint on a reader returns `ReadOnlyError`. The store must exist:
+a read-only open never creates one, and it creates, truncates, removes and renames nothing in
+the store directory. A reader of a read-only directory works.
 
-A reader sees one snapshot until `refresh()`, which returns false when nothing was committed
-and otherwise swaps to a newer snapshot; the old one stays usable until the swap completes.
-`has_newer_commits()` is the cheap check (a directory listing and a read of the journal's end).
-A reader's snapshot directory is removed when it closes or is dropped; directories left by a
-killed reader are removed by the next reader or `open_read_only` call after a minute.
+What a reader holds and how it follows the writer:
+
+| Writer file | Reader | Following the writer |
+|---|---|---|
+| Journal segments (`vectors_data.bin/.../seg_N.bin`) | one open handle per segment, read by position, nothing mapped | `refresh()` walks forward from the last frame it applied; the committed end is the last whole frame whose CRC32 matches, and a frame still being written ends the walk |
+| `CURRENT` and the generation it names (compaction) | handles to the generation it opened | `refresh()` sees `CURRENT` changed and opens the new generation once |
+| Document checkpoint (`documents.ckpt`) | read once into memory at open, then closed | with the generation |
+| `documents.text` | never opened: it is a cache the writer truncates and rebuilds, so a reader keeps chunk text in memory | n/a |
+| Dense-vector graph (`dense-vectors/`, `dense-ids.log`) | opened in place: the base files are immutable generations behind `CURRENT`, and the update log is read up to its last whole batch | the new log tail is applied; a consolidation is read once |
+| Sparse-vector log (`sparse-docs.wsp`) | read in place | re-read whole when its length changes (the writer also replaces it by rename when it compacts) |
+| Experience store | read in place: snapshot plus journal prefix, no recovery writes | re-read when its files change (retried until they hold still across a read) |
+| Index caches (`nsg_index*`, `ivf_index*`, `indices.json`) | read if they match the journal it opened; never written | a reader keeps what it trains in memory |
+| Keys (`master.key`, `key.check`) | read where they are | n/a |
+| Audit, signing and provenance logs | not opened: they record what a writer does | n/a |
+
+`refresh()` returns false when nothing was committed. After a compaction it opens the store
+afresh (that reads the compacted generation once, so it costs the size of the store, like any
+open). Every other refresh applies only the frames added since. `has_newer_commits()` is the
+check without the apply: it proves the new frames whole, so its cost is the size of what is new.
+The engine type also offers `refresh_in_place(&self)`, which returns `Refresh::{Unchanged,
+Advanced, Reopen}` and is what the Node, Python and MCP layers call: they keep their engine for
+the first two and swap it for the third.
+
+Mutable side files, and why they are read in place rather than rebuilt from the journal: the
+dense-vector graph and the experience store are not in the journal, so a reader cannot rebuild
+them from it. Neither is edited in place in a way a reader cannot follow: the dense graph's base
+is immutable and replaced by `CURRENT`, and its log and the experience journal are append-only
+with CRC-checked frames, so a reader reads a prefix of whole records. If a reader cannot open
+the dense graph it logs a warning and answers `query_vector` from the sparse path, as a store
+without one does.
 
 ## What a reader can observe
 
 Every journal-backed state a reader sees is a state the writer committed, never a mix of two:
 documents, memories, relations and sparse vectors all live in the journal, and one `commit`
-(one `memorize_documents` batch, one `remember`) is one journal frame. Sub-stores the writer
-updates after the journal commit, the dense-vector graph and the experience store, can lag the
-journal in a snapshot exactly as a crash would leave them; open already handles that state
-(dense search falls back to the journal's sparse path for a vector the graph lacks). This rests
-on the commit protocol, which the tests below exercise:
+(one `memorize_documents` batch, one `remember`) is one journal frame. The sub-stores the
+writer updates after the journal commit (the dense graph, the sparse log, the experience store)
+can lag or lead the journal a reader holds, exactly as a crash would leave them. Open already
+handles that: a dense hit whose id the reader's journal does not hold is dropped, and dense
+search falls back to the sparse path for a vector the graph lacks. This rests on the commit
+protocol, which the tests below exercise:
 
 - The journal is append-only. A frame counts only if its CRC32 matches, and frames are written
-  in order, so the longest prefix of valid frames is a committed state. A frame still being
-  written is dropped from the copy.
-- Sealed segments never change. Every other file is replaced atomically (temp file, sync,
-  rename) or belongs to a sub-store with its own recovery. The copy lists them before and after
-  copying and retries the whole snapshot (8 attempts, backing off) if any changed. They are
-  copied before the journal, so none is newer than the journal.
-- A compaction publishes a new generation by replacing `CURRENT`. The pointer is read before
-  and after the copy; a change retries.
-- A writer that commits continuously can make a snapshot of a large dense-vector or experience
-  store fail with "kept changing"; retry. Journal commits alone never cause this.
+  in order, so the longest prefix of valid frames is a committed state.
+- Sealed segments and generation files never change. A reader walking into a segment sealed
+  since its last refresh moves to the next one.
+- A compaction publishes a new generation by replacing `CURRENT`, then deletes the old one. A
+  reader's open handles keep the old generation readable after the delete (a Unix unlinked
+  file; on Windows every handle is opened with `FILE_SHARE_READ | FILE_SHARE_WRITE |
+  FILE_SHARE_DELETE`, so the writer's rename and delete are not refused, and nothing is
+  mapped, since a mapped file cannot be deleted on Windows). The reader goes on serving what
+  it applied until it refreshes.
 
 Limits, stated plainly:
 
-- A snapshot costs a copy of the store's files (disk space and open time proportional to the
-  store, removed with the snapshot). Reopening after `refresh()` replays the journal again.
-  Key files (`master.key`, signing and provenance keys) are not copied: the reader reads them
-  from the store, so a store whose key file is unreadable to the reader cannot be opened.
-- A commit whose durable sync fails is rolled back by the writer. A reader that copied it in
-  that instant can see it until its next refresh. The writer reported that commit as failed.
-- Erasure: a scrubbing compaction (`forget` with a purge) zero-fills the old generation. A
-  reader's private copy keeps the erased data until it refreshes or closes. Close readers, or
-  refresh them, to finish an erasure.
+- A reader holds the whole applied state in memory: documents (text included), vectors and
+  indexes. Open replays the journal, so it costs the size of the store in time and memory;
+  only refresh is incremental. A reader does not serve from a mapped checkpoint, because a
+  scrubbing compaction overwrites the checkpoint file in place.
+- A commit whose durable sync fails is rolled back by the writer by rewriting the frame's
+  bytes. A reader that walked over that frame in that instant keeps it until it reopens. The
+  writer reported that commit as failed.
+- Erasure. A scrubbing compaction (`forget` with a purge) zero-fills the old generation
+  through the same inode before unlinking it, so on Unix the erased bytes are gone from the
+  disk at once, including from a reader's open handle (a read through it then fails its
+  checksum). What a reader has already applied lives in its memory until it refreshes (it
+  opens the new generation and drops the old state and handles) or closes. The bound: erased
+  data is gone from every process once every reader has refreshed or closed. On Windows a
+  reader's open handle can keep the old generation's directory from being removed until the
+  reader lets go; the files are scrubbed first, and the writer collects the directory at its
+  next compaction.
 - A reader holds no lock, so it cannot stop a writer from compacting or purging, and it does
   not see uncommitted work.
+- Provenance, signing and audit are the writer's: a read-only engine has no provenance
+  manager and no audit log.
 
 ## Locking semantics
 
@@ -95,15 +129,15 @@ The lock is `std::fs::File::try_lock` on `.hms.lock`, never a blocking call.
 `flock` locks are advisory and unreliable on some network file systems; keep stores on local
 disks. Readers do not depend on locks at all, which is why they work the same on every
 platform. The lock tests use two handles in one process, which both primitives reject, and
-real child processes. The Windows column, and snapshotting a store whose writer holds its
-files open on Windows, are exercised by the Windows CI job only; they were not run on the
-machine this was written on.
+real child processes. The Windows column and the Windows reader share modes are exercised by
+the `test (windows-latest)` CI job only (the step "Reader share modes" and the full suite);
+they were not run on the machine this was written on.
 
 ## Command line and MCP
 
 - `warm-mcp --read-only` now also opens every store read-only, so it runs beside a writer and
-  picks up its commits: the first call after a commit takes a fresh snapshot (a copy of the
-  store, see the limits above). It refuses a namespace whose store does not exist instead of
+  picks up its commits: the first call after a commit applies the new frames in place (after
+  a compaction it opens the store afresh). It refuses a namespace whose store does not exist instead of
   creating it. Without the flag `warm-mcp` is a writer and a second one fails with
   `store_locked`. A downstream app that ingests with a CLI should run its server with
   `--read-only`, or `close()` the store before the ingest.
@@ -119,6 +153,20 @@ document pairs while three readers refresh in a loop and check that each pair is
 or not at all; a reader open after `SIGKILL` of the writer mid-commit (the shared store is
 byte-identical before and after the open, and the next writer recovers); a refresh seeing new
 commits across a compaction; a second writer refused with the holder's pid while readers open;
-`close()` releasing the lock in a process that stays alive; and a deterministic replay of one
-commit's exact bytes into a store prefix by prefix, where every incomplete prefix reads as the
-old state and `has_newer_commits` stays false until the frame is whole.
+`close()` releasing the lock in a process that stays alive; the dense graph followed in place;
+and a deterministic replay of one commit's exact bytes into a store prefix by prefix, where
+every incomplete prefix reads as the old state and `has_newer_commits` stays false until the
+frame is whole.
+
+`src/core/engine/reader.rs` holds the tests of the in-place design:
+
+- a reader holding handles while the writer compacts and deletes the old generation (the
+  reader still reads it; a later compaction clears it once the reader is gone);
+- a scrubbing compaction reaching a reader's open handle (Unix);
+- a segment renamed and deleted under a reader handle, which on `windows-latest` is the
+  share-mode contract;
+- refresh cost: the same new commit costs the same bytes read beside a store of 100 documents
+  and one forty times larger.
+
+`cargo test --release --test reader_scale -- --ignored --nocapture` measures refresh time
+beside a 10 MB and a large (default 1 GB) journal; set `WARM_READER_SCALE_MB` to change it.

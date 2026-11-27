@@ -41,11 +41,19 @@ impl WarmCore {
         if !store::exists(&self.storage_path) {
             return Ok(());
         }
-        let opened = ExperienceStore::open(
-            &self.storage_path,
-            self.config.experience.clone(),
-            self.experience_sealer(),
-        )?;
+        let opened = if self.read_only {
+            ExperienceStore::open_reader(
+                &self.storage_path,
+                self.config.experience.clone(),
+                self.experience_sealer(),
+            )?
+        } else {
+            ExperienceStore::open(
+                &self.storage_path,
+                self.config.experience.clone(),
+                self.experience_sealer(),
+            )?
+        };
         *self.experience.write() = Some(opened);
         Ok(())
     }

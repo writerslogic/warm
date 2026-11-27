@@ -39,12 +39,12 @@ pub use crate::core::types::{
 };
 pub use crate::core::EmbeddingSpace;
 #[cfg(not(target_arch = "wasm32"))]
-pub use crate::core::WarmCore;
-#[cfg(not(target_arch = "wasm32"))]
 pub use crate::core::{
     HistoryBounds, HistoryError, HistoryOptions, HistoryRevision, HistoryView, JournalPosition,
     RevisionKind, TimeResolution,
 };
+#[cfg(not(target_arch = "wasm32"))]
+pub use crate::core::{Refresh, WarmCore};
 #[cfg(not(target_arch = "wasm32"))]
 pub use WarmCore as HmsCore;
 pub use WarmError as HmsError;

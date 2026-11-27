@@ -177,10 +177,6 @@ fn tree_digest(dir: &Path) -> Vec<(PathBuf, Vec<u8>)> {
     fn walk(root: &Path, dir: &Path, out: &mut Vec<(PathBuf, Vec<u8>)>) {
         for entry in std::fs::read_dir(dir).unwrap().flatten() {
             let path = entry.path();
-            let name = entry.file_name();
-            if name == ".hms.readers" {
-                continue;
-            }
             if path.is_dir() {
                 walk(root, &path, out);
             } else {
@@ -193,12 +189,6 @@ fn tree_digest(dir: &Path) -> Vec<(PathBuf, Vec<u8>)> {
     walk(dir, dir, &mut out);
     out.sort();
     out
-}
-
-fn snapshots(dir: &Path) -> usize {
-    std::fs::read_dir(dir.join(".hms.readers"))
-        .map(|d| d.count())
-        .unwrap_or(0)
 }
 
 #[test]
@@ -285,7 +275,7 @@ fn a_refresh_sees_new_commits_and_the_old_state_stays_consistent_until_then() {
     assert_eq!(
         visible_counter(&r).unwrap(),
         1,
-        "a snapshot does not move on its own"
+        "a reader does not move on its own"
     );
     assert!(r.has_newer_commits().unwrap());
     assert!(r.refresh().unwrap());
@@ -296,12 +286,10 @@ fn a_refresh_sees_new_commits_and_the_old_state_stays_consistent_until_then() {
     commit_pair(&w, 3).unwrap();
     assert!(r.refresh().unwrap());
     assert_eq!(visible_counter(&r).unwrap(), 3);
-    assert_eq!(snapshots(&store), 1, "refresh left the old snapshot behind");
     drop(r);
-    assert_eq!(
-        snapshots(&store),
-        0,
-        "closing a reader left its snapshot behind"
+    assert!(
+        !store.join(".hms.readers").exists(),
+        "a reader keeps nothing in the store"
     );
 }
 
@@ -309,7 +297,7 @@ fn copy_dir(from: &Path, to: &Path) {
     std::fs::create_dir_all(to).unwrap();
     for entry in std::fs::read_dir(from).unwrap().flatten() {
         let name = entry.file_name();
-        if name == ".hms.lock" || name == ".hms.readers" {
+        if name == ".hms.lock" {
             continue;
         }
         let target = to.join(&name);
@@ -388,9 +376,10 @@ fn a_commit_caught_mid_write_is_invisible_until_it_is_whole() {
     assert_eq!(visible_counter(&r).unwrap(), 2);
 }
 
-/// Dense vectors live in a sub-store beside the journal; a reader copies it and finds them.
+/// Dense vectors live in a sub-store beside the journal; a reader opens it in place and finds
+/// them, then follows the writer's appends to it.
 #[test]
-fn a_reader_copies_the_dense_vector_sub_store_and_settles_when_nothing_changes() {
+fn a_reader_follows_the_dense_vector_sub_store_in_place() {
     let dir = tempfile::tempdir().unwrap();
     let store = dir.path().join("store");
     let w = writer(&store).unwrap();
@@ -403,7 +392,7 @@ fn a_reader_copies_the_dense_vector_sub_store_and_settles_when_nothing_changes()
     let mut r = reader(&store).unwrap();
     let hits = r.query_vector(&vector(7.0), 1).unwrap();
     assert_eq!(hits[0].id, "v-7");
-    // Nothing changed: the listing the reader took must compare equal, not drift.
+    // Nothing changed: the reader's own position must compare equal, not drift.
     assert!(!r.has_newer_commits().unwrap());
     assert!(!r.refresh().unwrap());
 
@@ -494,25 +483,11 @@ fn a_reader_opens_an_encrypted_store_with_its_key() {
         let w = WarmCore::new(DIM, Some(store.display().to_string()), None).unwrap();
         commit_pair(&w, 1).unwrap();
         assert!(store.join("master.key").exists());
+        let before = tree_digest(&store);
         let r = WarmCore::open_read_only(DIM, Some(store.display().to_string()), None).unwrap();
         assert_eq!(visible_counter(&r).unwrap(), 1);
-        // The key is read from the store; the snapshot holds no copy of it.
-        let copies = files_named(&store.join(".hms.readers"), "master.key");
-        assert!(copies.is_empty(), "key copied into a snapshot: {copies:?}");
-        assert!(!files_named(&store.join(".hms.readers"), "key.check").is_empty());
+        // The key is read from the store where it is: nothing is copied or created.
+        drop(r);
+        assert_eq!(tree_digest(&store), before, "a reader changed the store");
     }
-}
-
-#[cfg(feature = "security")]
-fn files_named(dir: &Path, name: &str) -> Vec<PathBuf> {
-    let mut found = Vec::new();
-    for entry in std::fs::read_dir(dir).unwrap().flatten() {
-        let path = entry.path();
-        if path.is_dir() {
-            found.extend(files_named(&path, name));
-        } else if entry.file_name() == name {
-            found.push(path);
-        }
-    }
-    found
 }

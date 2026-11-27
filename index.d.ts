@@ -26,8 +26,8 @@ export declare class WarmMemorySystem {
   constructor(dimensions: number, storagePath?: string | undefined | null, config?: WarmConfigJs | undefined | null)
   /**
    * Opens an existing store without the writer lock, so another process can hold it for
-   * writing. Reads see one committed snapshot; `refresh()` moves to a newer one. Every
-   * mutation fails with code `read_only`.
+   * writing. Reads see the journal up to its last complete frame; `refresh()` moves to a
+   * newer one. Every mutation fails with code `read_only`.
    */
   static openReadOnly(dimensions: number, storagePath?: string | undefined | null, config?: WarmConfigJs | undefined | null): WarmMemorySystem
   /** True for a store opened with `openReadOnly`. */
@@ -35,8 +35,8 @@ export declare class WarmMemorySystem {
   /** True after `close()`. */
   get closed(): boolean
   /**
-   * Moves a read-only store to the writer's latest commit. Returns false when nothing
-   * was committed since the current snapshot.
+   * Moves a read-only store to the writer's latest commit, reading only what was appended
+   * since (a compaction is read once, afresh). Returns false when nothing was committed.
    */
   refresh(): boolean
   /**
