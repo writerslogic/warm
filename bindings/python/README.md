@@ -137,6 +137,26 @@ reopened with the same `embedder` or `embedding_dimensions`.
 `memorize_vector(id, vector)` and `query_vector(vector, k)` use the vertex graph index;
 `query_vector` returns `(id, cosine)` pairs.
 
+## One writer, many readers
+
+A store has one writer at a time. `Warm(...)` is the writer: a second one fails at open with
+`StoreLockedError` naming the holder. `Warm.open_read_only(...)` takes no lock, so a reader
+runs beside the writer, sees one consistent snapshot of what the writer committed, and moves
+to newer commits on `refresh()` (False when nothing changed). Mutations on a reader raise
+`ReadOnlyError`; `close()` (or `with Warm(...) as store:`) flushes, releases the lock and is
+safe to repeat; later calls raise `StoreClosedError`.
+
+```python
+with hm.Warm(1024, "./store") as writer:
+    writer.memorize_document({"id": "a", "text": "committed"})
+    reader = hm.Warm.open_read_only(1024, "./store")
+    writer.memorize_document({"id": "b", "text": "newer"})
+    reader.refresh()  # True: the reader now sees "b"
+```
+
+The consistency guarantee, the cost of a snapshot and the Windows locking differences are in
+[one writer, many readers](https://github.com/writerslogic/warm/blob/main/docs/reference/concurrency.md).
+
 ## Choosing the right Python package
 
 This native binding runs the engine in your Python process: document search, the memory API,

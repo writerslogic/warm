@@ -25,6 +25,27 @@ export declare class WarmMemorySystem {
   queryVectraRecords(vector: number[], k: number, filter: Record<string, string | number | boolean>, options?: VectorRecordQueryOptions): Promise<VectorRecordQueryResult>
   constructor(dimensions: number, storagePath?: string | undefined | null, config?: WarmConfigJs | undefined | null)
   /**
+   * Opens an existing store without the writer lock, so another process can hold it for
+   * writing. Reads see one committed snapshot; `refresh()` moves to a newer one. Every
+   * mutation fails with code `read_only`.
+   */
+  static openReadOnly(dimensions: number, storagePath?: string | undefined | null, config?: WarmConfigJs | undefined | null): WarmMemorySystem
+  /** True for a store opened with `openReadOnly`. */
+  get readOnly(): boolean
+  /** True after `close()`. */
+  get closed(): boolean
+  /**
+   * Moves a read-only store to the writer's latest commit. Returns false when nothing
+   * was committed since the current snapshot.
+   */
+  refresh(): boolean
+  /**
+   * Flushes and releases the store lock so another process can open it for writing. Safe
+   * to call twice. Every later call fails with code `store_closed`. Waits up to 10 seconds
+   * for calls in flight; if they do not finish the store stays open and this throws.
+   */
+  close(): void
+  /**
    * Replaces the memory API's configuration (policies and defaults; see
    * docs/reference/api.md). Pass nothing to restore the defaults.
    */
