@@ -289,20 +289,26 @@ fn already_removed(error: &anyhow::Error) -> bool {
 /// media can still keep prior copies, which no file API controls.
 pub(crate) fn scrub_remove_file(path: &Path) -> Result<()> {
     use std::io::{Seek, SeekFrom};
-    let opened = match path.symlink_metadata() {
+    // Whether the entry is known to be a regular file, which a refused open of it can only mean
+    // is already deleted. A directory refuses the open too (access denied on Windows) and is an
+    // error.
+    let (regular, opened) = match path.symlink_metadata() {
         Ok(meta) if meta.file_type().is_symlink() => {
             // Never write through a link; the target is not ours to overwrite.
             return Ok(std::fs::remove_file(path)?);
         }
-        Ok(_) => open_regular(path, true).map_err(anyhow::Error::from),
-        Err(error) => Err(error.into()),
+        Ok(meta) => (
+            meta.is_file(),
+            open_regular(path, true).map_err(anyhow::Error::from),
+        ),
+        Err(error) => (true, Err(error.into())),
     };
     let mut file = match opened {
         Ok(file) => file,
         // Already removed (a race), or on Windows deleted while a reader still holds a handle:
         // the entry stays listed and every open of it is refused. Its content was zeroed
         // before the unlink that left it pending, so there is nothing left to scrub.
-        Err(error) if already_removed(&error) => {
+        Err(error) if regular && already_removed(&error) => {
             tracing::debug!(%error, path = %path.display(), "scrub skipped an entry that is already deleted");
             return Ok(());
         }
