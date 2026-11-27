@@ -11,6 +11,9 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 pub(super) struct ReaderState {
     /// Journal offset where the first unapplied frame starts.
     replayed: AtomicUsize,
+    /// Set when applying frames failed part way: the state may hold half a frame, so the next
+    /// refresh asks for a fresh engine instead of retrying in place.
+    poisoned: std::sync::atomic::AtomicBool,
     /// The experience store's files as last read.
     experience: crate::core::sync::Mutex<super::super::experience::store::DiskStamp>,
 }
@@ -97,8 +100,7 @@ impl WarmCore {
         let Some(reader) = &self.reader else {
             return Err(anyhow::anyhow!("refresh applies to a read-only engine"));
         };
-        let reopen = self.arena.generation_replaced()?;
-        if reopen {
+        if reader.poisoned.load(Ordering::Acquire) || self.arena.generation_replaced()? {
             return Ok(Refresh::Reopen);
         }
         let mut changed = false;
@@ -118,13 +120,22 @@ impl WarmCore {
             let _publication = transaction.publish();
             let from = reader.replayed.load(Ordering::Acquire);
             let shards = self.shards.write();
-            // Frames are applied one at a time; an error leaves `replayed` at the last
-            // applied frame's end only if it is recorded per frame, so record the end after
-            // success and let a retry re-read from the last success.
-            let end = self.replay_from(from, &shards)?;
-            reader.replayed.store(end, Ordering::Release);
+            match self.replay_from(from, &shards) {
+                Ok(end) => reader.replayed.store(end, Ordering::Release),
+                Err(error) => {
+                    reader.poisoned.store(true, Ordering::Release);
+                    // The writer replaced the generation under the walk (and scrubbed it): the
+                    // frames were not damaged, they are gone, and a fresh engine reads the new one.
+                    return if self.arena.generation_replaced().unwrap_or(true) {
+                        Ok(Refresh::Reopen)
+                    } else {
+                        Err(error)
+                    };
+                }
+            }
             drop(shards);
-            self.rebuild_meaning_indices();
+            // Applying the frames in order is what the writer's own commits did to its state,
+            // so nothing is rebuilt: a refresh costs what is new.
             self.revision.fetch_add(1, Ordering::Release);
             changed = true;
         }
@@ -306,6 +317,75 @@ mod tests {
         std::fs::rename(&segment, &moved).expect("rename under a reader handle");
         std::fs::remove_file(&moved).expect("delete under a reader handle");
         assert_eq!(reader.arena.read_frame(0).unwrap().0, first_frame);
+    }
+
+    /// A scrubbing compaction must succeed while a reader holds the old generation open, and
+    /// the reader's handles must not stop a later compaction from removing the old files.
+    #[test]
+    fn a_scrubbing_compaction_succeeds_with_a_reader_open_and_leaves_no_old_generation() {
+        let dir = tempfile::tempdir().unwrap();
+        let writer = open(dir.path(), false);
+        fill(&writer, 0, 10);
+        // The first compaction moves the journal out of the store root into a generation directory.
+        writer.compact().unwrap();
+        let reader = open(dir.path(), true);
+        let old = reader.arena.data_dir();
+        assert_ne!(old, dir.path().join("vectors_data.bin"));
+        writer.delete_document("d-3").unwrap();
+        writer.compact_scrubbing().unwrap();
+        drop(reader);
+        writer.compact_scrubbing().unwrap();
+        assert!(
+            !old.exists(),
+            "old generation left behind: {}",
+            old.display()
+        );
+    }
+
+    /// A reader of a directory it cannot write: every read path works and no byte changes.
+    #[cfg(unix)]
+    #[test]
+    fn a_reader_works_on_a_directory_it_cannot_write() {
+        use std::os::unix::fs::PermissionsExt;
+        let dir = tempfile::tempdir().unwrap();
+        {
+            let writer = open(dir.path(), false);
+            fill(&writer, 0, 10);
+            writer.flush().unwrap();
+        }
+        let chmod = |mode: u32| {
+            let mut paths = vec![dir.path().to_path_buf()];
+            let mut at = 0;
+            while at < paths.len() {
+                let path = paths[at].clone();
+                at += 1;
+                if path.is_dir() {
+                    paths.extend(std::fs::read_dir(&path).unwrap().map(|e| e.unwrap().path()));
+                }
+            }
+            for path in paths.iter().rev() {
+                let kind = if path.is_dir() { 0o111 } else { 0 };
+                std::fs::set_permissions(path, std::fs::Permissions::from_mode(mode | kind))
+                    .unwrap();
+            }
+        };
+        chmod(0o444);
+        let before = std::fs::read_dir(dir.path()).unwrap().count();
+        let outcome = std::panic::catch_unwind(|| {
+            let reader = open(dir.path(), true);
+            assert_eq!(reader.document_count(), 10);
+            assert!(reader.get_document("d-4").unwrap().is_some());
+            assert!(!reader
+                .search_documents("document", &Default::default())
+                .unwrap()
+                .is_empty());
+            reader.maintain_indices().unwrap();
+            let _ = reader.index_status();
+            reader.refresh_in_place().unwrap();
+        });
+        chmod(0o755);
+        outcome.unwrap();
+        assert_eq!(std::fs::read_dir(dir.path()).unwrap().count(), before);
     }
 
     fn refresh_cost(existing: usize) -> (u64, u64) {

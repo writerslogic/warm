@@ -46,7 +46,7 @@ What a reader holds and how it follows the writer:
 | Document checkpoint (`documents.ckpt`) | read once into memory at open, then closed | with the generation |
 | `documents.text` | never opened: it is a cache the writer truncates and rebuilds, so a reader keeps chunk text in memory | n/a |
 | Dense-vector graph (`dense-vectors/`, `dense-ids.log`) | opened in place: the base files are immutable generations behind `CURRENT`, and the update log is read up to its last whole batch | the new log tail is applied; a consolidation is read once |
-| Sparse-vector log (`sparse-docs.wsp`) | read in place | re-read whole when its length changes (the writer also replaces it by rename when it compacts) |
+| Sparse-vector log (`sparse-docs.wsp`) | read in place | the new records are parsed from the last one applied, after checking that record's checksum is still where it was; a shorter file or a changed checksum (the writer rewrote it) means a whole re-read |
 | Experience store | read in place: snapshot plus journal prefix, no recovery writes | re-read when its files change (retried until they hold still across a read) |
 | Index caches (`nsg_index*`, `ivf_index*`, `indices.json`) | read if they match the journal it opened; never written | a reader keeps what it trains in memory |
 | Keys (`master.key`, `key.check`) | read where they are | n/a |
@@ -54,7 +54,17 @@ What a reader holds and how it follows the writer:
 
 `refresh()` returns false when nothing was committed. After a compaction it opens the store
 afresh (that reads the compacted generation once, so it costs the size of the store, like any
-open). Every other refresh applies only the frames added since. `has_newer_commits()` is the
+open). Every other refresh applies only the frames added since, and costs what is new whatever
+the size of the store (a unit test pins the bytes read; a release run measured the median
+refresh at 3.8 ms, 4.0 ms and 2.7 ms for 21 MB, 172 MB and 1.7 GB stores, with the writer's
+index folding disabled so the generation stayed put).
+
+How often a generation changes: only an explicit `compact`, a purge, a `flush` or `close` that
+finds a checkpoint due, and index folding once the in-memory index passes `index_memory_budget`
+(default 64 MiB). An ingest of about 400 MB at the default configuration published no new
+generation. A reader that sees one reopens, which costs the size of the store; the MCP server
+runs that reopen on one call at a time and serves the other calls from the engine it has, and
+the Node and Python layers swap the engine only after the new one is open. `has_newer_commits()` is the
 check without the apply: it proves the new frames whole, so its cost is the size of what is new.
 The engine type also offers `refresh_in_place(&self)`, which returns `Refresh::{Unchanged,
 Advanced, Reopen}` and is what the Node, Python and MCP layers call: they keep their engine for
@@ -63,7 +73,7 @@ the first two and swap it for the third.
 Mutable side files, and why they are read in place rather than rebuilt from the journal: the
 dense-vector graph and the experience store are not in the journal, so a reader cannot rebuild
 them from it. Neither is edited in place in a way a reader cannot follow: the dense graph's base
-is immutable and replaced by `CURRENT`, and its log and the experience journal are append-only
+is immutable and replaced by `CURRENT` (a reader maps those base files, since a base never changes while it is current; the writer unlinks an old base best-effort and collects any it could not remove later, so on Windows a base a reader still maps is removed after the reader lets go, and it is unlinked, not scrubbed), and its log and the experience journal are append-only
 with CRC-checked frames, so a reader reads a prefix of whole records. If a reader cannot open
 the dense graph it logs a warning and answers `query_vector` from the sparse path, as a store
 without one does.

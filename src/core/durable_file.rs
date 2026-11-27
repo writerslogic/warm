@@ -315,7 +315,15 @@ pub(crate) fn scrub_remove_dir(dir: &Path) -> Result<()> {
             scrub_remove_file(&entry.path())?;
         }
     }
-    std::fs::remove_dir(dir)?;
+    if let Err(error) = std::fs::remove_dir(dir) {
+        // Windows keeps a deleted file listed until the last handle to it closes, and a reader
+        // holds one open. The content is already zeroed and unlinked; the empty directory is
+        // removed by the next compaction's `scrub_unreferenced`.
+        if !(cfg!(windows) && dir.exists()) {
+            return Err(error.into());
+        }
+        tracing::warn!(%error, dir = %dir.display(), "directory removal deferred while a reader holds a handle");
+    }
     sync_directory(dir.parent().unwrap_or_else(|| Path::new(".")))
 }
 

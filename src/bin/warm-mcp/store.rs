@@ -4,6 +4,7 @@
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -61,6 +62,8 @@ struct Store {
     /// Serializes read-modify-write sequences (compare-and-set, create-only, prefix deletes).
     gate: Mutex<()>,
     dir: PathBuf,
+    /// Set while one call opens this store's replacement after a compaction.
+    reopening: AtomicBool,
 }
 
 pub struct WarmBackend {
@@ -182,10 +185,28 @@ impl WarmBackend {
         ) {
             return Ok(store);
         }
+        // One call opens the replacement; the others serve what this engine holds (it reads from
+        // memory, so a compaction under it changes nothing they see) instead of each opening the
+        // whole store again.
+        if store
+            .reopening
+            .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
+            .is_err()
+        {
+            return Ok(store);
+        }
+        let core = match self.open(&store.dir) {
+            Ok(core) => core,
+            Err(error) => {
+                store.reopening.store(false, Ordering::Release);
+                return Err(error);
+            }
+        };
         let fresh = Arc::new(Store {
-            core: self.open(&store.dir)?,
+            core,
             gate: Mutex::new(()),
             dir: store.dir.clone(),
+            reopening: AtomicBool::new(false),
         });
         let key = match &self.options.root {
             StoreRoot::Single(_) => "",
@@ -205,7 +226,6 @@ impl WarmBackend {
         namespace: &str,
         mut open: impl FnMut(&Path) -> Res<WarmCore>,
     ) -> Res<Arc<Store>> {
-        use std::sync::atomic::Ordering;
         let key = match &self.options.root {
             StoreRoot::Single(_) => "",
             StoreRoot::Namespaced(_) => namespace,
@@ -283,6 +303,7 @@ impl WarmBackend {
                     core,
                     gate: Mutex::new(()),
                     dir,
+                    reopening: AtomicBool::new(false),
                 })
             }));
         }
