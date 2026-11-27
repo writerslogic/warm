@@ -2673,6 +2673,149 @@ Commit contract of one durable replace or delete, per system (rows compare only 
 | tantivy 0.27.0 (native Rust, pruning collector) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
 | tantivy 0.27.0 (native Rust, exhaustive collector with Count) | incremental-durable-commit | writer commit per operation (segment and meta.json synced) |
 
+## JavaScript in-process: WARM and Vectra
+
+Both stores are called from one Node process (`warm-memory` for WARM, `vectra` for Vectra), index the same 384-dimension document vectors (WARM's local embedder, one file shared by every row) and answer with the same query vectors, so the comparison is the stores, not the models. Quality is nDCG@10 and recall@10 of the returned top 10; QPS and latency are one query at a time with the hit ids read inside the timer; build, size, serve RSS and cold start are per fresh process. Vectra's `isBm25` option is measured on a small query sample because it rebuilds a BM25 engine per query and exhausts the heap after about 20 queries in one process. Factors are ratios of medians, more than 1x is WARM ahead; W, T and L follow the same bootstrap rule as the sections above, `n/v` is no verdict. Method, versions and the unsupported rows are recorded in each results file (`kind: js`); how to reproduce: [index.md](index.md).
+
+### fiqa (57,600 documents, 500 queries) on `gcp-n2-icelake-8c-16g`
+
+Versions: Node v24.22.3, vectra 0.15.0, warm-memory 0.7.4. Embedding: ibm-granite/granite-embedding-30m-english Int8, 384 dimensions. 10 rounds, 3 builds, results `benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json`.
+
+**Dense exact cosine, top 10 (vector records on both sides)**
+
+| System | nDCG@10 | QPS | p50 (us) | p99 (us) | Build (s) | Index (MiB) | Serve RSS (MiB) | Cold start (s) |
+|---|---|---|---|---|---|---|---|---|
+| Vectra 0.15.0 exact cosine | 0.3919 | 31 | 32,456 | 33,340 | 15.67 | 447.6 | 1,313 | 2.25 |
+| WARM vector records, exact | 0.3919 | 29 | 34,053 | 34,651 | 5.49 | 318.3 | 553 | 1.59 |
+| **WARM against Vectra** | +0.0000 nDCG TIE | 0.95x LOSS | 0.95x LOSS | 0.96x LOSS | 2.86x n/v | 1.41x n/v | 2.37x WIN | 1.42x WIN |
+
+**Hybrid: WARM fused BM25 + cosine against Vectra's `isBm25` option**
+
+| System | nDCG@10 | QPS | p50 (us) | p99 (us) | Build (s) | Index (MiB) | Serve RSS (MiB) | Cold start (s) |
+|---|---|---|---|---|---|---|---|---|
+| WARM hybrid (BM25 + cosine, blend) | 0.3885 | 332 | 2,970 | 3,697 | 7.19 | 97.9 | 334 | 1.24 |
+
+Vectra, hybrid: not run. Vectra's isBm25 rebuilds a BM25 engine over every item per query; its cost grows with the corpus (about 46 s per query at 4,559 LongMemEval sessions, 6 to 8 s at 3,600 to 5,200 short documents), so at 57,600 documents the row was not run (WARM_BENCH_JS_BM25_QUERIES=0).
+
+**Keyword only**
+
+| System | nDCG@10 | QPS | p50 (us) | p99 (us) | Build (s) | Index (MiB) | Serve RSS (MiB) | Cold start (s) |
+|---|---|---|---|---|---|---|---|---|
+| WARM lexical only | 0.2654 | 808 | 1,183 | 2,702 | 7.19 | 97.9 | 277 | 1.19 |
+| Vectra 0.15.0 | unsupported | unsupported | unsupported | unsupported | unsupported | unsupported | unsupported | unsupported |
+
+Vectra, keyword: Vectra 0.15.0 has no keyword-only query: `queryItems(vector, query, topK, filter, isBm25)` always runs the vector scan first and `isBm25` only appends BM25 hits (from `wink-bm25-text-search`) after the semantic list; there is no fusion.
+
+### memory (4,559 documents, 100 queries) on `gcp-n2-icelake-8c-16g`
+
+Versions: Node v24.22.3, vectra 0.15.0, warm-memory 0.7.4. Embedding: ibm-granite/granite-embedding-30m-english Int8, 384 dimensions. 10 rounds, 8 builds, results `benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json`.
+
+**Dense exact cosine, top 10 (vector records on both sides)**
+
+| System | nDCG@10 | QPS | p50 (us) | p99 (us) | Build (s) | Index (MiB) | Serve RSS (MiB) | Cold start (s) |
+|---|---|---|---|---|---|---|---|---|
+| Vectra 0.15.0 exact cosine | 0.2847 | 414 | 2,314 | 3,151 | 1.03 | 35.5 | 290 | 0.57 |
+| WARM vector records, exact | 0.2848 | 330 | 3,021 | 3,265 | 0.56 | 25.3 | 110 | 0.18 |
+| **WARM against Vectra** | +0.0001 nDCG TIE | 0.80x LOSS | 0.77x LOSS | 0.97x LOSS | 1.83x WIN | 1.40x WIN | 2.62x WIN | 3.24x WIN |
+
+**Hybrid: WARM fused BM25 + cosine against Vectra's `isBm25` option**
+
+| System | nDCG@10 | QPS | p50 (us) | p99 (us) | Build (s) | Index (MiB) | Serve RSS (MiB) | Cold start (s) |
+|---|---|---|---|---|---|---|---|---|
+| Vectra isBm25 (appended BM25 list) | 0.1505 | 0.02 | 45,934,809 | 45,934,809 | see dense | see dense | 1,286 | 44.83 |
+| WARM hybrid (BM25 + cosine, blend) | 0.5089 | 1,977 | 499 | 624 | 2.81 | 11.2 | 128 | 0.29 |
+| **WARM against Vectra** | +0.3584 nDCG n/v | 91175.70x WIN | 91977.32x WIN | 73609.76x WIN | - | - | 10.04x WIN | 153.04x WIN |
+
+**Keyword only**
+
+| System | nDCG@10 | QPS | p50 (us) | p99 (us) | Build (s) | Index (MiB) | Serve RSS (MiB) | Cold start (s) |
+|---|---|---|---|---|---|---|---|---|
+| WARM lexical only | 0.4561 | 2,817 | 334 | 703 | 2.81 | 11.2 | 119 | 0.29 |
+| Vectra 0.15.0 | unsupported | unsupported | unsupported | unsupported | unsupported | unsupported | unsupported | unsupported |
+
+Vectra, keyword: Vectra 0.15.0 has no keyword-only query: `queryItems(vector, query, topK, filter, isBm25)` always runs the vector scan first and `isBm25` only appends BM25 hits (from `wink-bm25-text-search`) after the semantic list; there is no fusion.
+
+The hybrid rows compare nDCG@10 on the same 2 queries Vectra's BM25 row ran; WARM hybrid over all 100 queries is 0.4288, WARM dense 0.2848, Vectra dense 0.2847. Vectra's list is the 10 semantic hits followed by BM25 hits, so its top-10 quality is the dense quality by construction.
+
+### nfcorpus (3,633 documents, 324 queries) on `gcp-n2-icelake-8c-16g`
+
+Versions: Node v24.22.3, vectra 0.15.0, warm-memory 0.7.4. Embedding: ibm-granite/granite-embedding-30m-english Int8, 384 dimensions. 10 rounds, 8 builds, results `benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json`.
+
+**Dense exact cosine, top 10 (vector records on both sides)**
+
+| System | nDCG@10 | QPS | p50 (us) | p99 (us) | Build (s) | Index (MiB) | Serve RSS (MiB) | Cold start (s) |
+|---|---|---|---|---|---|---|---|---|
+| Vectra 0.15.0 exact cosine | 0.3106 | 553 | 1,796 | 1,920 | 0.80 | 28.2 | 276 | 0.54 |
+| WARM vector records, exact | 0.3109 | 404 | 2,472 | 2,645 | 0.43 | 20.1 | 104 | 0.15 |
+| **WARM against Vectra** | +0.0003 nDCG TIE | 0.73x LOSS | 0.73x LOSS | 0.73x LOSS | 1.85x WIN | 1.40x WIN | 2.65x WIN | 3.72x WIN |
+
+**Hybrid: WARM fused BM25 + cosine against Vectra's `isBm25` option**
+
+| System | nDCG@10 | QPS | p50 (us) | p99 (us) | Build (s) | Index (MiB) | Serve RSS (MiB) | Cold start (s) |
+|---|---|---|---|---|---|---|---|---|
+| Vectra isBm25 (appended BM25 list) | 0.3365 | 0.16 | 6,086,765 | 6,146,704 | see dense | see dense | 662 | 6.62 |
+| WARM hybrid (BM25 + cosine, blend) | 0.3840 | 2,542 | 393 | 520 | 0.66 | 6.6 | 93 | 0.13 |
+| **WARM against Vectra** | +0.0475 nDCG n/v | 15520.51x WIN | 15490.16x WIN | 11823.85x WIN | - | - | 7.11x WIN | 52.58x WIN |
+
+**Keyword only**
+
+| System | nDCG@10 | QPS | p50 (us) | p99 (us) | Build (s) | Index (MiB) | Serve RSS (MiB) | Cold start (s) |
+|---|---|---|---|---|---|---|---|---|
+| WARM lexical only | 0.2916 | 9,995 | 90 | 210 | 0.66 | 6.6 | 88 | 0.12 |
+| Vectra 0.15.0 | unsupported | unsupported | unsupported | unsupported | unsupported | unsupported | unsupported | unsupported |
+
+Vectra, keyword: Vectra 0.15.0 has no keyword-only query: `queryItems(vector, query, topK, filter, isBm25)` always runs the vector scan first and `isBm25` only appends BM25 hits (from `wink-bm25-text-search`) after the semantic list; there is no fusion.
+
+The hybrid rows compare nDCG@10 on the same 10 queries Vectra's BM25 row ran; WARM hybrid over all 324 queries is 0.3407, WARM dense 0.3109, Vectra dense 0.3106. Vectra's list is the 10 semantic hits followed by BM25 hits, so its top-10 quality is the dense quality by construction.
+
+### scifact (5,183 documents, 809 queries) on `gcp-n2-icelake-8c-16g`
+
+Versions: Node v24.22.3, vectra 0.15.0, warm-memory 0.7.4. Embedding: ibm-granite/granite-embedding-30m-english Int8, 384 dimensions. 10 rounds, 8 builds, results `benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json`.
+
+**Dense exact cosine, top 10 (vector records on both sides)**
+
+| System | nDCG@10 | QPS | p50 (us) | p99 (us) | Build (s) | Index (MiB) | Serve RSS (MiB) | Cold start (s) |
+|---|---|---|---|---|---|---|---|---|
+| Vectra 0.15.0 exact cosine | 0.7461 | 378 | 2,614 | 2,936 | 1.08 | 40.3 | 319 | 0.60 |
+| WARM vector records, exact | 0.7461 | 303 | 3,282 | 3,586 | 0.61 | 28.7 | 122 | 0.19 |
+| **WARM against Vectra** | +0.0000 nDCG TIE | 0.80x LOSS | 0.80x LOSS | 0.82x LOSS | 1.78x WIN | 1.40x WIN | 2.62x WIN | 3.16x WIN |
+
+**Hybrid: WARM fused BM25 + cosine against Vectra's `isBm25` option**
+
+| System | nDCG@10 | QPS | p50 (us) | p99 (us) | Build (s) | Index (MiB) | Serve RSS (MiB) | Cold start (s) |
+|---|---|---|---|---|---|---|---|---|
+| Vectra isBm25 (appended BM25 list) | 0.4500 | 0.12 | 8,324,684 | 8,372,020 | see dense | see dense | 692 | 8.80 |
+| WARM hybrid (BM25 + cosine, blend) | 0.5507 | 1,938 | 509 | 673 | 0.91 | 9.4 | 114 | 0.17 |
+| **WARM against Vectra** | +0.1007 nDCG n/v | 16134.22x WIN | 16346.23x WIN | 12444.16x WIN | - | - | 6.07x WIN | 52.40x WIN |
+
+**Keyword only**
+
+| System | nDCG@10 | QPS | p50 (us) | p99 (us) | Build (s) | Index (MiB) | Serve RSS (MiB) | Cold start (s) |
+|---|---|---|---|---|---|---|---|---|
+| WARM lexical only | 0.7027 | 4,063 | 239 | 421 | 0.91 | 9.4 | 102 | 0.16 |
+| Vectra 0.15.0 | unsupported | unsupported | unsupported | unsupported | unsupported | unsupported | unsupported | unsupported |
+
+Vectra, keyword: Vectra 0.15.0 has no keyword-only query: `queryItems(vector, query, topK, filter, isBm25)` always runs the vector scan first and `isBm25` only appends BM25 hits (from `wink-bm25-text-search`) after the semantic list; there is no fusion.
+
+The hybrid rows compare nDCG@10 on the same 10 queries Vectra's BM25 row ran; WARM hybrid over all 809 queries is 0.7686, WARM dense 0.7461, Vectra dense 0.7461. Vectra's list is the 10 semantic hits followed by BM25 hits, so its top-10 quality is the dense quality by construction.
+
+### Where WARM loses to Vectra (JavaScript)
+
+| Dataset | Contract | Metric | WARM | Vectra | WARM against Vectra | Verdict |
+|---|---|---|---|---|---|---|
+| fiqa (`gcp-n2-icelake-8c-16g`) | dense | QPS | 29 | 31 | 0.95x | LOSS |
+| fiqa (`gcp-n2-icelake-8c-16g`) | dense | p50 (us) | 34,053 | 32,456 | 0.95x | LOSS |
+| fiqa (`gcp-n2-icelake-8c-16g`) | dense | p99 (us) | 34,651 | 33,340 | 0.96x | LOSS |
+| memory (`gcp-n2-icelake-8c-16g`) | dense | QPS | 330 | 414 | 0.80x | LOSS |
+| memory (`gcp-n2-icelake-8c-16g`) | dense | p50 (us) | 3,021 | 2,314 | 0.77x | LOSS |
+| memory (`gcp-n2-icelake-8c-16g`) | dense | p99 (us) | 3,265 | 3,151 | 0.97x | LOSS |
+| nfcorpus (`gcp-n2-icelake-8c-16g`) | dense | QPS | 404 | 553 | 0.73x | LOSS |
+| nfcorpus (`gcp-n2-icelake-8c-16g`) | dense | p50 (us) | 2,472 | 1,796 | 0.73x | LOSS |
+| nfcorpus (`gcp-n2-icelake-8c-16g`) | dense | p99 (us) | 2,645 | 1,920 | 0.73x | LOSS |
+| scifact (`gcp-n2-icelake-8c-16g`) | dense | QPS | 303 | 378 | 0.80x | LOSS |
+| scifact (`gcp-n2-icelake-8c-16g`) | dense | p50 (us) | 3,282 | 2,614 | 0.80x | LOSS |
+| scifact (`gcp-n2-icelake-8c-16g`) | dense | p99 (us) | 3,586 | 2,936 | 0.82x | LOSS |
+
 ## Operational facts
 
 | System | Service needed | Encrypted at rest | Basis |

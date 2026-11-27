@@ -185,7 +185,7 @@ def run(dataset, embed_bin, out_dir=None, rounds=ROUNDS, build_repeats=BUILD_REP
         },
         "systems": systems,
         "unsupported": UNSUPPORTED,
-        "not_run": {} if BM25_QUERIES > 0 else {"vectra-bm25": "Vectra's isBm25 rebuilds a BM25 engine over every item per query; on this corpus one query takes minutes, so the row was not run (WARM_BENCH_JS_BM25_QUERIES=0)."},
+        "not_run": {} if BM25_QUERIES > 0 else {"vectra-bm25": "Vectra's isBm25 rebuilds a BM25 engine over every item per query; its cost grows with the corpus (about 46 s per query at 4,559 LongMemEval sessions, 6 to 8 s at 3,600 to 5,200 short documents), so at 57,600 documents the row was not run (WARM_BENCH_JS_BM25_QUERIES=0)."},
     }
     out = Path(out_dir) if out_dir else common.RESULTS
     name = f"{suite}-js-{dataset}-{hw['class']}.json"
