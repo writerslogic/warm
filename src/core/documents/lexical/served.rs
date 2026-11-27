@@ -12,7 +12,6 @@
 //! decided by the exhaustive tie order (document id, then chunk index).
 
 use std::cmp::Ordering;
-use std::collections::BinaryHeap;
 
 mod count;
 mod lazy;
@@ -297,41 +296,49 @@ struct Shape {
     average: f64,
 }
 
-/// A hit as the top-k heap orders it: greater is worse. Ids are read only to break ties.
-struct Worse<'a> {
-    score: f64,
+/// A score as a key whose unsigned order is the reverse of `f64::total_cmp`, so a greater key is a
+/// worse hit.
+fn worse_key(score: f64) -> u64 {
+    let bits = score.to_bits();
+    !(if bits >> 63 == 1 {
+        !bits
+    } else {
+        bits | 1 << 63
+    })
+}
+
+/// The score `worse_key` was made from.
+fn key_score(key: u64) -> f64 {
+    let ordered = !key;
+    f64::from_bits(if ordered >> 63 == 1 {
+        ordered & !(1 << 63)
+    } else {
+        !ordered
+    })
+}
+
+/// A hit in the top-k heap: its score key, its tie order (read once, on entry) and its slot.
+#[derive(Clone, Copy)]
+struct Entry {
+    key: u64,
+    tie: u64,
     slot: u32,
-    image: &'a ServingImage,
 }
 
-impl PartialEq for Worse<'_> {
-    fn eq(&self, other: &Self) -> bool {
-        self.cmp(other) == Ordering::Equal
-    }
-}
-impl Eq for Worse<'_> {}
-impl PartialOrd for Worse<'_> {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-impl Ord for Worse<'_> {
-    fn cmp(&self, other: &Self) -> Ordering {
-        other.score.total_cmp(&self.score).then_with(|| {
-            if self.slot == other.slot {
-                return Ordering::Equal;
-            }
-            let mine = self.image.slot_tie_key(self.slot as usize);
-            let theirs = self.image.slot_tie_key(other.slot as usize);
-            mine.cmp(&theirs)
-        })
+impl Entry {
+    /// Whether this is a worse hit than `other` (ties are ordered by id).
+    #[inline(always)]
+    fn worse(&self, other: &Entry) -> bool {
+        (self.key, self.tie) > (other.key, other.tie)
     }
 }
 
+/// The k best hits so far: a binary heap whose root is the worst. A hit that scores below the
+/// root is dropped without reading its id.
 struct Top<'a> {
     image: &'a ServingImage,
     k: usize,
-    heap: BinaryHeap<Worse<'a>>,
+    heap: Vec<Entry>,
 }
 
 impl<'a> Top<'a> {
@@ -339,29 +346,59 @@ impl<'a> Top<'a> {
         Self {
             image,
             k,
-            heap: BinaryHeap::with_capacity(k + 1),
+            heap: Vec::with_capacity(k + 1),
         }
     }
 
     /// The k-th best score so far, once there are k.
     fn floor(&self) -> Option<f64> {
-        (self.k > 0 && self.heap.len() == self.k).then(|| self.heap.peek().expect("full").score)
+        (self.k > 0 && self.heap.len() == self.k).then(|| key_score(self.heap[0].key))
     }
 
     fn offer(&mut self, score: f64, slot: u32) {
         if self.k == 0 {
             return;
         }
-        let hit = Worse {
-            score,
+        let key = worse_key(score);
+        let full = self.heap.len() == self.k;
+        if full && key > self.heap[0].key {
+            return;
+        }
+        let hit = Entry {
+            key,
+            tie: self.image.slot_tie_key(slot as usize),
             slot,
-            image: self.image,
         };
-        if self.heap.len() < self.k {
+        if !full {
+            let mut at = self.heap.len();
             self.heap.push(hit);
-        } else if hit < *self.heap.peek().expect("full") {
-            self.heap.pop();
-            self.heap.push(hit);
+            while at > 0 {
+                let parent = (at - 1) / 2;
+                if !hit.worse(&self.heap[parent]) {
+                    break;
+                }
+                self.heap[at] = self.heap[parent];
+                at = parent;
+            }
+            self.heap[at] = hit;
+        } else if self.heap[0].worse(&hit) {
+            let len = self.heap.len();
+            let mut at = 0;
+            loop {
+                let mut child = 2 * at + 1;
+                if child >= len {
+                    break;
+                }
+                if child + 1 < len && self.heap[child + 1].worse(&self.heap[child]) {
+                    child += 1;
+                }
+                if !self.heap[child].worse(&hit) {
+                    break;
+                }
+                self.heap[at] = self.heap[child];
+                at = child;
+            }
+            self.heap[at] = hit;
         }
     }
 
@@ -369,9 +406,8 @@ impl<'a> Top<'a> {
         let image = self.image;
         let mut keyed: Vec<(f64, u64, u32)> = self
             .heap
-            .into_vec()
             .into_iter()
-            .map(|hit| (hit.score, image.slot_tie_key(hit.slot as usize), hit.slot))
+            .map(|hit| (key_score(hit.key), hit.tie, hit.slot))
             .collect();
         // Best first: score descending, then the tie order.
         keyed.sort_unstable_by(|a, b| b.0.total_cmp(&a.0).then_with(|| a.1.cmp(&b.1)));
@@ -3184,6 +3220,28 @@ fn lone_required_count(image: &ServingImage, query: &LexicalQuery, form: usize) 
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn worse_keys_reverse_the_total_order_of_scores() {
+        let scores = [
+            f64::NEG_INFINITY,
+            -2.5,
+            -0.0,
+            0.0,
+            f64::MIN_POSITIVE,
+            0.3,
+            1.0,
+            1.0 + f64::EPSILON,
+            7.25,
+            f64::INFINITY,
+        ];
+        for a in scores {
+            assert_eq!(key_score(worse_key(a)).to_bits(), a.to_bits());
+            for b in scores {
+                assert_eq!(worse_key(a).cmp(&worse_key(b)), b.total_cmp(&a));
+            }
+        }
+    }
+
     use super::super::tests::insert;
     use super::*;
     use crate::core::documents::binary::put_varint;
