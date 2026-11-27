@@ -91,6 +91,8 @@ pub use index::sparse_store;
 #[cfg(feature = "security")]
 pub use security::scrub_stack;
 pub(crate) mod os_memory;
+#[cfg(not(target_arch = "wasm32"))]
+pub(crate) mod reader_snapshot;
 #[cfg(target_arch = "x86_64")]
 pub(crate) mod simd_math;
 pub mod sparse;

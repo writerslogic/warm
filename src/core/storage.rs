@@ -78,7 +78,7 @@ pub(crate) const END_MARK: u32 = 0x454E_444C;
 /// or `None` if fewer than [`HEADER_SIZE`] bytes remain.
 #[inline]
 #[must_use]
-fn header_words(bytes: &[u8]) -> Option<[u32; 4]> {
+pub(crate) fn header_words(bytes: &[u8]) -> Option<[u32; 4]> {
     let (words, _) = bytes.first_chunk::<HEADER_SIZE>()?.as_chunks::<4>();
     Some(std::array::from_fn(|i| u32::from_le_bytes(words[i])))
 }
@@ -174,6 +174,8 @@ pub(crate) struct PersistentArena {
     /// rotation the next append must rotate rather than write into the current segment.
     rotation_pending: AtomicBool,
     commit_uncertain: AtomicBool,
+    /// Set for a read-only engine: no frame is written and no generation published.
+    read_only: AtomicBool,
 }
 
 pub(crate) struct PreparedCompaction {
@@ -296,6 +298,7 @@ impl PersistentArena {
             }),
             rotation_pending: AtomicBool::new(false),
             commit_uncertain: AtomicBool::new(false),
+            read_only: AtomicBool::new(false),
         })
     }
 
@@ -624,7 +627,14 @@ impl PersistentArena {
         self.write_frame(data, true)
     }
 
+    pub(crate) fn set_read_only(&self, read_only: bool) {
+        self.read_only.store(read_only, Ordering::Release);
+    }
+
     fn ensure_writable(&self) -> Result<()> {
+        if self.read_only.load(Ordering::Acquire) {
+            return Err(crate::core::error::ReadOnlyError.into());
+        }
         if self.commit_uncertain.load(Ordering::Acquire) {
             return Err(crate::core::error::IndeterminateMutationError {
                 effect: "journal recovery",

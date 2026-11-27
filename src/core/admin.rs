@@ -447,7 +447,9 @@ pub(crate) fn copy_tree(source: &Path, destination: &Path) -> Result<()> {
         if file_type.is_symlink() {
             bail!("migration refuses symbolic link {}", entry.path().display());
         }
-        if entry.file_name() == LOCK_FILE {
+        if entry.file_name() == LOCK_FILE
+            || entry.file_name() == super::reader_snapshot::READERS_DIR
+        {
             continue;
         }
         let target = destination.join(entry.file_name());

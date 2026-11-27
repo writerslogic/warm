@@ -1,18 +1,22 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
 
-use anyhow::{bail, ensure, Context, Result};
+use anyhow::{ensure, Context, Result};
 use std::fs::{File, TryLockError};
-use std::io::{Seek, SeekFrom, Write};
+use std::io::{Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 
 pub(crate) const LOCK_FILE: &str = ".hms.lock";
 
 /// Process-scoped exclusive ownership of a writable WARM store.
 ///
-/// WARM does not currently expose a read-only mode, so every engine instance is
-/// a potential writer. Holding this lock for the engine lifetime prevents two
-/// processes (or two instances in one process) from mutating the same store.
+/// Exactly one writer engine owns a store directory. The lock is an advisory whole-file
+/// `flock` on Unix and a `LockFileEx` exclusive lock on Windows (both through
+/// `std::fs::File::try_lock`), tied to the open file, so the OS drops it when the process
+/// dies. Read-only engines (`WarmCore::open_read_only`) never touch this file: they read a
+/// private snapshot of the committed files, so they neither wait for the writer nor make it
+/// wait. On Windows the lock is mandatory, so another process cannot read the holder's pid
+/// out of the file; the refusal then says the holder is unknown.
 pub(crate) struct StoreLock {
     file: File,
     path: PathBuf,
@@ -28,10 +32,13 @@ impl StoreLock {
 
         match super::durable_file::try_lock_exclusive(&file) {
             Ok(()) => {}
-            Err(TryLockError::WouldBlock) => bail!(
-                "WARM store {} is already open by another engine; concurrent writers are not supported",
-                store_path.display()
-            ),
+            Err(TryLockError::WouldBlock) => {
+                return Err(crate::core::error::StoreLockedError {
+                    path: store_path.to_path_buf(),
+                    holder_pid: read_holder_pid(&mut file),
+                }
+                .into());
+            }
             Err(TryLockError::Error(error)) => {
                 return Err(error)
                     .with_context(|| format!("failed to lock store {}", store_path.display()));
@@ -48,6 +55,35 @@ impl StoreLock {
 
         Ok(Self { file, path })
     }
+}
+
+impl StoreLock {
+    /// True if no engine holds the lock of the store directory `store_path` (or it has no
+    /// lock file). Takes and releases the lock without writing anything.
+    pub(crate) fn try_probe(store_path: &Path) -> Result<bool> {
+        let path = store_path.join(LOCK_FILE);
+        let file = match super::durable_file::open_regular_read_write(&path) {
+            Ok(file) => file,
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(true),
+            Err(error) => return Err(error.into()),
+        };
+        match super::durable_file::try_lock_exclusive(&file) {
+            Ok(()) => {
+                super::durable_file::unlock(&file)?;
+                Ok(true)
+            }
+            Err(TryLockError::WouldBlock) => Ok(false),
+            Err(TryLockError::Error(error)) => Err(error.into()),
+        }
+    }
+}
+
+/// The pid the lock's owner wrote, if it can be read and parsed.
+fn read_holder_pid(file: &mut File) -> Option<u32> {
+    let mut text = String::new();
+    file.seek(SeekFrom::Start(0)).ok()?;
+    Read::by_ref(file).take(64).read_to_string(&mut text).ok()?;
+    text.trim().strip_prefix("pid=")?.parse().ok()
 }
 
 #[cfg(unix)]
@@ -98,9 +134,47 @@ mod tests {
             .err()
             .expect("second lock must fail");
         assert!(error.to_string().contains("already open"));
+        let locked = error
+            .downcast_ref::<crate::core::error::StoreLockedError>()
+            .expect("typed lock error");
+        // Windows denies reads of a locked file, so only Unix can name the holder.
+        match locked.holder_pid {
+            Some(pid) => {
+                assert_eq!(pid, std::process::id());
+                assert!(error.to_string().contains(&format!("pid {pid}")));
+            }
+            None => assert!(error.to_string().contains("holder unknown")),
+        }
+        #[cfg(unix)]
+        assert!(locked.holder_pid.is_some());
         drop(first);
         let reacquired = StoreLock::acquire(dir.path())?;
         drop(reacquired);
+        Ok(())
+    }
+
+    /// The primitive behind every platform's lock (`flock` on Unix, `LockFileEx` on Windows):
+    /// a second handle to the same file, even in this process, is refused until the first
+    /// unlocks, and unlocking does not need the handle to close.
+    #[test]
+    fn the_lock_primitive_excludes_a_second_handle_until_unlocked() -> Result<()> {
+        use super::super::durable_file::{
+            open_regular_read_write_create, try_lock_exclusive, unlock,
+        };
+        let dir = tempfile::tempdir()?;
+        let path = dir.path().join(LOCK_FILE);
+        let first = open_regular_read_write_create(&path)?;
+        let second = open_regular_read_write_create(&path)?;
+        try_lock_exclusive(&first).map_err(|e| anyhow::anyhow!("{e:?}"))?;
+        assert!(matches!(
+            try_lock_exclusive(&second),
+            Err(TryLockError::WouldBlock)
+        ));
+        assert!(!StoreLock::try_probe(dir.path())?);
+        unlock(&first)?;
+        try_lock_exclusive(&second).map_err(|e| anyhow::anyhow!("{e:?}"))?;
+        unlock(&second)?;
+        assert!(StoreLock::try_probe(dir.path())?);
         Ok(())
     }
 

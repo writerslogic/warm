@@ -184,6 +184,11 @@ pub struct WarmCore {
     /// one, so a store that never receives an observation has no experience files.
     experience: RwLock<Option<super::experience::store::ExperienceStore>>,
     _store_lock: StoreLock,
+    /// Opened by `open_read_only`: every mutation is refused and nothing is written back to
+    /// the shared store (the engine runs over `reader_snapshot`).
+    read_only: bool,
+    // Dropped after the lock: removes the private copy the engine ran over.
+    reader_snapshot: Option<super::reader_snapshot::Snapshot>,
 }
 
 impl WarmCore {}
@@ -217,5 +222,6 @@ mod graph_api;
 mod indices;
 mod meaning_api;
 mod provenance_api;
+mod reader;
 mod replay;
 mod training;

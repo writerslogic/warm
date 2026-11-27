@@ -538,6 +538,7 @@ fn copy_store_files(source: &Path, staging: &Path, skip: &[&str]) -> Result<()> 
         let name = entry.file_name().to_string_lossy().into_owned();
         let cache = name.starts_with("nsg_index") || name.starts_with("ivf_index");
         let skipped = name == LOCK_FILE
+            || name == crate::core::reader_snapshot::READERS_DIR
             || name == ARENA_DIRECTORY
             || name == "indices.json"
             || name == "indices.json.crc32"

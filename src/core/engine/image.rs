@@ -387,7 +387,7 @@ impl WarmCore {
     /// one ([`Self::takes_checkpoint`]), and at least `document_checkpoint.min_journal_bytes` of
     /// frames in the live generation (the frames a checkpoint would fold in).
     pub(super) fn checkpoint_if_due(&self) -> Result<()> {
-        if !self.image.opened.load(Ordering::Acquire) {
+        if self.read_only || !self.image.opened.load(Ordering::Acquire) {
             return Ok(());
         }
         let used = self.arena.stats().used_bytes;

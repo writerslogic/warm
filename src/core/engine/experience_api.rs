@@ -55,6 +55,11 @@ impl WarmCore {
         &self,
         f: impl FnOnce(&mut ExperienceStore) -> R,
     ) -> std::result::Result<R, ExperienceError> {
+        if self.read_only {
+            return Err(ExperienceError::Invalid(
+                "write: the store is open read-only",
+            ));
+        }
         let mut slot = self.experience.write();
         if slot.is_none() {
             *slot = Some(ExperienceStore::create(

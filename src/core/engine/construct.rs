@@ -10,6 +10,16 @@ impl WarmCore {
         storage_path: Option<String>,
         config: Option<WarmConfig>,
     ) -> Result<Self> {
+        Self::open_engine(dimensions, storage_path, config, false, None)
+    }
+
+    pub(super) fn open_engine(
+        dimensions: u32,
+        storage_path: Option<String>,
+        config: Option<WarmConfig>,
+        read_only: bool,
+        reader_snapshot: Option<super::super::reader_snapshot::Snapshot>,
+    ) -> Result<Self> {
         const MAX_DIMENSIONS: u32 = 1_000_000;
         if dimensions == 0 || dimensions > MAX_DIMENSIONS {
             return Err(anyhow::anyhow!(
@@ -38,6 +48,12 @@ impl WarmCore {
         }
 
         let store_lock = StoreLock::acquire(&base_path)?;
+        if !read_only {
+            // Snapshots of readers that died without cleaning up.
+            super::super::reader_snapshot::reap(
+                &base_path.join(super::super::reader_snapshot::READERS_DIR),
+            );
+        }
         let resolved = super::super::schema::resolve_protection(&base_path, &config)?;
         #[cfg(feature = "security")]
         {
@@ -233,7 +249,10 @@ impl WarmCore {
             scrub_gate: crate::core::sync::Mutex::new(()),
             experience: RwLock::new(None),
             _store_lock: store_lock,
+            read_only,
+            reader_snapshot,
         };
+        core.arena.set_read_only(read_only);
 
         let text_path = core.storage_path.join("documents.text");
         // A purge interrupted before renaming its canonical segment leaves a copy of the live
@@ -266,7 +285,7 @@ impl WarmCore {
         core.mark_opened();
         // A purge that died between its delete commit and the end of its compaction left the
         // deleted text in the journal; finish it before the store is handed out.
-        if core.purge_pending() {
+        if !read_only && core.purge_pending() {
             if let Err(error) = core.compact_scrubbing() {
                 // A full disk (or any failure) must not make the store unopenable: nothing
                 // acknowledged is lost, the deletes are committed, and the ticket stays on disk
