@@ -19,6 +19,7 @@ nav:
           - api/**/*.md
       - file-format/index.md
       - reference/provenance-profile-v1.md
+      - reference/concurrency.md
       - reference/faq.md
       - reference/changelog.md
   - Integrations:
