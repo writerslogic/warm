@@ -159,8 +159,10 @@ pub(crate) struct DocumentStore {
     /// Estimated resident bytes of the documents installed since the store was created
     /// (see [`Self::resident_estimate`]); never lowered by deletes, which keeps it an upper bound.
     resident_estimate: usize,
-    /// Quantized embeddings for unfiltered hybrid queries, built on demand for one generation.
-    screen: ScreenCache,
+    /// Quantized embeddings for unfiltered hybrid queries. Kept in step with the slots by every
+    /// write (a row per embedded chunk), never built or changed by a query; present from
+    /// [`SCREEN_TABLE_MIN_CHUNKS`] chunks, for a store not served over a checkpoint.
+    screen: Option<Arc<ScreenTable>>,
 }
 
 /// Documents below which [`DocumentStore::reorder_slots`] leaves a store in its order.
@@ -180,22 +182,6 @@ impl Drop for AbortOnUnwind {
 
 /// Rows of embedded chunks below which a store is scored by a plain scan and keeps no screen table.
 const SCREEN_TABLE_MIN_CHUNKS: usize = 2048;
-
-#[derive(Default)]
-struct ScreenState {
-    generation: u64,
-    dimensions: usize,
-    queries: u32,
-    table: Option<Arc<ScreenTable>>,
-}
-
-struct ScreenCache(crate::core::sync::Mutex<ScreenState>);
-
-impl Default for ScreenCache {
-    fn default() -> Self {
-        Self(crate::core::sync::Mutex::new(ScreenState::default()))
-    }
-}
 
 #[cfg(test)]
 impl DocumentStore {
@@ -732,42 +718,75 @@ impl DocumentStore {
         true
     }
 
-    /// The screen table of this generation for queries of `dimensions`, once a second query has asked for it (a store
-    /// written between queries never pays for a table it would not reuse). `None` below `SCREEN_TABLE_MIN_CHUNKS`
-    /// chunks, for a store served over a checkpoint, and until built.
+    /// The screen table for queries of `dimensions`: kept current by the writes, so a query only
+    /// reads it. `None` below `SCREEN_TABLE_MIN_CHUNKS` chunks, for a store served over a
+    /// checkpoint, and for queries of another length than the table's.
     pub(super) fn screen_table(&self, dimensions: usize) -> Option<Arc<ScreenTable>> {
-        if self.base.is_some()
-            || self.chunk_count < SCREEN_TABLE_MIN_CHUNKS
-            || dimensions == 0
-            || dimensions > super::screen::MAX_DIMENSIONS
-        {
-            return None;
+        self.screen
+            .as_ref()
+            .filter(|table| table.dimensions() == dimensions)
+            .map(Arc::clone)
+    }
+
+    /// Whether the kept screen table equals one built from the slots now (a write that left a
+    /// row behind makes them differ), and whether a table exists exactly when it should.
+    #[cfg(test)]
+    pub(super) fn screen_matches_rebuild(&self) -> bool {
+        let mut fresh = self.clone_screen_state();
+        fresh.refresh_screen();
+        match (&self.screen, &fresh.screen) {
+            (Some(kept), Some(built)) => **kept == **built,
+            (None, None) => true,
+            _ => false,
         }
-        let mut state = self.screen.0.lock();
-        if state.generation != self.generation || state.dimensions != dimensions {
-            *state = ScreenState {
-                generation: self.generation,
-                dimensions,
-                ..ScreenState::default()
-            };
+    }
+
+    /// A store with this one's slots and no screen table, for [`Self::screen_matches_rebuild`].
+    #[cfg(test)]
+    fn clone_screen_state(&self) -> Self {
+        Self {
+            owners: self.owners.clone(),
+            chunk_count: self.chunk_count,
+            embedded_count: self.embedded_count,
+            ..Self::default()
         }
-        if let Some(table) = &state.table {
-            return Some(Arc::clone(table));
+    }
+
+    /// Sets the screen row of `slot` (a write under way keeps the table in step).
+    fn screen_set(&mut self, slot: usize, embedding: Option<&super::Embedding>) {
+        if let Some(table) = &mut self.screen {
+            Arc::make_mut(table).set(slot, embedding);
         }
-        state.queries = state.queries.saturating_add(1);
-        if state.queries < 2 {
-            return None;
+    }
+
+    /// Creates or drops the screen table once a write has settled: dropped for a store served
+    /// over a checkpoint or below the chunk threshold; else built, from the first embedded
+    /// chunk's dimension, when the store crosses the threshold.
+    fn refresh_screen(&mut self) {
+        if self.base.is_some() || self.chunk_count < SCREEN_TABLE_MIN_CHUNKS {
+            self.screen = None;
+            return;
         }
-        let table = ScreenTable::build(
+        if self.screen.is_some() || self.embedded_count == 0 {
+            return;
+        }
+        let dimensions = self
+            .owners
+            .iter()
+            .flatten()
+            .find_map(|(document, chunk)| document.chunks[*chunk].embedding.as_ref())
+            .map_or(0, |embedding| embedding.len());
+        if dimensions == 0 || dimensions > super::screen::MAX_DIMENSIONS {
+            return;
+        }
+        self.screen = Some(Arc::new(ScreenTable::build(
             self.owners.len(),
             dimensions,
             self.owners.iter().enumerate().filter_map(|(slot, owner)| {
                 let (document, chunk) = owner.as_ref()?;
                 Some((slot, document.chunks[*chunk].embedding.as_ref()?))
             }),
-        );
-        state.table = Some(Arc::clone(&table));
-        Some(table)
+        )));
     }
 
     pub(crate) fn get(&self, id: &str) -> Option<&Arc<StoredDocument>> {
@@ -904,6 +923,7 @@ impl DocumentStore {
             }
         }
         self.install_new(group);
+        self.refresh_screen();
         failure.map_or(Ok(()), Err)
     }
 
@@ -956,6 +976,7 @@ impl DocumentStore {
         store.free = (0..slot_count)
             .filter(|&slot| store.owners[slot].is_none())
             .collect();
+        store.refresh_screen();
         store
     }
 
@@ -1106,6 +1127,7 @@ impl DocumentStore {
                     "document slot already owned"
                 );
                 self.word_counts[slot] = slot_words(chunk.word_count);
+                self.screen_set(slot, chunk.embedding.as_ref());
                 set_position_source(
                     &mut self.position_sources,
                     self.slot_count,
@@ -1239,6 +1261,9 @@ impl DocumentStore {
                 }
             }
             self.word_counts[slot] = slot_words(new.word_count);
+            if let Some(table) = &mut self.screen {
+                Arc::make_mut(table).set(slot, new.embedding.as_ref());
+            }
             set_position_source(
                 &mut self.position_sources,
                 self.slot_count,
@@ -1502,11 +1527,13 @@ impl DocumentStore {
             postings.permute_slots(&map, &word_counts);
         }
         self.owners = owners;
+        self.screen = None;
         self.word_counts = word_counts;
         self.position_sources = position_sources;
         self.free.clear();
         self.slot_count = count;
         self.ordered_slots = count;
+        self.refresh_screen();
         std::mem::forget(abort);
         self.advance_generation();
         #[cfg(not(target_arch = "wasm32"))]
@@ -1666,6 +1693,7 @@ impl DocumentStore {
                 .expect("document slot has no owner");
             assert_eq!(owner.0.id, id, "document slot owner mismatch");
             assert_eq!(owner.1, index, "document slot chunk mismatch");
+            self.screen_set(slot, None);
             if let Some(source) = self.position_sources.get_mut(slot) {
                 *source = None;
             }
@@ -1689,6 +1717,9 @@ impl DocumentStore {
             self.slot_count -= 1;
         }
         self.owners.truncate(self.slot_count);
+        if let Some(table) = &mut self.screen {
+            Arc::make_mut(table).truncate(self.slot_count);
+        }
         self.word_counts.truncate(self.slot_count);
         self.trim_position_sources();
         if self.slot_count > 1024 && self.free.len() > self.slot_count / 2 {
@@ -1704,6 +1735,7 @@ impl DocumentStore {
             Self::share_document_terms(&mut documents);
             self.install_new(documents);
         }
+        self.refresh_screen();
         Some(document)
     }
 }

@@ -12,7 +12,7 @@
 //! candidates; the caller scores only those with [`super::Embedding::cosine`], so every score it ranks is the exact
 //! one and the screen changes which chunks are read, never a score.
 
-use std::{cmp::Reverse, collections::BinaryHeap, sync::Arc};
+use std::{cmp::Reverse, collections::BinaryHeap};
 
 use super::Embedding;
 
@@ -21,7 +21,7 @@ pub(super) const MAX_DIMENSIONS: usize = 4096;
 /// Largest query code; fewer levels are used where `127 * level * dimensions` would leave `i32`.
 const MAX_QUERY_LEVEL: i64 = 32767;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 struct Row {
     /// Row code scale; `0` for an all-zero row.
     scale: f64,
@@ -43,6 +43,7 @@ enum Kind {
     Exact,
 }
 
+#[derive(Clone, PartialEq)]
 pub(super) struct ScreenTable {
     dimensions: usize,
     codes: Vec<i8>,
@@ -51,74 +52,104 @@ pub(super) struct ScreenTable {
 }
 
 impl ScreenTable {
+    const NO_ROW: Row = Row {
+        scale: 0.0,
+        residual: 0.0,
+        fine_residual: 0.0,
+        norm: 0.0,
+        kind: Kind::None,
+    };
+
+    /// The table of `slots` slots, all without an embedding.
+    pub(super) fn empty(slots: usize, dimensions: usize) -> Self {
+        Self {
+            dimensions,
+            codes: vec![0i8; slots * dimensions],
+            fine: vec![0i8; slots * dimensions],
+            rows: vec![Self::NO_ROW; slots],
+        }
+    }
+
     pub(super) fn build<'a>(
         slots: usize,
         dimensions: usize,
         embeddings: impl Iterator<Item = (usize, &'a Embedding)>,
-    ) -> Arc<Self> {
-        let mut codes = vec![0i8; slots * dimensions];
-        let mut fine = vec![0i8; slots * dimensions];
-        let mut rows = vec![
-            Row {
-                scale: 0.0,
-                residual: 0.0,
-                fine_residual: 0.0,
-                norm: 0.0,
-                kind: Kind::None,
-            };
-            slots
-        ];
+    ) -> Self {
+        let mut table = Self::empty(slots, dimensions);
         for (slot, embedding) in embeddings {
-            let values: &[f32] = embedding;
-            let finite = values.iter().all(|value| value.is_finite());
-            if values.len() != dimensions || !finite {
-                rows[slot].kind = Kind::Exact;
-                continue;
-            }
-            let largest = values.iter().fold(0f64, |m, &v| m.max(f64::from(v).abs()));
-            let scale = f64::from((largest / 127.0) as f32);
-            let span = slot * dimensions..(slot + 1) * dimensions;
-            let fine_scale = scale / 254.0;
-            let (mut residual, mut fine_residual, mut norm) = (0f64, 0f64, 0f64);
-            for ((code, fine_code), &value) in codes[span.clone()]
-                .iter_mut()
-                .zip(&mut fine[span])
-                .zip(values)
-            {
-                let value = f64::from(value);
-                let level = if scale > 0.0 {
-                    (value / scale).round().clamp(-127.0, 127.0)
-                } else {
-                    0.0
-                };
-                *code = level as i8;
-                let left = value - scale * level;
-                let fine_level = if scale > 0.0 {
-                    (left / fine_scale).round().clamp(-127.0, 127.0)
-                } else {
-                    0.0
-                };
-                *fine_code = fine_level as i8;
-                let after = left - fine_scale * fine_level;
-                residual += left * left;
-                fine_residual += after * after;
-                let decoded = scale * level + fine_scale * fine_level;
-                norm += decoded * decoded;
-            }
-            rows[slot] = Row {
-                scale,
-                residual: residual.sqrt() * (1.0 + 1e-9) + 1e-12,
-                fine_residual: fine_residual.sqrt() * (1.0 + 1e-9) + 1e-12,
-                norm: norm.sqrt() * (1.0 + 1e-9) + 1e-12,
-                kind: Kind::Coded,
-            };
+            table.set(slot, Some(embedding));
         }
-        Arc::new(Self {
-            dimensions,
-            codes,
-            fine,
-            rows,
-        })
+        table
+    }
+
+    pub(super) fn dimensions(&self) -> usize {
+        self.dimensions
+    }
+
+    /// Cuts the table to its first `slots` slots.
+    pub(super) fn truncate(&mut self, slots: usize) {
+        self.codes.truncate(slots * self.dimensions);
+        self.fine.truncate(slots * self.dimensions);
+        self.rows.truncate(slots);
+    }
+
+    /// Sets the row of `slot` (growing the table to hold it) to `embedding`, or to none.
+    pub(super) fn set(&mut self, slot: usize, embedding: Option<&Embedding>) {
+        let dimensions = self.dimensions;
+        if slot >= self.rows.len() {
+            self.codes.resize((slot + 1) * dimensions, 0);
+            self.fine.resize((slot + 1) * dimensions, 0);
+            self.rows.resize(slot + 1, Self::NO_ROW);
+        }
+        let span = slot * dimensions..(slot + 1) * dimensions;
+        self.codes[span.clone()].fill(0);
+        self.fine[span.clone()].fill(0);
+        self.rows[slot] = Self::NO_ROW;
+        let Some(embedding) = embedding else {
+            return;
+        };
+        let values: &[f32] = embedding;
+        let finite = values.iter().all(|value| value.is_finite());
+        if values.len() != dimensions || !finite {
+            self.rows[slot].kind = Kind::Exact;
+            return;
+        }
+        let largest = values.iter().fold(0f64, |m, &v| m.max(f64::from(v).abs()));
+        let scale = f64::from((largest / 127.0) as f32);
+        let fine_scale = scale / 254.0;
+        let (mut residual, mut fine_residual, mut norm) = (0f64, 0f64, 0f64);
+        for ((code, fine_code), &value) in self.codes[span.clone()]
+            .iter_mut()
+            .zip(&mut self.fine[span])
+            .zip(values)
+        {
+            let value = f64::from(value);
+            let level = if scale > 0.0 {
+                (value / scale).round().clamp(-127.0, 127.0)
+            } else {
+                0.0
+            };
+            *code = level as i8;
+            let left = value - scale * level;
+            let fine_level = if scale > 0.0 {
+                (left / fine_scale).round().clamp(-127.0, 127.0)
+            } else {
+                0.0
+            };
+            *fine_code = fine_level as i8;
+            let after = left - fine_scale * fine_level;
+            residual += left * left;
+            fine_residual += after * after;
+            let decoded = scale * level + fine_scale * fine_level;
+            norm += decoded * decoded;
+        }
+        self.rows[slot] = Row {
+            scale,
+            residual: residual.sqrt() * (1.0 + 1e-9) + 1e-12,
+            fine_residual: fine_residual.sqrt() * (1.0 + 1e-9) + 1e-12,
+            norm: norm.sqrt() * (1.0 + 1e-9) + 1e-12,
+            kind: Kind::Coded,
+        };
     }
 
     /// The slots that can be among the `limit` best exact scores at or above `floor`, ascending: every embedded slot
