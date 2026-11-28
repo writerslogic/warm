@@ -1,0 +1,303 @@
+{
+  "benchmark": "LoCoMo (locomo10.json), categories 1-4",
+  "protocol": "mem0ai/mem0 evaluation@393a4fd5",
+  "reader_model": "gpt-4o-mini-2024-07-18",
+  "judge_model": "gpt-4o-mini-2024-07-18",
+  "arm": "warm-memory-api",
+  "embedding_model": "text-embedding-3-small",
+  "k_per_speaker": 30,
+  "recall_options": {},
+  "token_budget": 1764,
+  "pack": "round-robin",
+  "captions": false,
+  "memory_config": null,
+  "runs": 5,
+  "conversations": [
+    "conv-26",
+    "conv-30",
+    "conv-41",
+    "conv-42",
+    "conv-43",
+    "conv-44",
+    "conv-47",
+    "conv-48",
+    "conv-49",
+    "conv-50"
+  ],
+  "split": {
+    "tuning": [
+      "conv-26",
+      "conv-30",
+      "conv-41"
+    ],
+    "heldout": [
+      "conv-42",
+      "conv-43",
+      "conv-44",
+      "conv-47",
+      "conv-48",
+      "conv-49",
+      "conv-50"
+    ]
+  },
+  "warm_sha": "",
+  "new_api_tokens": {
+    "gpt-4o-mini-2024-07-18": [
+      20156296,
+      88116,
+      3128320
+    ]
+  },
+  "new_api_spend_usd": 2.8417,
+  "wall_seconds": 625.3,
+  "system": "warm",
+  "system_settings": null,
+  "results": {
+    "run": {
+      "overall": {
+        "n": 1540,
+        "evidence_recall": 0.8182,
+        "context_tokens_mean": 1749.4,
+        "j": 0.7344,
+        "j_runs": [
+          0.7338,
+          0.7331,
+          0.7338,
+          0.737,
+          0.7344
+        ],
+        "j_std": 0.0015,
+        "f1": 0.5192,
+        "bleu1": 0.4118
+      },
+      "category_1": {
+        "n": 282,
+        "evidence_recall": 0.6047,
+        "context_tokens_mean": 1749.8,
+        "j": 0.6355,
+        "j_runs": [
+          0.6383,
+          0.6348,
+          0.6312,
+          0.6418,
+          0.6312
+        ],
+        "j_std": 0.0046,
+        "f1": 0.3588,
+        "bleu1": 0.2386
+      },
+      "category_2": {
+        "n": 321,
+        "evidence_recall": 0.879,
+        "context_tokens_mean": 1748.8,
+        "j": 0.7178,
+        "j_runs": [
+          0.7134,
+          0.7227,
+          0.7227,
+          0.7165,
+          0.7134
+        ],
+        "j_std": 0.0047,
+        "f1": 0.6002,
+        "bleu1": 0.4899
+      },
+      "category_3": {
+        "n": 96,
+        "evidence_recall": 0.5642,
+        "context_tokens_mean": 1747.1,
+        "j": 0.4479,
+        "j_runs": [
+          0.4583,
+          0.4375,
+          0.4375,
+          0.4479,
+          0.4583
+        ],
+        "j_std": 0.0104,
+        "f1": 0.2602,
+        "bleu1": 0.1935
+      },
+      "category_4": {
+        "n": 841,
+        "evidence_recall": 0.8956,
+        "context_tokens_mean": 1749.8,
+        "j": 0.8067,
+        "j_runs": [
+          0.805,
+          0.8038,
+          0.8062,
+          0.8098,
+          0.8086
+        ],
+        "j_std": 0.0025,
+        "f1": 0.5717,
+        "bleu1": 0.465
+      }
+    },
+    "tuning": {
+      "overall": {
+        "n": 385,
+        "evidence_recall": 0.8429,
+        "context_tokens_mean": 1749.1,
+        "j": 0.7855,
+        "j_runs": [
+          0.787,
+          0.774,
+          0.7844,
+          0.7922,
+          0.7896
+        ],
+        "j_std": 0.007,
+        "f1": 0.5426,
+        "bleu1": 0.4219
+      },
+      "category_1": {
+        "n": 74,
+        "evidence_recall": 0.6421,
+        "context_tokens_mean": 1750.8,
+        "j": 0.6486,
+        "j_runs": [
+          0.6351,
+          0.6351,
+          0.6486,
+          0.6622,
+          0.6622
+        ],
+        "j_std": 0.0135,
+        "f1": 0.4166,
+        "bleu1": 0.2788
+      },
+      "category_2": {
+        "n": 90,
+        "evidence_recall": 0.9556,
+        "context_tokens_mean": 1748.5,
+        "j": 0.8578,
+        "j_runs": [
+          0.8556,
+          0.8556,
+          0.8778,
+          0.8556,
+          0.8444
+        ],
+        "j_std": 0.0122,
+        "f1": 0.691,
+        "bleu1": 0.5511
+      },
+      "category_3": {
+        "n": 21,
+        "evidence_recall": 0.4762,
+        "context_tokens_mean": 1741.9,
+        "j": 0.5714,
+        "j_runs": [
+          0.5714,
+          0.5238,
+          0.5238,
+          0.5714,
+          0.6667
+        ],
+        "j_std": 0.0583,
+        "f1": 0.1789,
+        "bleu1": 0.1537
+      },
+      "category_4": {
+        "n": 200,
+        "evidence_recall": 0.905,
+        "context_tokens_mean": 1749.5,
+        "j": 0.826,
+        "j_runs": [
+          0.835,
+          0.815,
+          0.82,
+          0.835,
+          0.825
+        ],
+        "j_std": 0.0089,
+        "f1": 0.5607,
+        "bleu1": 0.4449
+      }
+    },
+    "heldout": {
+      "overall": {
+        "n": 1155,
+        "evidence_recall": 0.81,
+        "context_tokens_mean": 1749.5,
+        "j": 0.7174,
+        "j_runs": [
+          0.716,
+          0.7195,
+          0.7169,
+          0.7186,
+          0.716
+        ],
+        "j_std": 0.0016,
+        "f1": 0.5115,
+        "bleu1": 0.4085
+      },
+      "category_1": {
+        "n": 208,
+        "evidence_recall": 0.5913,
+        "context_tokens_mean": 1749.5,
+        "j": 0.6308,
+        "j_runs": [
+          0.6394,
+          0.6346,
+          0.625,
+          0.6346,
+          0.6202
+        ],
+        "j_std": 0.0079,
+        "f1": 0.3382,
+        "bleu1": 0.2242
+      },
+      "category_2": {
+        "n": 231,
+        "evidence_recall": 0.8492,
+        "context_tokens_mean": 1748.9,
+        "j": 0.6632,
+        "j_runs": [
+          0.658,
+          0.671,
+          0.6623,
+          0.6623,
+          0.6623
+        ],
+        "j_std": 0.0047,
+        "f1": 0.5648,
+        "bleu1": 0.4661
+      },
+      "category_3": {
+        "n": 75,
+        "evidence_recall": 0.5888,
+        "context_tokens_mean": 1748.6,
+        "j": 0.4133,
+        "j_runs": [
+          0.4267,
+          0.4133,
+          0.4133,
+          0.4133,
+          0.4
+        ],
+        "j_std": 0.0094,
+        "f1": 0.283,
+        "bleu1": 0.2047
+      },
+      "category_4": {
+        "n": 641,
+        "evidence_recall": 0.8926,
+        "context_tokens_mean": 1749.9,
+        "j": 0.8006,
+        "j_runs": [
+          0.7956,
+          0.8003,
+          0.8019,
+          0.8019,
+          0.8034
+        ],
+        "j_std": 0.003,
+        "f1": 0.5752,
+        "bleu1": 0.4713
+      }
+    }
+  }
+}

@@ -1,0 +1,11 @@
+Rendered reader prompts (ANSWER_PROMPT with both speakers' memories), WARM commit c80aa52a (Cargo 0.6.1, the build behind benchmarks/results/locomo_v1.json) against WARM v0.7.5 (58a816b6aedf787f25f2497ecc35972a6bea9ebd). Same harness for both servers (the v0.7.5 harness plus scripts/dump-prompts.patch), retrieval only, k=30 per speaker, token budget 1764, round-robin packing.
+
+Without embeddings (lexical recall):
+questions 1540, categories [1, 2, 3, 4], identical 1540, different 0
+
+Hybrid recall with text-embedding-3-small vectors (retrieval only; the vectors are computed by the harness and cached, so both servers saw the same vectors; embedding spend 0.004 USD):
+questions 1540, categories [1, 2, 3, 4], identical 1539, different 1
+different by category: {3: 1}
+Differing question: conv-48, qa_index 36, category 3, "How old is Jolene?". The same 25 and 26 memories are retrieved for the two speakers; two adjacent memories of the second speaker's list swap order (ranks 18 and 19: D13:27 and D11:13). The prompt differs by one swapped line.
+
+The accuracy run in summary.json and predictions.jsonl was made on v0.7.5, so it does not depend on this check; the check only shows that the 2026-10-23 measurement at c80aa52a and this one received the same reader inputs for 1,539 of 1,540 questions.
