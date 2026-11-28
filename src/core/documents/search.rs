@@ -168,12 +168,18 @@ enum SlotPositions {
 pub(super) const DENSE_SLOT_LIMIT: usize = 1 << 19;
 /// Below this many slots the exhaustive hot-list ranking beats the windowed pruned ranker.
 /// Above `DENSE_SLOT_LIMIT` the pruned ranker is the only one that avoids hydrating the store.
-const PRUNE_SLOT_FLOOR_SERVING: usize = 1 << 15;
+pub(super) const PRUNE_SLOT_FLOOR_SERVING: usize = 1 << 15;
 const PRUNE_SLOT_FLOOR: usize = if cfg!(test) {
     0
 } else {
     PRUNE_SLOT_FLOOR_SERVING
 };
+/// Whether a checkpoint of `slots` slots is served by the unpruned ranker, the one that reads
+/// the stored per-slot norms and weighted lists. Independent of the test floor, so tests of
+/// small stores exercise the tables.
+pub(super) fn serves_unpruned(slots: usize) -> bool {
+    slots <= PRUNE_SLOT_FLOOR_SERVING
+}
 fn prune_above(slots: usize, floor: usize) -> bool {
     slots > floor
 }
@@ -378,5 +384,6 @@ pub(super) use self::capture::{
 use self::execute::*;
 pub(crate) use self::execute::{execute_search, rank_search, read_ranked};
 use self::rank::*;
+pub(super) use self::rank::{weigh_list, WEIGH_BLOCK};
 use self::source::*;
-pub(super) use self::source::{LexicalSource, PostingSet};
+pub(super) use self::source::{LexicalSource, PostingSet, StoredWeights};

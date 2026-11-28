@@ -18,6 +18,11 @@ const DIM: u32 = 256;
 /// The checkpoint header's feature word and its bit for the derived tables.
 const FEATURES_AT: usize = 8 + 8 * 3;
 const FEATURE_DERIVED: u64 = 2;
+/// Header word of the derived section's offset and length (the last of the 13 sections).
+const DERIVED_AT: usize = 8 + 8 * (14 + 2 * 12);
+/// The derived section's layout this build writes. A build that knows only layout 1 finds a
+/// header it does not match, computes its tables and reads none of the newer bytes.
+const DERIVED_FORMAT: u64 = 2;
 
 fn input(id: &str, text: &str) -> DocumentInput {
     serde_json::from_value(serde_json::json!({ "id": id, "text": text })).unwrap()
@@ -75,6 +80,19 @@ fn features(path: &Path) -> u64 {
     u64::from_le_bytes(bytes[FEATURES_AT..FEATURES_AT + 8].try_into().unwrap())
 }
 
+/// The derived section's format word, its slot-norm count and its weighted-list count.
+fn derived_header(path: &Path) -> (u64, u64, u64) {
+    let bytes = std::fs::read(path).unwrap();
+    let word = |at: usize| u64::from_le_bytes(bytes[at..at + 8].try_into().unwrap()) as usize;
+    let (start, len) = (word(DERIVED_AT), word(DERIVED_AT + 8));
+    assert!(len > 15 * 8 && start + len == bytes.len());
+    (
+        word(start) as u64,
+        word(start + 12 * 8) as u64,
+        word(start + 13 * 8) as u64,
+    )
+}
+
 fn manifest(dir: &Path) -> Vec<u8> {
     std::fs::read(dir.join("vectors_data.bin").join("format.json")).unwrap()
 }
@@ -126,6 +144,9 @@ fn a_new_store_records_the_field_and_its_checkpoint_carries_the_tables() {
     assert!(!found.is_empty());
     for path in found {
         assert_eq!(features(&path) & FEATURE_DERIVED, FEATURE_DERIVED);
+        let (format, norms, _) = derived_header(&path);
+        assert_eq!(format, DERIVED_FORMAT);
+        assert_eq!(norms, 60, "one stored norm per slot of a small store");
     }
 }
 
@@ -212,4 +233,72 @@ fn upgrade_leaves_the_old_store_and_writes_a_new_one_with_the_field() {
     for path in checkpoints(&destination) {
         assert_eq!(features(&path) & FEATURE_DERIVED, FEATURE_DERIVED);
     }
+}
+
+/// A compacted store of the size the unpruned ranker serves answers bare disjunctions from its
+/// stored norms and weights: the hits, scores to the bit and the count are the exhaustive
+/// ones, at depths around the weighing block (128), for lists on both sides of it.
+#[test]
+fn a_small_store_ranks_disjunctions_as_the_exhaustive_scan() {
+    let dir = tempfile::tempdir().unwrap();
+    let core = open(dir.path());
+    let mut state = 0x9e37_79b9_7f4a_7c15u64;
+    let mut next = || {
+        state ^= state << 13;
+        state ^= state >> 7;
+        state ^= state << 17;
+        state
+    };
+    for n in 0..1200usize {
+        let words: Vec<String> = (0..3 + next() % 20)
+            .map(|_| format!("w{}", next() % (1 + next() % 80)))
+            .chain((n < 127).then(|| "edge127".to_owned()))
+            .chain((n < 128).then(|| "edge128".to_owned()))
+            .chain((n < 129).then(|| "edge129".to_owned()))
+            .collect();
+        core.memorize_document_with(input(&format!("d{n}"), &words.join(" ")), &lexical())
+            .unwrap();
+    }
+    core.compact().unwrap();
+    core.close().unwrap();
+    let core = open(dir.path());
+    let queries = [
+        "edge127",
+        "edge128",
+        "edge129",
+        "edge127 edge128 edge129",
+        "w1 w2",
+        "w1 w2 w3 w4 w5 w6 w7",
+        "w3 edge129 w9",
+        "w70 w71 w72",
+        "w0",
+    ];
+    for query in queries {
+        let parsed = LexicalQuery::parse(query).unwrap();
+        for k in [1usize, 10, 127, 128, 129, 1000] {
+            for count in [false, true] {
+                let options = LexicalOptions {
+                    k,
+                    count,
+                    ..Default::default()
+                };
+                let exhaustive = LexicalOptions {
+                    execution: LexicalExecution::Exhaustive,
+                    ..options
+                };
+                let got = core.search_lexical(&parsed, &options).unwrap();
+                let want = core.search_lexical(&parsed, &exhaustive).unwrap();
+                assert_eq!(got.count, want.count, "{query:?} k={k}");
+                assert_eq!(got.hits.len(), want.hits.len(), "{query:?} k={k}");
+                for (a, b) in got.hits.iter().zip(&want.hits) {
+                    assert_eq!(
+                        (&a.document_id, a.chunk_index, a.score.to_bits()),
+                        (&b.document_id, b.chunk_index, b.score.to_bits()),
+                        "{query:?} k={k}"
+                    );
+                }
+            }
+        }
+    }
+    core.close().unwrap();
 }
