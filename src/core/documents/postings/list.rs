@@ -58,7 +58,7 @@ pub(in super::super) struct PostingList {
     pub(super) positive_count: u32,
     pub(super) last: u64,
     /// For a list of at least [`SUMMARY_MIN_BLOCKS`] blocks, the frontier of each run of
-    /// [`SUPER_LEN`] blocks, built by the first query that needs it after a change.
+    /// [`SUPER_LEN`] blocks, computed when the list is written ([`Self::seal`]).
     pub(super) summary: Option<Box<Summary>>,
 }
 
@@ -77,12 +77,34 @@ pub(in super::super) fn frontiers_computed() -> usize {
     FRONTIERS.with(std::cell::Cell::get)
 }
 
-/// Facts about a long list's blocks, each built by the first query that needs it after a
-/// change: reading every block's metadata of a long list costs a query more than the result.
+/// Facts about a long list's blocks, computed when the list is written (see
+/// [`PostingList::seal`]): reading every block's metadata of a long list costs a query more
+/// than the result, so queries only read them.
 #[derive(Default)]
 pub(super) struct Summary {
-    pub(super) maxima: OnceLock<(u32, u32)>,
-    pub(super) runs: OnceLock<Box<[Frontier]>>,
+    /// The blocks changed since the facts were computed; a query then reads the blocks.
+    stale: bool,
+    /// While stale: the blocks `first..=last` changed, and `shifted` says later blocks moved.
+    first: usize,
+    last: usize,
+    shifted: bool,
+    maxima: (u32, u32),
+    /// The maxima over every run but the last, kept so that a write to the last run (the usual
+    /// append) re-seals in constant time.
+    head: (u32, u32),
+    runs: Vec<Frontier>,
+}
+
+/// The highest frequency and fewest words of `runs`: a frontier lists its highest frequency
+/// first and its fewest words last.
+fn run_maxima(runs: &[Frontier]) -> (u32, u32) {
+    runs.iter()
+        .fold((0, u32::MAX), |(frequency, words), frontier| {
+            (
+                frontier.first().map_or(frequency, |p| frequency.max(p.0)),
+                frontier.last().map_or(words, |p| words.min(p.1)),
+            )
+        })
 }
 
 /// Blocks per run that one summary frontier covers.
@@ -256,8 +278,8 @@ impl PostingList {
                 })
         };
         match self.summary.as_deref() {
-            Some(summary) => *summary.maxima.get_or_init(fold),
-            None => fold(),
+            Some(summary) if !summary.stale => summary.maxima,
+            _ => fold(),
         }
     }
     pub(super) fn decode(&self) -> Vec<Posting> {
@@ -394,7 +416,7 @@ impl PostingList {
             min_words,
             frontier,
         });
-        self.touch();
+        self.touch_range(self.blocks.len() - 1, self.blocks.len() - 1, false);
     }
 
     /// Rewrites the list as `postings`, with each block's length bounds taken from `words`
@@ -427,6 +449,7 @@ impl PostingList {
         self.count = u32::try_from(postings.len()).expect("posting list over u32::MAX");
         self.positive_count = postings.iter().filter(|p| p.1 > 0).count() as u32;
         self.last = postings.last().map_or(0, |p| p.0 as u64);
+        self.seal();
     }
 
     /// See [`PostingLists::permute_slots`].
@@ -469,6 +492,16 @@ impl PostingList {
     }
 
     pub(super) fn append_run_with_ordinals(
+        &mut self,
+        run: &[Posting],
+        ordinals: &[u32],
+        words: impl Fn(usize) -> u32,
+    ) {
+        self.append_run_unsealed(run, ordinals, words);
+        self.seal();
+    }
+
+    fn append_run_unsealed(
         &mut self,
         run: &[Posting],
         ordinals: &[u32],
@@ -607,8 +640,9 @@ impl PostingList {
         for block in &mut scratch.blocks {
             block.offset += start;
         }
+        let parts = scratch.blocks.len();
         self.blocks.splice(index..=index, scratch.blocks);
-        self.touch();
+        self.touch_range(index, index + parts.saturating_sub(1), parts != 1);
     }
 
     /// Inserts one posting before the list's last into its block.
@@ -633,9 +667,15 @@ impl PostingList {
         self.rewrite_block(block, &decoded[..count + 1], &ordinals[..count + 1], words);
         self.count += 1;
         self.positive_count += u32::from(posting.1 > 0);
+        self.seal();
     }
 
     pub(super) fn remove(&mut self, slot: usize, words: impl Fn(usize) -> u32) {
+        self.remove_unsealed(slot, words);
+        self.seal();
+    }
+
+    fn remove_unsealed(&mut self, slot: usize, words: impl Fn(usize) -> u32) {
         let mut decoded = [(0, 0); BLOCK_LEN];
         let (block, count) = self.block_of(slot, &mut decoded);
         if count <= MIN_BLOCK_LEN && block + 1 < self.blocks.len() {
@@ -685,6 +725,17 @@ impl PostingList {
     }
 
     pub(super) fn set_entry(
+        &mut self,
+        slot: usize,
+        frequency: u32,
+        ordinal: Option<u32>,
+        words: impl Fn(usize) -> u32,
+    ) {
+        self.set_entry_unsealed(slot, frequency, ordinal, words);
+        self.seal();
+    }
+
+    fn set_entry_unsealed(
         &mut self,
         slot: usize,
         frequency: u32,
@@ -748,40 +799,138 @@ impl PostingList {
         let block = self.blocks.partition_point(|b| b.last < slot);
         self.blocks[block].min_words = 0;
         self.blocks[block].frontier = None;
-        self.touch();
+        self.touch_range(block, block, false);
+        self.seal();
     }
 
-    /// Drops the summary after a change to the blocks; a long list gets an empty one.
+    /// Marks the summary stale after a change to every block; a short list has none. Every
+    /// public write ends in [`Self::seal`].
     pub(super) fn touch(&mut self) {
+        self.touch_range(0, usize::MAX, true);
+    }
+
+    /// Marks stale a change to blocks `first..=last`; `shifted` when blocks after `last` moved
+    /// to other indices (the block count changed).
+    fn touch_range(&mut self, first: usize, last: usize, shifted: bool) {
         if self.blocks.len() < SUMMARY_MIN_BLOCKS {
             self.summary = None;
-        } else if let Some(summary) = &mut self.summary {
-            if summary.maxima.get().is_some() || summary.runs.get().is_some() {
-                **summary = Summary::default();
+            return;
+        }
+        let summary = self.summary.get_or_insert_with(|| {
+            Box::new(Summary {
+                stale: true,
+                first: 0,
+                last: usize::MAX,
+                shifted: true,
+                ..Summary::default()
+            })
+        });
+        if summary.stale {
+            summary.first = summary.first.min(first);
+            summary.last = summary.last.max(last);
+            summary.shifted |= shifted;
+        } else {
+            (summary.first, summary.last, summary.shifted) = (first, last, shifted);
+            summary.stale = true;
+        }
+    }
+
+    /// Computes the summary of a long list whose blocks changed, so no query does. Only the
+    /// runs the change reaches are rebuilt: the one it falls in, or every later one when
+    /// blocks moved.
+    pub(super) fn seal(&mut self) {
+        let Some(summary) = self.summary.as_deref_mut().filter(|summary| summary.stale) else {
+            return;
+        };
+        let total = self.blocks.len().div_ceil(SUPER_LEN);
+        let old_len = summary.runs.len();
+        let moved = summary.shifted || old_len != total;
+        let (from, to) = (summary.first / SUPER_LEN, summary.last / SUPER_LEN);
+        let build = |run: usize| {
+            let mut points = Vec::new();
+            for block in
+                &self.blocks[run * SUPER_LEN..((run + 1) * SUPER_LEN).min(self.blocks.len())]
+            {
+                match block.frontier.as_deref() {
+                    Some(frontier) => points.extend_from_slice(frontier),
+                    None => points.push((block.max_frequency, block.min_words)),
+                }
+            }
+            pareto(points)
+        };
+        // The runs are edited in place, so a write to the last run costs one run, not a copy
+        // of every run's pointer.
+        let runs = &mut summary.runs;
+        if moved {
+            runs.truncate(from.min(total));
+            for run in runs.len()..total {
+                runs.push(build(run));
             }
         } else {
-            self.summary = Some(Box::default());
+            let end = to.min(total - 1) + 1;
+            for (run, slot) in runs.iter_mut().enumerate().take(end).skip(from) {
+                *slot = build(run);
+            }
         }
+        // The runs before the last are untouched when the change starts in the last run, or in
+        // the one before it when the list grew by one run: then the head is carried, and only the
+        // tail is read. Any other change refolds the runs (still 1/SUPER_LEN of the blocks).
+        let last = total - 1;
+        let carried = if !summary.shifted && old_len == total && from >= last {
+            Some(summary.head)
+        } else if !summary.shifted && old_len + 1 == total && from + 1 >= last {
+            let (frequency, words) = run_maxima(&summary.runs[last - 1..last]);
+            Some((summary.head.0.max(frequency), summary.head.1.min(words)))
+        } else {
+            None
+        };
+        let head = carried.unwrap_or_else(|| run_maxima(&summary.runs[..last]));
+        let (frequency, words) = run_maxima(&summary.runs[last..]);
+        summary.head = head;
+        summary.maxima = (head.0.max(frequency), head.1.min(words));
+        summary.stale = false;
+    }
+
+    /// Whether the summary equals one computed from every block (the incremental seals agree
+    /// with a full one).
+    #[cfg(test)]
+    pub(super) fn summary_matches_recompute(&self) -> bool {
+        let Some(summary) = self.summary.as_deref() else {
+            return self.blocks.len() < SUMMARY_MIN_BLOCKS;
+        };
+        let maxima = self
+            .blocks
+            .iter()
+            .fold((0, u32::MAX), |(frequency, words), block| {
+                (
+                    frequency.max(block.max_frequency),
+                    words.min(block.min_words),
+                )
+            });
+        let runs: Vec<Frontier> = self
+            .blocks
+            .chunks(SUPER_LEN)
+            .map(|run| {
+                let mut points = Vec::new();
+                for block in run {
+                    match block.frontier.as_deref() {
+                        Some(frontier) => points.extend_from_slice(frontier),
+                        None => points.push((block.max_frequency, block.min_words)),
+                    }
+                }
+                pareto(points)
+            })
+            .collect();
+        let head = run_maxima(&runs[..runs.len().saturating_sub(1)]);
+        !summary.stale && summary.maxima == maxima && *summary.runs == *runs && summary.head == head
     }
 
     /// The frontier of each run of [`SUPER_LEN`] blocks (a block without a frontier
     /// contributes its largest frequency at its least length), or `None` for a short list.
     pub(in super::super) fn summary(&self) -> Option<&[Frontier]> {
-        let summary = self.summary.as_deref()?;
-        Some(summary.runs.get_or_init(|| {
-            self.blocks
-                .chunks(SUPER_LEN)
-                .map(|run| {
-                    let mut points = Vec::new();
-                    for block in run {
-                        match block.frontier.as_deref() {
-                            Some(frontier) => points.extend_from_slice(frontier),
-                            None => points.push((block.max_frequency, block.min_words)),
-                        }
-                    }
-                    pareto(points)
-                })
-                .collect()
-        }))
+        self.summary
+            .as_deref()
+            .filter(|summary| !summary.stale)
+            .map(|summary| &*summary.runs)
     }
 }

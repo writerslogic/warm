@@ -782,6 +782,7 @@ fn check_manifest(base: &Path, generation: &Path, report: &mut Report) -> Option
                 magic: FORMAT_MAGIC.to_owned(),
                 version: 2,
                 segment_size: LEGACY_SEGMENT_SIZE,
+                derived_tables: false,
             });
         }
         report.add(

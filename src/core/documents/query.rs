@@ -39,18 +39,22 @@ pub(crate) fn capture_overlaid_search(
     search::capture_overlaid_search(store, prepared)
 }
 
-/// The checkpoint of `store` for the generation whose name has CRC32 `generation`; `None` when
+/// The checkpoint of `store` for the generation whose name has CRC32 `generation`, with derived
+/// tables when `derived` (the store's manifest allows them); `None` when
 /// a chunk is not lexical-only or the store would not fit the layout.
 pub(crate) fn encode_checkpoint(
     store: &DocumentStore,
     generation: u32,
     dimensions: usize,
     compress_text: bool,
+    derived: bool,
 ) -> Result<Option<Vec<u8>>> {
     if compress_text {
         image::encode_compressed(store, generation, dimensions)
-    } else {
+    } else if derived {
         image::encode(store, generation, dimensions)
+    } else {
+        image::encode_v4_plain(store, generation, dimensions)
     }
 }
 /// Streams the checkpoint of `store` (with the checkpoint under it, if any) to `destination`;
@@ -61,11 +65,20 @@ pub(crate) fn merge_checkpoint(
     dimensions: usize,
     destination: &std::path::Path,
     order: Option<&image::SlotOrder>,
+    derived: bool,
 ) -> Result<Option<u64>> {
     let Some(base) = store.merge_base() else {
         return Ok(None);
     };
-    image::merge(base, store, generation, dimensions, destination, order)
+    image::merge(
+        base,
+        store,
+        generation,
+        dimensions,
+        destination,
+        order,
+        derived,
+    )
 }
 
 pub(crate) use image::SlotOrder;
