@@ -287,7 +287,7 @@ pub(super) fn prefetch<T>(table: &[T], at: usize) {
 const PREFETCH_BYTES: usize = 1 << 20;
 
 /// Slots per accumulation window.
-const WINDOW: u32 = 4096;
+pub(super) const WINDOW: u32 = 4096;
 /// The window of a query that wants few chunks: fewer windows mean less per-window work, and the
 /// accumulator it touches stays sparse. Offsets stay below `u16::MAX`.
 const WIDE_WINDOW: u32 = 8192;
@@ -300,6 +300,14 @@ const WIDE_LIMIT: usize = 10;
 pub(super) struct WindowBounds(Box<[f64]>);
 
 impl WindowBounds {
+    pub(super) fn values(&self) -> &[f64] {
+        &self.0
+    }
+
+    pub(super) fn from_values(values: Box<[f64]>) -> Self {
+        Self(values)
+    }
+
     pub(super) fn new(list: ListRef<'_>, table: &RankTable, slots: usize) -> Option<Self> {
         let mut cursor = Cursor::open(list);
         let mut bounds = vec![0.0f64; slots.div_ceil(WINDOW as usize)];
@@ -333,15 +341,20 @@ impl WindowBounds {
 /// The most terms a query ranks through windows; more fall back to the exhaustive ranking.
 const MAX_TERMS: usize = 64;
 /// Bytes of direct frequency tables one checkpoint may hold (see [`DenseTables`]).
-const DENSE_BYTES: usize = 32 << 20;
+pub(super) const DENSE_BYTES: usize = 32 << 20;
 /// A checkpoint may also hold this many tables, however many bytes they take: the budget grows
-/// with the slot count (a table is `slots / 2` bytes), so the lists a large index queries most
-/// keep their tables instead of the first few lists to be queried taking the whole budget.
-const DENSE_TABLES: usize = 128;
+/// with the slot count (a table is `slots / 2` bytes), so a large index keeps its longest lists'
+/// tables (see [`select_tabled`]).
+pub(super) const DENSE_TABLES: usize = 128;
+/// No checkpoint holds more than this many bytes of direct tables, nor more than a
+/// 1/[`DENSE_SHARE`] share of the index (tables are mapped and cost page cache, not heap).
+pub(super) const DENSE_CAP: usize = 512 << 20;
+/// The tables' share of the checkpoint's bytes is at most 1/this.
+pub(super) const DENSE_SHARE: usize = 8;
 /// A list is tabled when it holds at least this share (1/32) of the slots and this many postings.
-const DENSE_MIN_POSTINGS: usize = if cfg!(test) { 8 } else { 512 };
-/// Distinct word counts whose length normalization is cached.
-const NORM_CACHE: usize = 8192;
+pub(super) const DENSE_MIN_POSTINGS: usize = if cfg!(test) { 8 } else { 512 };
+/// Distinct word counts whose length normalization is tabled.
+pub(super) const NORM_CACHE: usize = 8192;
 /// Tabled quiet terms whose frequencies bound a chunk in the first pass (the largest ceilings).
 const FIRST_PASS_TABLES: usize = 4;
 /// Postings of the rarest term weighed to find a score the top chunks are sure to reach.
@@ -351,7 +364,7 @@ const PILOT_POSTINGS: usize = 512;
 const CLASSES: usize = 64;
 
 /// The least word count of each class and the class of each word count below [`NORM_CACHE`].
-fn classes() -> &'static ([u32; CLASSES], Vec<u8>) {
+pub(super) fn classes() -> &'static ([u32; CLASSES], Vec<u8>) {
     static TABLE: std::sync::OnceLock<([u32; CLASSES], Vec<u8>)> = std::sync::OnceLock::new();
     TABLE.get_or_init(|| {
         let mut edges = [0u32; CLASSES];
@@ -379,76 +392,134 @@ pub(super) fn tabled(postings: usize, slots: usize) -> bool {
 /// (read the list), else the frequency. A query that must know whether a few chunks hold a
 /// frequent term reads one nibble per chunk instead of seeking the list.
 pub(super) struct Dense {
-    nibbles: Vec<u8>,
-    /// Bounds of the weight of a posting by frequency and word-count class, for the scoring
-    /// constants they were computed under.
-    bounds: std::sync::OnceLock<([u64; 5], Box<[f64]>)>,
+    nibbles: Nibbles,
+}
+
+/// The bytes of a [`Dense`] table: built in memory, or read in place from a mapped checkpoint.
+enum Nibbles {
+    Owned(Vec<u8>),
+    Mapped {
+        ptr: std::ptr::NonNull<u8>,
+        len: usize,
+    },
+}
+
+// SAFETY: `Mapped` is a read-only view of bytes that are never written while the table lives
+// (see `Dense::mapped`), so sharing and sending it is as safe as sharing a `&[u8]`.
+unsafe impl Send for Nibbles {}
+unsafe impl Sync for Nibbles {}
+
+impl Nibbles {
+    #[inline(always)]
+    fn bytes(&self) -> &[u8] {
+        match self {
+            Self::Owned(bytes) => bytes,
+            // SAFETY: `Dense::mapped` guarantees `ptr` addresses `len` readable bytes that
+            // outlive this table.
+            Self::Mapped { ptr, len } => unsafe { std::slice::from_raw_parts(ptr.as_ptr(), *len) },
+        }
+    }
 }
 
 impl Dense {
+    /// The table of `list` over `slots` slots.
+    pub(super) fn build(slots: usize, list: &Postings<'_>) -> Self {
+        let mut nibbles = vec![0u8; slots.div_ceil(2)];
+        list.for_each(|slot, frequency| {
+            nibbles[slot >> 1] |= (frequency.min(15) as u8) << ((slot & 1) * 4);
+        });
+        Self {
+            nibbles: Nibbles::Owned(nibbles),
+        }
+    }
+
+    /// A table from nibbles held in memory.
+    #[cfg(test)]
+    pub(super) fn from_nibbles(nibbles: Vec<u8>) -> Self {
+        Self {
+            nibbles: Nibbles::Owned(nibbles),
+        }
+    }
+
+    /// A table read in place from `bytes`, which must be a stored table of the right length.
+    ///
+    /// # Safety
+    /// `bytes` must stay mapped, unmodified and at the same address for as long as the table
+    /// or any clone of its `Arc` lives. The checkpoint image keeps its mapping for its whole
+    /// life and owns every table made from it, and queries only borrow the image.
+    pub(super) unsafe fn mapped(bytes: &[u8]) -> Self {
+        Self {
+            nibbles: Nibbles::Mapped {
+                ptr: std::ptr::NonNull::from(bytes).cast(),
+                len: bytes.len(),
+            },
+        }
+    }
+
     /// The nibble of `slot`: 0 when the list lacks it, 15 when its frequency is fifteen or more.
     #[inline]
     pub(super) fn get(&self, slot: usize) -> u8 {
-        (self.nibbles[slot >> 1] >> ((slot & 1) * 4)) & 15
+        (self.nibbles.bytes()[slot >> 1] >> ((slot & 1) * 4)) & 15
     }
 
     /// The nibbles, two slots a byte, the even slot in the low half.
     pub(super) fn nibble_bytes(&self) -> &[u8] {
-        &self.nibbles
+        self.nibbles.bytes()
     }
 
     /// Starts loading the nibble of `slot`; a hint, with no effect on results.
     #[inline(always)]
     pub(super) fn prefetch(&self, slot: usize) {
-        prefetch(&self.nibbles, slot >> 1);
+        prefetch(self.nibbles.bytes(), slot >> 1);
     }
 }
 
-/// Direct frequency tables of a checkpoint's longest lists, built on first use and bounded by
-/// [`DENSE_BYTES`] and [`DENSE_TABLES`].
+/// The lists that get direct tables, by their `(postings, key)` among the lists long enough
+/// for one (see [`tabled`]): the longest first (ties by key) while the tables fit
+/// [`DENSE_BYTES`] and [`DENSE_TABLES`]. A function of the index alone, never of the queries.
+pub(super) fn select_tabled(
+    mut lists: Vec<(usize, usize)>,
+    slots: usize,
+    index_bytes: usize,
+) -> Vec<(usize, usize)> {
+    lists.sort_unstable_by(|a, b| b.0.cmp(&a.0).then(a.1.cmp(&b.1)));
+    let size = slots.div_ceil(2);
+    let budget = DENSE_BYTES.max(
+        (DENSE_TABLES * size)
+            .min(DENSE_CAP)
+            .min(index_bytes / DENSE_SHARE),
+    );
+    let fit = budget.checked_div(size).unwrap_or(lists.len());
+    lists.truncate(fit);
+    lists
+}
+
+/// Direct frequency tables of a checkpoint's longest lists, fixed when the checkpoint is
+/// opened (stored in it, or else built from it) and read-only after.
 #[derive(Default)]
 pub(super) struct DenseTables {
-    tables: std::sync::Mutex<Vec<(usize, std::sync::Arc<Dense>)>>,
-    bytes: std::sync::atomic::AtomicUsize,
+    tables: std::collections::HashMap<usize, std::sync::Arc<Dense>>,
 }
 
 impl DenseTables {
-    /// The table of `list`, building it when the budget allows; `None` when it does not.
-    pub(super) fn get(&self, slots: usize, list: &Postings<'_>) -> Option<std::sync::Arc<Dense>> {
-        use std::sync::atomic::Ordering::Relaxed;
-        let key = list.bytes.as_ptr() as usize;
-        let lookup = |tables: &[(usize, std::sync::Arc<Dense>)]| {
-            tables
-                .iter()
-                .find(|(k, _)| *k == key)
-                .map(|(_, table)| std::sync::Arc::clone(table))
-        };
-        if let Some(found) = lookup(self.tables.lock().ok()?.as_slice()) {
-            return Some(found);
+    /// The tables of the lists at the given postings addresses.
+    pub(super) fn new(tables: impl IntoIterator<Item = (usize, Dense)>) -> Self {
+        Self {
+            tables: tables
+                .into_iter()
+                .map(|(key, table)| (key, std::sync::Arc::new(table)))
+                .collect(),
         }
-        let size = slots.div_ceil(2);
-        let budget = DENSE_BYTES.max(DENSE_TABLES * size);
-        if self.bytes.load(Relaxed).saturating_add(size) > budget {
-            return None;
-        }
-        let mut nibbles = vec![0u8; size];
-        list.for_each(|slot, frequency| {
-            nibbles[slot >> 1] |= (frequency.min(15) as u8) << ((slot & 1) * 4);
-        });
-        let table = std::sync::Arc::new(Dense {
-            nibbles,
-            bounds: std::sync::OnceLock::new(),
-        });
-        let mut tables = self.tables.lock().ok()?;
-        if let Some(found) = lookup(tables.as_slice()) {
-            return Some(found);
-        }
-        if self.bytes.fetch_add(size, Relaxed).saturating_add(size) > budget {
-            self.bytes.fetch_sub(size, Relaxed);
-            return None;
-        }
-        tables.push((key, std::sync::Arc::clone(&table)));
-        Some(table)
+    }
+
+    #[cfg(test)]
+    pub(super) fn len(&self) -> usize {
+        self.tables.len()
+    }
+
+    /// The table of `list`, when it has one.
+    pub(super) fn get(&self, list: &Postings<'_>) -> Option<std::sync::Arc<Dense>> {
+        self.tables.get(&(list.bytes.as_ptr() as usize)).cloned()
     }
 }
 
@@ -617,9 +688,9 @@ pub(super) struct PruneScratch {
     /// The postings of a window's one accumulated term: offset and weight, in slot order.
     single: Vec<(u32, f64)>,
     weights: [f64; MAX_TERMS],
-    /// Length normalization by word count under `norm_key`.
+    /// Length normalization by word count under non-default scoring constants, rewritten whole
+    /// by every query that needs it.
     norms: Vec<f64>,
-    norm_key: (u64, u64, u64, u64, u64),
 }
 
 impl Default for PruneScratch {
@@ -642,7 +713,6 @@ impl Default for PruneScratch {
             single: Vec::new(),
             weights: [0.0; MAX_TERMS],
             norms: vec![0.0; NORM_CACHE],
-            norm_key: (0, 0, 0, 0, 0),
         }
     }
 }
@@ -772,9 +842,9 @@ impl Scorer<'_> {
         }
     }
 
-    /// Length normalization of `slot`'s chunk, cached by word count in `norms`.
+    /// Length normalization of `slot`'s chunk, from the table by word count in `norms`.
     #[inline(always)]
-    fn norm(&self, norms: &mut [f64], slot: u32) -> f64 {
+    fn norm(&self, norms: &[f64], slot: u32) -> f64 {
         let words = match self.word_counts[slot as usize] {
             u16::MAX => {
                 let at = slot as usize * SLOT_BYTES;
@@ -782,13 +852,8 @@ impl Scorer<'_> {
             }
             short => u32::from(short),
         };
-        match norms.get_mut(words as usize) {
-            Some(cached) => {
-                if *cached == 0.0 {
-                    *cached = self.bm25.norm(f64::from(words), self.average);
-                }
-                *cached
-            }
+        match norms.get(words as usize) {
+            Some(&norm) => norm,
             None => self.bm25.norm(f64::from(words), self.average),
         }
     }
@@ -805,7 +870,7 @@ enum PostingBuffer<'a> {
 #[allow(clippy::too_many_arguments)]
 fn accumulate_run(
     scorer: &Scorer<'_>,
-    norms: &mut [f64],
+    norms: &[f64],
     idf: f64,
     lo: u32,
     slots: &[u32],
@@ -833,7 +898,7 @@ fn accumulate_run(
 #[allow(clippy::too_many_arguments)]
 fn collect_run(
     scorer: &Scorer<'_>,
-    norms: &mut [f64],
+    norms: &[f64],
     idf: f64,
     lo: u32,
     slots: &[u32],
@@ -1040,18 +1105,6 @@ pub(super) fn rank<S: LexicalSource>(
         .iter()
         .map(|(list, ..)| (list.count as usize).div_ceil(CHECKPOINT_BLOCK))
         .sum();
-    // Length normalization by word count: the very expression the exhaustive ranking uses.
-    let norm_key = (
-        bm25.k1.to_bits(),
-        bm25.b.to_bits(),
-        bm25.one_minus_b.to_bits(),
-        average.to_bits(),
-        image.slot_total() as u64,
-    );
-    if scratch.norm_key != norm_key {
-        scratch.norm_key = norm_key;
-        scratch.norms.fill(0.0);
-    }
     let PruneScratch {
         terms,
         order: by_bound,
@@ -1069,9 +1122,19 @@ pub(super) fn rank<S: LexicalSource>(
         cand,
         single,
         weights,
-        norms,
+        norms: scratch_norms,
         ..
     } = scratch;
+    // Length normalization by word count: the very expression the exhaustive ranking uses. The
+    // image holds the table for the default constants; any others are tabled for this query.
+    let norms: &[f64] =
+        if bm25 == Bm25::DEFAULT && average.to_bits() == image.norm_average().to_bits() {
+            image.norm_table()
+        } else {
+            scratch_norms.clear();
+            scratch_norms.extend((0..NORM_CACHE).map(|words| bm25.norm(words as f64, average)));
+            scratch_norms
+        };
     let slot_table = image.slot_table();
     let word_counts = image.word_counts();
     let classes8 = image.word_classes(&classes().1);
@@ -1110,7 +1173,7 @@ pub(super) fn rank<S: LexicalSource>(
         slot_table,
     };
     let weigh = |idf: f64, tf: f64, norm: f64| -> f64 { scorer.weigh(idf, tf, norm) };
-    let norm_for = |norms: &mut Vec<f64>, slot: u32| -> f64 { scorer.norm(norms, slot) };
+    let norm_for = |norms: &[f64], slot: u32| -> f64 { scorer.norm(norms, slot) };
     // A score `limit` chunks are sure to reach, from the weights of the rarest term's first
     // chunks alone (a chunk's score is at least any one of its weights).
     let mut pilot_floor = 0.0f64;
@@ -1230,35 +1293,19 @@ pub(super) fn rank<S: LexicalSource>(
             let term = &mut terms[i];
             if term.tabled && !term.dense_tried {
                 term.dense_tried = true;
-                term.dense = image.dense().get(slots, &lists[i].0);
-                if let Some(dense) = term.dense.as_ref() {
-                    let key = [
-                        bm25.k1.to_bits(),
-                        bm25.b.to_bits(),
-                        bm25.one_minus_b.to_bits(),
-                        average.to_bits(),
-                        term.idf.to_bits(),
-                    ];
-                    let compute = || {
-                        let (edges, _) = classes();
-                        let mut bounds = vec![0.0f64; 16 * CLASSES];
-                        for found in 1..16usize {
-                            for (class, &edge) in edges.iter().enumerate() {
-                                bounds[found * CLASSES + class] = if found == 15 {
-                                    term.ceiling
-                                } else {
-                                    term.bound.at(found as u32, edge).min(term.ceiling)
-                                };
-                            }
-                        }
-                        (key, bounds.into_boxed_slice())
-                    };
-                    let cached = dense.bounds.get_or_init(compute);
+                term.dense = image.dense().get(&lists[i].0);
+                if term.dense.is_some() {
+                    let (edges, _) = classes();
                     term.ub.clear();
-                    if cached.0 == key {
-                        term.ub.extend_from_slice(&cached.1);
-                    } else {
-                        term.ub.extend_from_slice(&compute().1);
+                    term.ub.resize(16 * CLASSES, 0.0);
+                    for found in 1..16usize {
+                        for (class, &edge) in edges.iter().enumerate() {
+                            term.ub[found * CLASSES + class] = if found == 15 {
+                                term.ceiling
+                            } else {
+                                term.bound.at(found as u32, edge).min(term.ceiling)
+                            };
+                        }
                     }
                 }
             }
@@ -1622,10 +1669,7 @@ mod tests {
         let nibbles: Vec<u8> = (0..slots / 2)
             .map(|_| nibble(next()) | (nibble(next()) << 4))
             .collect();
-        let table = Dense {
-            nibbles,
-            bounds: std::sync::OnceLock::new(),
-        };
+        let table = Dense::from_nibbles(nibbles);
         let classes: Vec<u8> = (0..slots)
             .map(|_| (next() % CLASSES as u64) as u8)
             .collect();

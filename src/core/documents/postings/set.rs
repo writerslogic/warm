@@ -358,6 +358,10 @@ impl PostingLists {
             live[id as usize] = true;
             let list = &self.lists[id as usize];
             assert!(!list.is_empty(), "live term with an empty list");
+            assert!(
+                list.summary_matches_recompute(),
+                "a write left a summary stale or wrong"
+            );
             let slots: Vec<usize> = list.iter().map(|(slot, _)| slot).collect();
             assert!(slots.windows(2).all(|pair| pair[0] < pair[1]));
             assert_eq!(slots.last().copied(), Some(list.last as usize));

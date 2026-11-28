@@ -83,6 +83,8 @@ struct Detected {
     store_schema: u32,
     text_segment: Option<u8>,
     has_caches: bool,
+    /// The arena manifest records `derived_tables`; true for any format that is rewritten anyway.
+    derived_tables: bool,
 }
 
 /// Every upgrade step that exists. Order matters only between steps that apply together.
@@ -181,6 +183,19 @@ static MIGRATIONS: &[Migration] = &[
     },
     Migration {
         step: UpgradeStep {
+            id: "arena-4-derived-tables",
+            artefact: "arena-manifest",
+            from: 4,
+            to: 4,
+            description: "record `derived_tables` in the arena manifest of the copy, so its \
+                          checkpoints store the derived tables (an older build cannot open \
+                          those); the frames and existing checkpoints are copied unchanged",
+        },
+        applies: |d| d.storage_format == STORAGE_FORMAT_CURRENT && !d.derived_tables,
+        run: |_| Ok(()),
+    },
+    Migration {
+        step: UpgradeStep {
             id: "text-segment-1-to-2",
             artefact: "text-segment",
             from: 1,
@@ -220,7 +235,38 @@ fn detect(source: &Path, report: &Report) -> Detected {
             .exists()
             .then_some(report.versions.text_segment.unwrap_or(1)),
         has_caches: source.join("indices.json").exists(),
+        derived_tables: manifest_takes_derived_tables(source),
     }
+}
+
+/// Sets `derived_tables` in every arena manifest under the staged `arena` (the base one and the
+/// current generation's copy).
+fn record_derived_tables(arena: &Path) -> Result<()> {
+    let mut paths = vec![arena.join("format.json")];
+    if let Ok(generation) = crate::core::durable_file::arena_generation(arena) {
+        paths.push(generation.join("format.json"));
+    }
+    for path in paths.into_iter().filter(|path| path.exists()) {
+        let mut manifest: serde_json::Value = serde_json::from_slice(&std::fs::read(&path)?)?;
+        manifest["derived_tables"] = true.into();
+        crate::core::durable_file::atomic_write(&path, &serde_json::to_vec_pretty(&manifest)?)?;
+    }
+    Ok(())
+}
+
+/// Whether the arena manifest of `source` carries `derived_tables`; a store without a readable
+/// manifest is rewritten by an earlier step, so it counts as taking them.
+fn manifest_takes_derived_tables(source: &Path) -> bool {
+    let base = source.join(ARENA_DIRECTORY);
+    let mut paths = vec![base.join("format.json")];
+    if let Ok(generation) = crate::core::durable_file::arena_generation(&base) {
+        paths.push(generation.join("format.json"));
+    }
+    paths
+        .iter()
+        .find_map(|path| std::fs::read(path).ok())
+        .and_then(|bytes| serde_json::from_slice::<serde_json::Value>(&bytes).ok())
+        .is_none_or(|manifest| manifest["derived_tables"].as_bool().unwrap_or(false))
 }
 
 /// Plans the upgrade of the store at `source` without touching it.
@@ -238,7 +284,8 @@ fn plan_from(source: &Path, report: &Report) -> Result<UpgradePlan> {
     refuse_unupgradable(report)?;
     let detected = detect(source, report);
     let current = detected.storage_format == STORAGE_FORMAT_CURRENT
-        && detected.store_schema == STORE_SCHEMA_VERSION;
+        && detected.store_schema == STORE_SCHEMA_VERSION
+        && detected.derived_tables;
     let steps = if current {
         Vec::new()
     } else {
@@ -588,6 +635,9 @@ fn stage_store(source: &Path, staging: &Path) -> Result<Staged> {
             &source.join(ARENA_DIRECTORY),
             &staging.join(ARENA_DIRECTORY),
         )?;
+        if !detected.derived_tables {
+            record_derived_tables(&staging.join(ARENA_DIRECTORY))?;
+        }
         return Ok(Staged {
             frames: report.frames,
         });

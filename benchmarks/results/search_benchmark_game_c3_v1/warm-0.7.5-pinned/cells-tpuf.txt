@@ -1,0 +1,65 @@
+Columns: warm-0.7.5-bp | infino-0.11.26 | infino-main  (mean / median microseconds, per-query best of 10 runs)
+
+## TOP_10
+
+| category | n | warm-0.7.5-bp | infino-0.11.26 | infino-main |
+|---|---|---|---|---|
+| ALL | 31 | 3147 / 788 | 2341 / 474 | 2155 / 502 |
+| union | 18 | 4900 / 1338 | 3613 / 1100 | 3320 / 1214 |
+| intersection | 11 | 840 / 384 | 669 / 372 | 623 / 412 |
+| term | 2 | 65 / 65 | 90 / 90 | 94 / 94 |
+
+## TOP_100
+
+| category | n | warm-0.7.5-bp | infino-0.11.26 | infino-main |
+|---|---|---|---|---|
+| ALL | 31 | 4908 / 1248 | 3061 / 858 | 2858 / 905 |
+| union | 18 | 7632 / 1914 | 4576 / 1830 | 4272 / 1927 |
+| intersection | 11 | 1297 / 656 | 1096 / 616 | 1025 / 676 |
+| term | 2 | 240 / 240 | 238 / 238 | 214 / 214 |
+
+## TOP_1000
+
+| category | n | warm-0.7.5-bp | infino-0.11.26 | infino-main |
+|---|---|---|---|---|
+| ALL | 31 | 7810 / 3060 | 4743 / 2152 | 4232 / 2111 |
+| union | 18 | 11817 / 3492 | 6872 / 3430 | 6123 / 3502 |
+| intersection | 11 | 2418 / 1737 | 1966 / 1087 | 1757 / 1159 |
+| term | 2 | 1397 / 1397 | 864 / 864 | 825 / 825 |
+
+## COUNT
+
+| category | n | warm-0.7.5-bp | infino-0.11.26 | infino-main |
+|---|---|---|---|---|
+| ALL | 31 | 1062 / 555 | 1149 / 556 | 1128 / 546 |
+| union | 18 | 1470 / 769 | 1581 / 866 | 1547 / 845 |
+| intersection | 11 | 584 / 283 | 644 / 497 | 642 / 498 |
+| term | 2 | 19 / 19 | 31 / 31 | 34 / 34 |
+
+## WARM losses (WARM slower than the named engine)
+
+Format: command / category: engine (WARM mean vs engine mean; WARM median vs engine median), listed when WARM is slower on that statistic.
+
+- TOP_10 / ALL (n=31): infino-0.11.26: mean+median (WARM 3147/788 vs 2341/474)
+- TOP_10 / ALL (n=31): infino-main: mean+median (WARM 3147/788 vs 2155/502)
+- TOP_10 / union (n=18): infino-0.11.26: mean+median (WARM 4900/1338 vs 3613/1100)
+- TOP_10 / union (n=18): infino-main: mean+median (WARM 4900/1338 vs 3320/1214)
+- TOP_10 / intersection (n=11): infino-0.11.26: mean+median (WARM 840/384 vs 669/372)
+- TOP_10 / intersection (n=11): infino-main: mean only (WARM 840/384 vs 623/412)
+- TOP_100 / ALL (n=31): infino-0.11.26: mean+median (WARM 4908/1248 vs 3061/858)
+- TOP_100 / ALL (n=31): infino-main: mean+median (WARM 4908/1248 vs 2858/905)
+- TOP_100 / union (n=18): infino-0.11.26: mean+median (WARM 7632/1914 vs 4576/1830)
+- TOP_100 / union (n=18): infino-main: mean only (WARM 7632/1914 vs 4272/1927)
+- TOP_100 / intersection (n=11): infino-0.11.26: mean+median (WARM 1297/656 vs 1096/616)
+- TOP_100 / intersection (n=11): infino-main: mean only (WARM 1297/656 vs 1025/676)
+- TOP_100 / term (n=2): infino-0.11.26: mean+median (WARM 240/240 vs 238/238)
+- TOP_100 / term (n=2): infino-main: mean+median (WARM 240/240 vs 214/214)
+- TOP_1000 / ALL (n=31): infino-0.11.26: mean+median (WARM 7810/3060 vs 4743/2152)
+- TOP_1000 / ALL (n=31): infino-main: mean+median (WARM 7810/3060 vs 4232/2111)
+- TOP_1000 / union (n=18): infino-0.11.26: mean+median (WARM 11817/3492 vs 6872/3430)
+- TOP_1000 / union (n=18): infino-main: mean only (WARM 11817/3492 vs 6123/3502)
+- TOP_1000 / intersection (n=11): infino-0.11.26: mean+median (WARM 2418/1737 vs 1966/1087)
+- TOP_1000 / intersection (n=11): infino-main: mean+median (WARM 2418/1737 vs 1757/1159)
+- TOP_1000 / term (n=2): infino-0.11.26: mean+median (WARM 1397/1397 vs 864/864)
+- TOP_1000 / term (n=2): infino-main: mean+median (WARM 1397/1397 vs 825/825)
+- COUNT / ALL (n=31): infino-main: median only (WARM 1062/555 vs 1128/546)

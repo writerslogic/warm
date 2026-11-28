@@ -89,6 +89,16 @@ impl Filter {
             "native Vectra filter requires 1..=64 fields"
         );
         for (key, value) in object {
+            if matches!(key.as_str(), "$and" | "$or") {
+                return Err(crate::core::documents::unsupported_operator(key, &[]));
+            }
+            if let Some(ops) = crate::core::documents::operators(value) {
+                let op = ops
+                    .keys()
+                    .find(|op| op.starts_with('$'))
+                    .expect("operator key");
+                return Err(crate::core::documents::unsupported_operator(op, &[]));
+            }
             ensure!(supported_key(key), "unsupported native Vectra filter field");
             ensure!(
                 matches!(value, Value::Bool(_) | Value::String(_)) || number(value).is_some(),

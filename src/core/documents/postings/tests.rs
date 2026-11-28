@@ -158,6 +158,78 @@ fn single_posting_edits_recompute_one_block_frontier() {
     assert!(list.block_count() >= blocks);
 }
 
+/// A long list's summary is kept by the writes: after random inserts, deletes and reweights (blocks split, shrink and
+/// vanish) it equals one computed from every block.
+#[test]
+fn summary_follows_random_edits_like_a_full_recompute() {
+    let words = |slot: usize| 5 + (slot % 31) as u32;
+    let run: Vec<Posting> = (0..40 * BLOCK_LEN)
+        .map(|i| (i * 4, 1 + (i % 9) as u32))
+        .collect();
+    let mut list = PostingList::default();
+    list.append_run_with_lengths(&run, words);
+    let mut live: std::collections::BTreeSet<usize> = run.iter().map(|p| p.0).collect();
+    let mut state = 0x2545_f491_4f6c_dd1du64;
+    let mut next = move || {
+        state ^= state << 13;
+        state ^= state >> 7;
+        state ^= state << 17;
+        state
+    };
+    for step in 0..3000 {
+        let slot = (next() % (45 * BLOCK_LEN as u64 * 4)) as usize;
+        let last = live.last().copied().unwrap_or(0);
+        match next() % 4 {
+            0 if live.contains(&slot) => {
+                list.remove(slot, words);
+                live.remove(&slot);
+            }
+            1 if live.contains(&slot) => list.set_frequency(slot, 1 + (next() % 20) as u32, words),
+            2 => {
+                let slot = last + 4;
+                list.append_run_with_lengths(&[(slot, 1 + (next() % 5) as u32)], words);
+                live.insert(slot);
+            }
+            3 if !live.contains(&slot) && slot < last => {
+                list.insert((slot, 2), 0, words);
+                live.insert(slot);
+            }
+            _ => {}
+        }
+        assert!(list.summary_matches_recompute(), "step {step}");
+    }
+}
+
+/// Appending one posting at a time, the summary equals a full recompute at one posting below,
+/// at and above each run boundary (a run is `SUPER_LEN` blocks), including after the highest
+/// frequency of an earlier run is lowered, which the carried head cannot answer.
+#[test]
+fn summary_is_exact_across_run_boundaries() {
+    use super::list::{SUMMARY_MIN_BLOCKS, SUPER_LEN};
+    let words = |slot: usize| 5 + (slot % 31) as u32;
+    let boundary = SUPER_LEN * BLOCK_LEN;
+    let total = 4 * boundary + 2;
+    let mut list = PostingList::default();
+    let mut slots = Vec::new();
+    for n in 1..=total {
+        let slot = n * 4;
+        list.append_run_with_lengths(&[(slot, 1 + ((n * 7) % 11) as u32)], words);
+        slots.push(slot);
+        if n >= SUMMARY_MIN_BLOCKS * BLOCK_LEN
+            && (n % boundary == 0 || (n + 1) % boundary == 0 || (n - 1) % boundary == 0)
+        {
+            assert!(list.summary_matches_recompute(), "{n} postings");
+        }
+    }
+    // Raise a posting in the first run above everything, then lower it again.
+    list.set_frequency(slots[3], 500, words);
+    assert!(list.summary_matches_recompute());
+    list.set_frequency(slots[3], 1, words);
+    assert!(list.summary_matches_recompute());
+    list.remove(slots[boundary + 5], words);
+    assert!(list.summary_matches_recompute());
+}
+
 #[test]
 fn gallop_matches_partition_point() {
     for length in 0..70usize {

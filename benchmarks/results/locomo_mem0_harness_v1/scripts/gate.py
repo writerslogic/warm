@@ -1,11 +1,11 @@
 import json, os, sys, glob
-OUT, P = sys.argv[1], '/Volumes/A/.hms-lb/locomo-20261114/pilot'
+OUT, P = sys.argv[1], '$WARM_BENCH_DATA/pilot'
 H = os.path.expanduser('~')
 os.environ['OPENAI_API_KEY'] = open(H + '/.config/warm-bench/lme2-openai.key').read().strip()
 os.environ['WARM_EMBED_BASE_URL'] = 'https://api.openai.com/v1'
 sys.path.insert(0, H + '/.hms-src-locomo/benchmarks/public/locomo')
 import mem0_harness_warm as w
-data = json.load(open('/Volumes/A/.hms-lb/locomo-20261114/locomo10.json'))
+data = json.load(open('$WARM_BENCH_DATA/locomo10.json'))
 counts = {}
 for l in open(H + '/pilot-out/all-server.log', errors='replace'):
     if '/memory/remember' not in l: continue

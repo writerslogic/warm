@@ -715,6 +715,10 @@ def build():
         out += ["## Server mode results", "",
                 ("Every system here is a separate server process tree measured from one client over loopback; verdicts compare "
                  "comparators with `warm-server`, never with the embedded rows above. The protocol is recorded in each results file."), ""] + server_body
+    from . import jsvector
+    js_results = jsvector.load()
+    if js_results:
+        out += jsvector.lines(js_results, cells) + jsvector.loss_lines(js_results)
     out += ["## Operational facts", "", *facts_table(results), "",
                                            "## Versions", "", *versions_table(results), ""]
     nr = {}
@@ -843,6 +847,8 @@ def readme_block(summary):
         if sec["per_build"]:
             counts = {v: sum(1 for e in sec["per_build"] if e["metric"] in ("build_seconds", "serving_rss_mib") and e["verdict"] == v) for v in ("WIN", "TIE", "LOSS")}
             lines.append(f"| {short} | `{sec['hw']['class']}` | Build time and serving RSS, per comparator build | - | see COMPARISON.md | W {counts['WIN']} / T {counts['TIE']} / L {counts['LOSS']} | |")
+    from . import jsvector
+    lines += jsvector.readme_rows(jsvector.load())
     lines += ["", END]
     return "\n".join(lines) + "\n"
 

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "audit_date": "2026-10-22",
   "baseline_sha": "08d37778a66b58709461456e5b9a7ab6a05b399f",
-  "worktree": "/Volumes/A/.sol-wt-qag",
+  "worktree": "$WARM_WORKTREE",
   "scope": "Frozen official/validation results plus completed RF80, inconclusive/cancelled ID regression, and separately bounded validation-only layout/kernel experiments. Overall superiority is not established.",
   "supplied_baseline": {
     "artifact": "benchmarks/results/vibe_v1/llama-128-ip-standing-wl02.json",

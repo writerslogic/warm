@@ -1,0 +1,19 @@
+main run1 SCALE embedded insert at 100000 chunks: median 29.3 us, mean 31.5 us, p99 66.8 us, max 95.8 us
+main run1 SCALE embedded insert at 300000 chunks: median 28.3 us, mean 29.9 us, p99 64.6 us, max 73.5 us
+main run1 SCALE embedded insert at 1000000 chunks: median 29.6 us, mean 31.5 us, p99 65.3 us, max 100.6 us
+new run1 SCALE embedded insert at 100000 chunks: median 33.1 us, mean 35.4 us, p99 70.1 us, max 677.1 us
+new run1 SCALE embedded insert at 300000 chunks: median 35.2 us, mean 38.3 us, p99 70.4 us, max 82.5 us
+new run1 SCALE embedded insert at 1000000 chunks: median 42.6 us, mean 46.5 us, p99 78.2 us, max 97.9 us
+new run2 SCALE embedded insert at 100000 chunks: median 32.7 us, mean 34.6 us, p99 66.7 us, max 85.1 us
+new run2 SCALE embedded insert at 300000 chunks: median 36.2 us, mean 39.8 us, p99 72.0 us, max 87.3 us
+new run2 SCALE embedded insert at 1000000 chunks: median 40.5 us, mean 45.5 us, p99 78.9 us, max 91.9 us
+main run2 SCALE embedded insert at 100000 chunks: median 28.7 us, mean 30.9 us, p99 63.8 us, max 71.9 us
+main run2 SCALE embedded insert at 300000 chunks: median 28.1 us, mean 29.7 us, p99 63.8 us, max 77.6 us
+main run2 SCALE embedded insert at 1000000 chunks: median 28.6 us, mean 30.5 us, p99 64.9 us, max 73.1 us
+main run3 SCALE embedded insert at 100000 chunks: median 28.6 us, mean 30.7 us, p99 64.6 us, max 74.3 us
+main run3 SCALE embedded insert at 300000 chunks: median 29.1 us, mean 30.9 us, p99 66.1 us, max 79.7 us
+main run3 SCALE embedded insert at 1000000 chunks: median 28.1 us, mean 29.6 us, p99 64.5 us, max 81.8 us
+new run3 SCALE embedded insert at 100000 chunks: median 34.5 us, mean 37.1 us, p99 70.7 us, max 85.4 us
+new run3 SCALE embedded insert at 300000 chunks: median 35.8 us, mean 39.6 us, p99 73.0 us, max 409.7 us
+new run3 SCALE embedded insert at 1000000 chunks: median 43.3 us, mean 47.8 us, p99 82.1 us, max 119.8 us
+SWEEP DONE 06:43:35

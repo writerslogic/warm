@@ -50,6 +50,18 @@ def test_filters_pushed_and_residual(server):
         assert ids == {"d1"}
 
 
+def test_in_and_list_filters_are_evaluated_by_the_engine(server):
+    with WarmBackend(cfg(server)) as b:
+        b.remember([
+            Record("a", "alpha one", {"team": "red", "tags": ["x", "y"]}),
+            Record("b", "alpha two", {"team": "blue", "tags": ["z"]}),
+        ])
+        teams = lambda flt: {h.metadata["team"] for h in b.recall("alpha", k=5, filter=flt)}
+        assert teams({"team": {"$in": ["red", "green"]}}) == {"red"}
+        assert teams({"tags": "z"}) == {"blue"}
+        assert teams({"tags": {"$in": ["x", "z"]}}) == {"red", "blue"}
+
+
 def test_collections_isolated_in_one_tenant(server):
     c = cfg(server)
     with WarmBackend(c) as plain, WarmBackend(dataclasses.replace(c, collection="A")) as a:
@@ -170,3 +182,9 @@ def test_filter_semantics():
     pushed, rest = split(parse_filter({"a": 1, "b": {"$gt": 2}}))
     assert pushed == {"a": 1} and rest == Cmp("b", "gt", 2)
     assert split(parse_filter({"a": 1, "$or": [{"b": 1}, {"c": 2}]}))[0] == {"a": 1}
+    # `in` goes to the engine; a list field matches on any element.
+    assert split(parse_filter({"a": {"$in": ["x", 2]}, "b": {"$gt": 2}}))[0] == {"a": {"$in": ["x", 2]}}
+    assert parse_filter({"t": "x"}).matches({"t": ["x", "y"]})
+    assert parse_filter({"t": {"$in": ["q", "y"]}}).matches({"t": ["x", "y"]})
+    assert not parse_filter({"t": {"$ne": "x"}}).matches({"t": ["x", "y"]})
+    assert parse_filter({"t": ["x", "y"]}).matches({"t": ["x", "y"]})

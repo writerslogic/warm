@@ -1,0 +1,12 @@
+diff --git a/benchmarks/public/locomo/locomo_bench.py b/benchmarks/public/locomo/locomo_bench.py
+index 8edd295..ab4db48 100644
+--- a/benchmarks/public/locomo/locomo_bench.py
++++ b/benchmarks/public/locomo/locomo_bench.py
+@@ -379,6 +379,7 @@ def answer(server, llm, sample, dates, qa, args, enc):
+         for run in range(args.runs)]
+     return {'retrieved_a': ids['a'], 'retrieved_b': ids['b'], 'responses': responses,
+             'context_tokens': len(enc.encode(mem_a)) + len(enc.encode(mem_b)),
++            'prompt_sha256': hashlib.sha256(prompt.encode()).hexdigest(), 'prompt': prompt,
+             'prompt_tokens_local': len(enc.encode(prompt))}
+ 
+ 

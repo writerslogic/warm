@@ -45,6 +45,7 @@ mod lexical_count;
 mod matryoshka_vectors;
 #[cfg(feature = "server")]
 mod memory_api_server;
+mod metadata_filters;
 mod native_memory_workflow;
 mod qgraph_prefetch;
 #[cfg(feature = "experimental")]

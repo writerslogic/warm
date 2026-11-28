@@ -1,0 +1,13 @@
+{
+  "name": "warm-bench-js",
+  "private": true,
+  "description": "Node worker for the WARM vs Vectra comparison; exact pins, see ../../../docs/benchmarks/index.md",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "vectra": "0.15.0",
+    "warm-memory": "0.7.5"
+  }
+}

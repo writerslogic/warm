@@ -1,0 +1,660 @@
+{"query": "voice", "tags": ["term"]}
+{"query": "+who +won +the +first +season +of +the +voice", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"who won the first season of the voice\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "who won the first season of the voice", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "+who won the first", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+who -won", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "succour", "tags": ["term"]}
+{"query": "+feast +day +of +our +lady +of +perpetual +succour", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"feast day of our lady of perpetual succour\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "feast day of our lady of perpetual succour", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "feast +day of our", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+feast -day -of", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "of", "tags": ["term"]}
+{"query": "+high +blood +glucose +levels +stimulate +the +release +of", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"high blood glucose levels stimulate the release of\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "high blood glucose levels stimulate the release of", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "+high blood glucose levels", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+high -blood", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "head", "tags": ["term"]}
+{"query": "+the +head +of +the +orthodox +church +in +cyprus", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"the head of the orthodox church in cyprus\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "the head of the orthodox church in cyprus", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "the +head of the", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+the -head -of", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "biggest", "tags": ["term"]}
+{"query": "+the +biggest +nuclear +power +plant +in +the +world", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"the biggest nuclear power plant in the world\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "the biggest nuclear power plant in the world", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "+the biggest nuclear power", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+the -biggest", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "convention", "tags": ["term"]}
+{"query": "+who +was +the +president +of +the +constitutional +convention", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"who was the president of the constitutional convention\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "who was the president of the constitutional convention", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "who +was the president", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+who -was -the", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "+who +holds +the +record +for +the +most +olympic +medals", "tags": ["intersection", "global", "intersection:num_tokens_9"]}
+{"query": "\"who holds the record for the most olympic medals\"", "tags": ["phrase", "phrase:num_tokens_9"]}
+{"query": "who holds the record for the most olympic medals", "tags": ["union", "global", "union:num_tokens_9"]}
+{"query": "+who holds the record", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+who -holds", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "coined", "tags": ["term"]}
+{"query": "+who +coined +the +term +survival +of +the +fittest", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"who coined the term survival of the fittest\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "who coined the term survival of the fittest", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "who +coined the term", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+who -coined -the", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "own", "tags": ["term"]}
+{"query": "+who +fell +in +love +with +his +own +reflection", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"who fell in love with his own reflection\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "who fell in love with his own reflection", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "+who fell in love", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+who -fell", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "amount", "tags": ["term"]}
+{"query": "+the +si +unit +for +amount +of +substance +is", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"the si unit for amount of substance is\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "the si unit for amount of substance is", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "the +si unit for", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+the -si -unit", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "general", "tags": ["term"]}
+{"query": "+who +was +the +secretary +general +of +the +united +nations", "tags": ["intersection", "global", "intersection:num_tokens_9"]}
+{"query": "\"who was the secretary general of the united nations\"", "tags": ["phrase", "phrase:num_tokens_9"]}
+{"query": "who was the secretary general of the united nations", "tags": ["union", "global", "union:num_tokens_9"]}
+{"query": "+who was the secretary", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+who -was", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "justice", "tags": ["term"]}
+{"query": "+chief +justice +of +the +federal +court +of +australia", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"chief justice of the federal court of australia\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "chief justice of the federal court of australia", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "chief +justice of the", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+chief -justice -of", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "university", "tags": ["term"]}
+{"query": "+first +african +american +student +at +university +of +mississippi", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"first african american student at university of mississippi\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "first african american student at university of mississippi", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "+first african american student", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+first -african", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "from", "tags": ["term"]}
+{"query": "+who +was +banished +from +the +massachusetts +bay +colony", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"who was banished from the massachusetts bay colony\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "who was banished from the massachusetts bay colony", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "who +was banished from", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+who -was -banished", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "wrote", "tags": ["term"]}
+{"query": "+who +wrote +the +music +for +kiss +me +kate", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"who wrote the music for kiss me kate\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "who wrote the music for kiss me kate", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "+who wrote the music", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+who -wrote", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "+the +first +woman +elected +to +the +us +senate", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"the first woman elected to the us senate\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "the first woman elected to the us senate", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "the +first woman elected", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+the -first -woman", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "largest", "tags": ["term"]}
+{"query": "+largest +country +in +the +world +by +land +area", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"largest country in the world by land area\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "largest country in the world by land area", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "+largest country in the", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+largest -country", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "actress", "tags": ["term"]}
+{"query": "+best +actress +in +a +leading +role +golden +globe", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"best actress in a leading role golden globe\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "best actress in a leading role golden globe", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "best +actress in a", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+best -actress -in", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "+permanent +representative +of +tanzania +to +the +united +nations", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"permanent representative of tanzania to the united nations\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "permanent representative of tanzania to the united nations", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "+permanent representative of tanzania", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+permanent -representative", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "phrase", "tags": ["term"]}
+{"query": "+who +coined +the +phrase +survival +of +the +fittest", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"who coined the phrase survival of the fittest\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "who coined the phrase survival of the fittest", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "who +coined the phrase", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+list +of +world +heritage +sites +in +the +philippines", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"list of world heritage sites in the philippines\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "list of world heritage sites in the philippines", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "+list of world heritage", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+list -of", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "state", "tags": ["term"]}
+{"query": "+everything +within +the +state +nothing +outside +the +state", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"everything within the state nothing outside the state\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "everything within the state nothing outside the state", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "everything +within the state", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+everything -within -the", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "president", "tags": ["term"]}
+{"query": "+who +is +the +president +of +the +united +states", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"who is the president of the united states\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "who is the president of the united states", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "+who is the president", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+who -is", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "in", "tags": ["term"]}
+{"query": "+all +time +leading +scorer +in +big +ten +basketball", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"all time leading scorer in big ten basketball\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "all time leading scorer in big ten basketball", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "all +time leading scorer", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+all -time -leading", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "+who +was +turned +into +a +pillar +of +salt", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"who was turned into a pillar of salt\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "who was turned into a pillar of salt", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "+who was turned into", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "killed", "tags": ["term"]}
+{"query": "+who +killed +his +father +and +married +his +mother", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"who killed his father and married his mother\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "who killed his father and married his mother", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "who +killed his father", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+who -killed -his", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "list", "tags": ["term"]}
+{"query": "+list +of +best +selling +artists +in +south +korea", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"list of best selling artists in south korea\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "list of best selling artists in south korea", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "+list of best selling", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+who +wrote +the +books +of +the +new +testament", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"who wrote the books of the new testament\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "who wrote the books of the new testament", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "who +wrote the books", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+who -wrote -the", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "civil", "tags": ["term"]}
+{"query": "+who +were +involved +in +the +american +civil +war", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"who were involved in the american civil war\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "who were involved in the american civil war", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "+who were involved in", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+who -were", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "terms", "tags": ["term"]}
+{"query": "+richest +country +in +the +world +in +terms +of +gdp", "tags": ["intersection", "global", "intersection:num_tokens_9"]}
+{"query": "\"richest country in the world in terms of gdp\"", "tags": ["phrase", "phrase:num_tokens_9"]}
+{"query": "richest country in the world in terms of gdp", "tags": ["union", "global", "union:num_tokens_9"]}
+{"query": "richest +country in the", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+richest -country -in", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "is", "tags": ["term"]}
+{"query": "+the +sum +of +the +interior +angles +of +a +triangle +is", "tags": ["intersection", "global", "intersection:num_tokens_10"]}
+{"query": "\"the sum of the interior angles of a triangle is\"", "tags": ["phrase", "phrase:num_tokens_10"]}
+{"query": "the sum of the interior angles of a triangle is", "tags": ["union", "global", "union:num_tokens_10"]}
+{"query": "+the sum of the", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+the -sum", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "+who +is +known +as +the +father +of +texas", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"who is known as the father of texas\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "who is known as the father of texas", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "who +is known as", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+who -is -known", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "who", "tags": ["term"]}
+{"query": "+who +wrote +an +essay +on +the +principle +of +population", "tags": ["intersection", "global", "intersection:num_tokens_9"]}
+{"query": "\"who wrote an essay on the principle of population\"", "tags": ["phrase", "phrase:num_tokens_9"]}
+{"query": "who wrote an essay on the principle of population", "tags": ["union", "global", "union:num_tokens_9"]}
+{"query": "+who wrote an essay", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "war", "tags": ["term"]}
+{"query": "+who +fought +in +the +sri +lankan +civil +war", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"who fought in the sri lankan civil war\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "who fought in the sri lankan civil war", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "who +fought in the", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+who -fought -in", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "+the +term +of +vice +president +of +india +is", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"the term of vice president of india is\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "the term of vice president of india is", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "+the term of vice", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+the -term", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "+first +major +battle +of +the +english +civil +war", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"first major battle of the english civil war\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "first major battle of the english civil war", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "first +major battle of", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+first -major -battle", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "united", "tags": ["term"]}
+{"query": "+united +states +attorney +for +the +eastern +district +of +new +york", "tags": ["intersection", "global", "intersection:num_tokens_10"]}
+{"query": "\"united states attorney for the eastern district of new york\"", "tags": ["phrase", "phrase:num_tokens_10"]}
+{"query": "united states attorney for the eastern district of new york", "tags": ["union", "global", "union:num_tokens_10"]}
+{"query": "+united states attorney for", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+united -states", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "player", "tags": ["term"]}
+{"query": "+oldest +player +to +score +in +premier +league +history", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"oldest player to score in premier league history\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "oldest player to score in premier league history", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "oldest +player to score", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+oldest -player -to", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "+types +of +neuroglia +in +the +central +nervous +system", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"types of neuroglia in the central nervous system\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "types of neuroglia in the central nervous system", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "+types of neuroglia in", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+types -of", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "and", "tags": ["term"]}
+{"query": "+ranking +member +of +the +house +committee +on +science +space +and +technology", "tags": ["intersection", "global", "intersection:num_tokens_11"]}
+{"query": "\"ranking member of the house committee on science space and technology\"", "tags": ["phrase", "phrase:num_tokens_11"]}
+{"query": "ranking member of the house committee on science space and technology", "tags": ["union", "global", "union:num_tokens_11"]}
+{"query": "ranking +member of the", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+ranking -member -of", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "route", "tags": ["term"]}
+{"query": "+who +discovered +the +sea +route +from +europe +to +india", "tags": ["intersection", "global", "intersection:num_tokens_9"]}
+{"query": "\"who discovered the sea route from europe to india\"", "tags": ["phrase", "phrase:num_tokens_9"]}
+{"query": "who discovered the sea route from europe to india", "tags": ["union", "global", "union:num_tokens_9"]}
+{"query": "+who discovered the sea", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+who -discovered", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "indian", "tags": ["term"]}
+{"query": "+to +regulate +commerce +with +foreign +nations +and +among +the +several +states +and +with +the +indian +tribes", "tags": ["intersection", "global", "intersection:num_tokens_16"]}
+{"query": "\"to regulate commerce with foreign nations and among the several states and with the indian tribes\"", "tags": ["phrase", "phrase:num_tokens_16"]}
+{"query": "to regulate commerce with foreign nations and among the several states and with the indian tribes", "tags": ["union", "global", "union:num_tokens_16"]}
+{"query": "to +regulate commerce with", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+to -regulate -commerce", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "successful", "tags": ["term"]}
+{"query": "+who +performed +the +first +successful +open +heart +surgery", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"who performed the first successful open heart surgery\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "who performed the first successful open heart surgery", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "+who performed the first", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+who -performed", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "+the +youngest +player +to +play +in +the +nba", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"the youngest player to play in the nba\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "the youngest player to play in the nba", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "the +youngest player to", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+the -youngest -player", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "world", "tags": ["term"]}
+{"query": "+largest +country +in +the +world +in +terms +of +land +area", "tags": ["intersection", "global", "intersection:num_tokens_10"]}
+{"query": "\"largest country in the world in terms of land area\"", "tags": ["phrase", "phrase:num_tokens_10"]}
+{"query": "largest country in the world in terms of land area", "tags": ["union", "global", "union:num_tokens_10"]}
+{"query": "+who +fought +during +the +french +and +indian +war", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"who fought during the french and indian war\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "who fought during the french and indian war", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "who +fought during the", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+who -fought -during", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "over", "tags": ["term"]}
+{"query": "+who +went +over +the +falls +in +a +barrel", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"who went over the falls in a barrel\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "who went over the falls in a barrel", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "+who went over the", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+who -went", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "forbes", "tags": ["term"]}
+{"query": "+most +powerful +woman +in +the +world +by +forbes", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"most powerful woman in the world by forbes\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "most powerful woman in the world by forbes", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "most +powerful woman in", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+most -powerful -woman", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "national", "tags": ["term"]}
+{"query": "+who +wrote +the +lyrics +for +the +national +anthem", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"who wrote the lyrics for the national anthem\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "who wrote the lyrics for the national anthem", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "+who wrote the lyrics", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "canada", "tags": ["term"]}
+{"query": "+leader +of +the +government +in +the +senate +canada", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"leader of the government in the senate canada\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "leader of the government in the senate canada", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "leader +of the government", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+leader -of -the", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "kentucky", "tags": ["term"]}
+{"query": "+who +is +the +drummer +for +the +kentucky +headhunters", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"who is the drummer for the kentucky headhunters\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "who is the drummer for the kentucky headhunters", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "+who is the drummer", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "led", "tags": ["term"]}
+{"query": "+who +led +the +charge +of +the +light +brigade", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"who led the charge of the light brigade\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "who led the charge of the light brigade", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "who +led the charge", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+who -led -the", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "lines", "tags": ["term"]}
+{"query": "+broken +lines +that +are +wider +and +closer +together", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"broken lines that are wider and closer together\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "broken lines that are wider and closer together", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "+broken lines that are", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+broken -lines", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "first", "tags": ["term"]}
+{"query": "+who +was +the +first +king +of +the +northern +kingdom", "tags": ["intersection", "global", "intersection:num_tokens_9"]}
+{"query": "\"who was the first king of the northern kingdom\"", "tags": ["phrase", "phrase:num_tokens_9"]}
+{"query": "who was the first king of the northern kingdom", "tags": ["union", "global", "union:num_tokens_9"]}
+{"query": "who +was the first", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "god", "tags": ["term"]}
+{"query": "+in +the +name +of +god +ye +not +guilty", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"in the name of god ye not guilty\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "in the name of god ye not guilty", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "+in the name of", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+in -the", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "thousand", "tags": ["term"]}
+{"query": "+who +published +the +hero +with +a +thousand +faces", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"who published the hero with a thousand faces\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "who published the hero with a thousand faces", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "who +published the hero", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+who -published -the", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "+largest +privately +owned +island +in +the +united +states", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"largest privately owned island in the united states\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "largest privately owned island in the united states", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "+largest privately owned island", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+largest -privately", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "auntie", "tags": ["term"]}
+{"query": "+who +played +auntie +em +in +the +wizard +of +oz", "tags": ["intersection", "global", "intersection:num_tokens_9"]}
+{"query": "\"who played auntie em in the wizard of oz\"", "tags": ["phrase", "phrase:num_tokens_9"]}
+{"query": "who played auntie em in the wizard of oz", "tags": ["union", "global", "union:num_tokens_9"]}
+{"query": "who +played auntie em", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+who -played -auntie", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "+who +was +the +third +president +of +the +united +states", "tags": ["intersection", "global", "intersection:num_tokens_9"]}
+{"query": "\"who was the third president of the united states\"", "tags": ["phrase", "phrase:num_tokens_9"]}
+{"query": "who was the third president of the united states", "tags": ["union", "global", "union:num_tokens_9"]}
+{"query": "+who was the third", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "secretary", "tags": ["term"]}
+{"query": "+who +is +the +united +states +secretary +of +education", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"who is the united states secretary of education\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "who is the united states secretary of education", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "who +is the united", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+who -is -the", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "won", "tags": ["term"]}
+{"query": "+who +won +the +nba +rookie +of +the +year", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"who won the nba rookie of the year\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "who won the nba rookie of the year", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "+who won the nba", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "representatives", "tags": ["term"]}
+{"query": "+number +of +members +of +the +house +of +representatives", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"number of members of the house of representatives\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "number of members of the house of representatives", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "number +of members of", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+number -of -members", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "victims", "tags": ["term"]}
+{"query": "+international +day +in +memory +of +the +victims +of +the +holocaust", "tags": ["intersection", "global", "intersection:num_tokens_10"]}
+{"query": "\"international day in memory of the victims of the holocaust\"", "tags": ["phrase", "phrase:num_tokens_10"]}
+{"query": "international day in memory of the victims of the holocaust", "tags": ["union", "global", "union:num_tokens_10"]}
+{"query": "+international day in memory", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+international -day", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "+who +wrote +the +song +blame +it +on +the +boogie", "tags": ["intersection", "global", "intersection:num_tokens_9"]}
+{"query": "\"who wrote the song blame it on the boogie\"", "tags": ["phrase", "phrase:num_tokens_9"]}
+{"query": "who wrote the song blame it on the boogie", "tags": ["union", "global", "union:num_tokens_9"]}
+{"query": "who +wrote the song", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+president +of +the +united +states +during +the +civil +war", "tags": ["intersection", "global", "intersection:num_tokens_9"]}
+{"query": "\"president of the united states during the civil war\"", "tags": ["phrase", "phrase:num_tokens_9"]}
+{"query": "president of the united states during the civil war", "tags": ["union", "global", "union:num_tokens_9"]}
+{"query": "+president of the united", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+president -of", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "was", "tags": ["term"]}
+{"query": "+who +was +the +first +president +of +the +senate", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"who was the first president of the senate\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "who was the first president of the senate", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "which", "tags": ["term"]}
+{"query": "+form +in +which +carbohydrates +are +transported +in +plants", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"form in which carbohydrates are transported in plants\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "form in which carbohydrates are transported in plants", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "+form in which carbohydrates", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+form -in", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "rivers", "tags": ["term"]}
+{"query": "+the +area +between +the +tigris +and +euphrates +rivers", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"the area between the tigris and euphrates rivers\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "the area between the tigris and euphrates rivers", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "the +area between the", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+the -area -between", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "+respect +the +old +but +seek +out +the +new", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"respect the old but seek out the new\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "respect the old but seek out the new", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "+respect the old but", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+respect -the", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "+who +is +the +commander +in +chief +of +the +indian +armed +forces", "tags": ["intersection", "global", "intersection:num_tokens_11"]}
+{"query": "\"who is the commander in chief of the indian armed forces\"", "tags": ["phrase", "phrase:num_tokens_11"]}
+{"query": "who is the commander in chief of the indian armed forces", "tags": ["union", "global", "union:num_tokens_11"]}
+{"query": "who +is the commander", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+chief +of +staff +of +the +armed +forces +of +liberia", "tags": ["intersection", "global", "intersection:num_tokens_9"]}
+{"query": "\"chief of staff of the armed forces of liberia\"", "tags": ["phrase", "phrase:num_tokens_9"]}
+{"query": "chief of staff of the armed forces of liberia", "tags": ["union", "global", "union:num_tokens_9"]}
+{"query": "+chief of staff of", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+chief -of", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "to", "tags": ["term"]}
+{"query": "+first +african +american +to +win +an +olympic +gold +medal", "tags": ["intersection", "global", "intersection:num_tokens_9"]}
+{"query": "\"first african american to win an olympic gold medal\"", "tags": ["phrase", "phrase:num_tokens_9"]}
+{"query": "first african american to win an olympic gold medal", "tags": ["union", "global", "union:num_tokens_9"]}
+{"query": "first +african american to", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+first -african -american", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "affairs", "tags": ["term"]}
+{"query": "+assistant +secretary +of +state +for +east +asian +and +pacific +affairs", "tags": ["intersection", "global", "intersection:num_tokens_10"]}
+{"query": "\"assistant secretary of state for east asian and pacific affairs\"", "tags": ["phrase", "phrase:num_tokens_10"]}
+{"query": "assistant secretary of state for east asian and pacific affairs", "tags": ["union", "global", "union:num_tokens_10"]}
+{"query": "+assistant secretary of state", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+assistant -secretary", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "+who +was +the +first +governor +of +new +south +wales", "tags": ["intersection", "global", "intersection:num_tokens_9"]}
+{"query": "\"who was the first governor of new south wales\"", "tags": ["phrase", "phrase:num_tokens_9"]}
+{"query": "who was the first governor of new south wales", "tags": ["union", "global", "union:num_tokens_9"]}
+{"query": "prisoners", "tags": ["term"]}
+{"query": "+convention +relative +to +the +treatment +of +prisoners +of +war", "tags": ["intersection", "global", "intersection:num_tokens_9"]}
+{"query": "\"convention relative to the treatment of prisoners of war\"", "tags": ["phrase", "phrase:num_tokens_9"]}
+{"query": "convention relative to the treatment of prisoners of war", "tags": ["union", "global", "union:num_tokens_9"]}
+{"query": "+convention relative to the", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+convention -relative", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "me", "tags": ["term"]}
+{"query": "+song +walk +me +out +in +the +morning +dew", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"song walk me out in the morning dew\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "song walk me out in the morning dew", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "song +walk me out", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+song -walk -me", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "as", "tags": ["term"]}
+{"query": "+first +indian +language +to +be +declared +as +a +classical +language", "tags": ["intersection", "global", "intersection:num_tokens_10"]}
+{"query": "\"first indian language to be declared as a classical language\"", "tags": ["phrase", "phrase:num_tokens_10"]}
+{"query": "first indian language to be declared as a classical language", "tags": ["union", "global", "union:num_tokens_10"]}
+{"query": "+first indian language to", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+first -indian", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "trapp", "tags": ["term"]}
+{"query": "+captain +von +trapp +in +the +sound +of +music", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"captain von trapp in the sound of music\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "captain von trapp in the sound of music", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "captain +von trapp in", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+captain -von -trapp", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "played", "tags": ["term"]}
+{"query": "+who +played +mimi +on +the +drew +carey +show", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"who played mimi on the drew carey show\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "who played mimi on the drew carey show", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "+who played mimi on", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+who -played", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "a", "tags": ["term"]}
+{"query": "+nfl +record +for +most +punts +in +a +game", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"nfl record for most punts in a game\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "nfl record for most punts in a game", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "nfl +record for most", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+nfl -record -for", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "australia", "tags": ["term"]}
+{"query": "+who +was +the +first +governor +of +western +australia", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"who was the first governor of western australia\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "who was the first governor of western australia", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "+who was the first", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "council", "tags": ["term"]}
+{"query": "+president +of +the +united +nations +economic +and +social +council", "tags": ["intersection", "global", "intersection:num_tokens_9"]}
+{"query": "\"president of the united nations economic and social council\"", "tags": ["phrase", "phrase:num_tokens_9"]}
+{"query": "president of the united nations economic and social council", "tags": ["union", "global", "union:num_tokens_9"]}
+{"query": "president +of the united", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+president -of -the", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "senate", "tags": ["term"]}
+{"query": "+the +presiding +officer +of +the +senate +is +the", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"the presiding officer of the senate is the\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "the presiding officer of the senate is the", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "+the presiding officer of", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+the -presiding", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "being", "tags": ["term"]}
+{"query": "+who +directed +the +perks +of +being +a +wallflower", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"who directed the perks of being a wallflower\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "who directed the perks of being a wallflower", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "who +directed the perks", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+who -directed -the", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "outer", "tags": ["term"]}
+{"query": "+director +of +the +united +nations +office +for +outer +space +affairs", "tags": ["intersection", "global", "intersection:num_tokens_10"]}
+{"query": "\"director of the united nations office for outer space affairs\"", "tags": ["phrase", "phrase:num_tokens_10"]}
+{"query": "director of the united nations office for outer space affairs", "tags": ["union", "global", "union:num_tokens_10"]}
+{"query": "+director of the united", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+director -of", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "+who +was +the +founder +of +the +salvation +army", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"who was the founder of the salvation army\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "who was the founder of the salvation army", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "who +was the founder", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+who +fought +at +the +battle +of +the +boyne", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"who fought at the battle of the boyne\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "who fought at the battle of the boyne", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "+who fought at the", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+who -fought", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "+which +side +of +the +road +to +drive +on", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"which side of the road to drive on\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "which side of the road to drive on", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "which +side of the", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+which -side -of", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "+legal +age +to +get +a +tattoo +in +cyprus", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"legal age to get a tattoo in cyprus\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "legal age to get a tattoo in cyprus", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "+legal age to get", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+legal -age", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "+who +was +the +lead +singer +of +the +bay +city +rollers", "tags": ["intersection", "global", "intersection:num_tokens_10"]}
+{"query": "\"who was the lead singer of the bay city rollers\"", "tags": ["phrase", "phrase:num_tokens_10"]}
+{"query": "who was the lead singer of the bay city rollers", "tags": ["union", "global", "union:num_tokens_10"]}
+{"query": "who +was the lead", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "all", "tags": ["term"]}
+{"query": "+the +highest +grossing +video +game +of +all +time", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"the highest grossing video game of all time\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "the highest grossing video game of all time", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "+the highest grossing video", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+the -highest", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "+who +was +killed +in +the +battle +of +little +bighorn", "tags": ["intersection", "global", "intersection:num_tokens_9"]}
+{"query": "\"who was killed in the battle of little bighorn\"", "tags": ["phrase", "phrase:num_tokens_9"]}
+{"query": "who was killed in the battle of little bighorn", "tags": ["union", "global", "union:num_tokens_9"]}
+{"query": "who +was killed in", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+who -was -killed", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "most", "tags": ["term"]}
+{"query": "+most +visited +city +in +india +by +foreign +tourists", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"most visited city in india by foreign tourists\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "most visited city in india by foreign tourists", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "+most visited city in", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+most -visited", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "+who +discovered +the +four +largest +moons +of +jupiter", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"who discovered the four largest moons of jupiter\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "who discovered the four largest moons of jupiter", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "who +discovered the four", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+who -discovered -the", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "+who +won +the +first +season +of +the +voice +australia", "tags": ["intersection", "global", "intersection:num_tokens_9"]}
+{"query": "\"who won the first season of the voice australia\"", "tags": ["phrase", "phrase:num_tokens_9"]}
+{"query": "who won the first season of the voice australia", "tags": ["union", "global", "union:num_tokens_9"]}
+{"query": "+who +was +the +first +speaker +of +the +house", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"who was the first speaker of the house\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "who was the first speaker of the house", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "woman", "tags": ["term"]}
+{"query": "+who +was +the +first +woman +to +hike +the +appalachian +trail", "tags": ["intersection", "global", "intersection:num_tokens_10"]}
+{"query": "\"who was the first woman to hike the appalachian trail\"", "tags": ["phrase", "phrase:num_tokens_10"]}
+{"query": "who was the first woman to hike the appalachian trail", "tags": ["union", "global", "union:num_tokens_10"]}
+{"query": "sri", "tags": ["term"]}
+{"query": "+which +is +the +national +language +of +sri +lanka", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"which is the national language of sri lanka\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "which is the national language of sri lanka", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "which +is the national", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+which -is -the", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "music", "tags": ["term"]}
+{"query": "+who +wrote +the +music +for +the +national +anthem", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"who wrote the music for the national anthem\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "who wrote the music for the national anthem", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "finals", "tags": ["term"]}
+{"query": "+most +three +pointers +in +an +nba +finals +game", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"most three pointers in an nba finals game\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "most three pointers in an nba finals game", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "most +three pointers in", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+most -three -pointers", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "record", "tags": ["term"]}
+{"query": "+record +for +most +three +pointers +in +a +game", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"record for most three pointers in a game\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "record for most three pointers in a game", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "+record for most three", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+record -for", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "+largest +national +park +in +india +in +terms +of +area", "tags": ["intersection", "global", "intersection:num_tokens_9"]}
+{"query": "\"largest national park in india in terms of area\"", "tags": ["phrase", "phrase:num_tokens_9"]}
+{"query": "largest national park in india in terms of area", "tags": ["union", "global", "union:num_tokens_9"]}
+{"query": "largest +national park in", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+largest -national -park", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "flag", "tags": ["term"]}
+{"query": "+who +raised +the +american +flag +on +iwo +jima", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"who raised the american flag on iwo jima\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "who raised the american flag on iwo jima", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "+who raised the american", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+who -raised", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "+united +states +attorney +for +the +district +of +south +dakota", "tags": ["intersection", "global", "intersection:num_tokens_9"]}
+{"query": "\"united states attorney for the district of south dakota\"", "tags": ["phrase", "phrase:num_tokens_9"]}
+{"query": "united states attorney for the district of south dakota", "tags": ["union", "global", "union:num_tokens_9"]}
+{"query": "united +states attorney for", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+united -states -attorney", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "battle", "tags": ["term"]}
+{"query": "+the +first +battle +of +the +english +civil +war", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"the first battle of the english civil war\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "the first battle of the english civil war", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "+the first battle of", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+the -first", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "army", "tags": ["term"]}
+{"query": "+chief +of +staff +of +the +republic +of +korea +army", "tags": ["intersection", "global", "intersection:num_tokens_9"]}
+{"query": "\"chief of staff of the republic of korea army\"", "tags": ["phrase", "phrase:num_tokens_9"]}
+{"query": "chief of staff of the republic of korea army", "tags": ["union", "global", "union:num_tokens_9"]}
+{"query": "chief +of staff of", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+chief -of -staff", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "+first +asian +to +swim +across +the +english +channel", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"first asian to swim across the english channel\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "first asian to swim across the english channel", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "+first asian to swim", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+first -asian", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "+who +is +the +head +coach +of +the +cleveland +browns", "tags": ["intersection", "global", "intersection:num_tokens_9"]}
+{"query": "\"who is the head coach of the cleveland browns\"", "tags": ["phrase", "phrase:num_tokens_9"]}
+{"query": "who is the head coach of the cleveland browns", "tags": ["union", "global", "union:num_tokens_9"]}
+{"query": "who +is the head", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+chief +justice +of +the +supreme +court +of +sri +lanka", "tags": ["intersection", "global", "intersection:num_tokens_9"]}
+{"query": "\"chief justice of the supreme court of sri lanka\"", "tags": ["phrase", "phrase:num_tokens_9"]}
+{"query": "chief justice of the supreme court of sri lanka", "tags": ["union", "global", "union:num_tokens_9"]}
+{"query": "+chief justice of the", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+chief -justice", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "+ambassador +extraordinary +and +plenipotentiary +of +the +united +states +of +america +to +the +holy +see", "tags": ["intersection", "global", "intersection:num_tokens_14"]}
+{"query": "\"ambassador extraordinary and plenipotentiary of the united states of america to the holy see\"", "tags": ["phrase", "phrase:num_tokens_14"]}
+{"query": "ambassador extraordinary and plenipotentiary of the united states of america to the holy see", "tags": ["union", "global", "union:num_tokens_14"]}
+{"query": "ambassador +extraordinary and plenipotentiary", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+ambassador -extraordinary -and", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "+who +invented +the +first +practical +typewriter +and +the +qwerty +keyboard +still +in +use +today", "tags": ["intersection", "global", "intersection:num_tokens_14"]}
+{"query": "\"who invented the first practical typewriter and the qwerty keyboard still in use today\"", "tags": ["phrase", "phrase:num_tokens_14"]}
+{"query": "who invented the first practical typewriter and the qwerty keyboard still in use today", "tags": ["union", "global", "union:num_tokens_14"]}
+{"query": "+who invented the first", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+who -invented", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "highest", "tags": ["term"]}
+{"query": "+the +state +with +highest +population +density +in +india", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"the state with highest population density in india\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "the state with highest population density in india", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "the +state with highest", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+the -state -with", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "catholic", "tags": ["term"]}
+{"query": "+oldest +continuously +operating +roman +catholic +parish +in +the +united +states", "tags": ["intersection", "global", "intersection:num_tokens_10"]}
+{"query": "\"oldest continuously operating roman catholic parish in the united states\"", "tags": ["phrase", "phrase:num_tokens_10"]}
+{"query": "oldest continuously operating roman catholic parish in the united states", "tags": ["union", "global", "union:num_tokens_10"]}
+{"query": "+oldest continuously operating roman", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+oldest -continuously", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "use", "tags": ["term"]}
+{"query": "+the +first +person +to +use +the +word +geography +was", "tags": ["intersection", "global", "intersection:num_tokens_9"]}
+{"query": "\"the first person to use the word geography was\"", "tags": ["phrase", "phrase:num_tokens_9"]}
+{"query": "the first person to use the word geography was", "tags": ["union", "global", "union:num_tokens_9"]}
+{"query": "the +first person to", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+the -first -person", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "+the +holder +of +this +passport +is +not +entitled +to +travel +to +occupied +palestine", "tags": ["intersection", "global", "intersection:num_tokens_13"]}
+{"query": "\"the holder of this passport is not entitled to travel to occupied palestine\"", "tags": ["phrase", "phrase:num_tokens_13"]}
+{"query": "the holder of this passport is not entitled to travel to occupied palestine", "tags": ["union", "global", "union:num_tokens_13"]}
+{"query": "+the holder of this", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+the -holder", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "numbers", "tags": ["term"]}
+{"query": "+numbers +that +are +the +sum +of +two +squares", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"numbers that are the sum of two squares\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "numbers that are the sum of two squares", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "numbers +that are the", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+numbers -that -are", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "+director +of +the +administrative +office +of +the +united +states +courts", "tags": ["intersection", "global", "intersection:num_tokens_10"]}
+{"query": "\"director of the administrative office of the united states courts\"", "tags": ["phrase", "phrase:num_tokens_10"]}
+{"query": "director of the administrative office of the united states courts", "tags": ["union", "global", "union:num_tokens_10"]}
+{"query": "+director of the administrative", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+who +won +the +academy +award +for +best +actor", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"who won the academy award for best actor\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "who won the academy award for best actor", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "who +won the academy", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+who -won -the", "tags": ["negated", "global", "negated:num_tokens_3"]}
+{"query": "fall", "tags": ["term"]}
+{"query": "+year +of +the +fall +of +the +berlin +wall", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"year of the fall of the berlin wall\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "year of the fall of the berlin wall", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "+year of the fall", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+year -of", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "+who +was +the +last +person +to +be +guillotined", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"who was the last person to be guillotined\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "who was the last person to be guillotined", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "who +was the last", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "atomic", "tags": ["term"]}
+{"query": "+the +atomic +bomb +that +was +dropped +on +hiroshima", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"the atomic bomb that was dropped on hiroshima\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "the atomic bomb that was dropped on hiroshima", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "+the atomic bomb that", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+the -atomic", "tags": ["negated", "global", "negated:num_tokens_2"]}
+{"query": "+who +wrote +hit +me +with +your +best +shot", "tags": ["intersection", "global", "intersection:num_tokens_8"]}
+{"query": "\"who wrote hit me with your best shot\"", "tags": ["phrase", "phrase:num_tokens_8"]}
+{"query": "who wrote hit me with your best shot", "tags": ["union", "global", "union:num_tokens_8"]}
+{"query": "who +wrote hit me", "tags": ["intersection_union", "global", "intersection_union:num_tokens_4"]}
+{"query": "+who -wrote -hit", "tags": ["negated", "global", "negated:num_tokens_3"]}

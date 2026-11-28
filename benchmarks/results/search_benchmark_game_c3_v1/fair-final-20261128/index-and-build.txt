@@ -1,0 +1,16 @@
+=== index warm-new-final 05:55:24
+compile exit 0
+target/release/build_index idx < ~/search-benchmark-game/corpus.json
+5032104 documents read, 391611 without words not indexed, every other one indexed
+--- warm-new-final: index built in 639.4s
+exit 0 warm-new-final
+{"index_secs": 639.423, "finished_utc": "2026-11-28T06:09:35+00:00", "corpus_bytes": 8327453114}
+3800683426	engines/warm-new-final/idx
+=== index warm-main-final 06:09:35
+compile exit 0
+target/release/build_index idx < ~/search-benchmark-game/corpus.json
+5032104 documents read, 391611 without words not indexed, every other one indexed
+--- warm-main-final: index built in 590.2s
+exit 0 warm-main-final
+{"index_secs": 590.164, "finished_utc": "2026-11-28T06:22:52+00:00", "corpus_bytes": 8327453114}
+3474585007	engines/warm-main-final/idx
