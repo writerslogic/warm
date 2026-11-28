@@ -1,0 +1,25 @@
+[package]
+name = "sbg-fuzz"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+# The tree under test. Run from a checkout of the commit being tested; the directory sits at
+# benchmarks/competitive/sbg_fuzz inside it.
+warm-rust = { path = "../../.." }
+anyhow = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+mimalloc = { version = "0.1", default-features = false }
+
+# The committed served-vs-exhaustive differential over a query file, built unchanged.
+[[bin]]
+name = "qb7d"
+path = "../../results/search_benchmark_game_c3_v1/exhaustive_differential/qb7d.rs"
+
+[profile.release]
+opt-level = 3
+debug = 1
+
+[workspace]

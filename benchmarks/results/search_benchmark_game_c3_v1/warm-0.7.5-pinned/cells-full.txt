@@ -1,0 +1,138 @@
+Columns: infino-0.11.26 | infino-main | tantivy-0.27 | lucene-10.5.0 | lucene-10.5.0-bp | iresearch-26.10.3 | warm-0.7.5-bp  (mean / median microseconds, per-query best of 10 runs)
+
+## TOP_10
+
+| category | n | infino-0.11.26 | infino-main | tantivy-0.27 | lucene-10.5.0 | lucene-10.5.0-bp | iresearch-26.10.3 | warm-0.7.5-bp |
+|---|---|---|---|---|---|---|---|---|
+| ALL | 962 | 476 / 239 | 522 / 246 | 1353 / 473 | 1119 / 470 | 801 / 354 | 565 / 245 | 383 / 198 |
+| union | 301 | 331 / 224 | 349 / 220 | 1416 / 582 | 672 / 419 | 503 / 316 | 351 / 211 | 342 / 192 |
+| intersection | 300 | 229 / 170 | 248 / 184 | 538 / 316 | 545 / 380 | 401 / 271 | 291 / 178 | 256 / 180 |
+| phrase | 300 | 784 / 376 | 903 / 416 | 1787 / 500 | 1803 / 614 | 1258 / 422 | 979 / 376 | 493 / 230 |
+| intersection_union | 40 | 759 / 568 | 693 / 492 | 3455 / 2326 | 2854 / 1833 | 1907 / 1261 | 824 / 614 | 612 / 456 |
+| negated | 19 | 85 / 79 | 80 / 78 | 479 / 331 | 579 / 529 | 374 / 356 | 144 / 130 | 66 / 67 |
+| term | 1 | 94 / 94 | 92 / 92 | 1602 / 1602 | 1121 / 1121 | 770 / 770 | 88 / 88 | 56 / 56 |
+| global | 657 | 285 / 195 | 302 / 207 | 974 / 466 | 699 / 430 | 506 / 313 | 325 / 210 | 288 / 189 |
+
+## TOP_100
+
+| category | n | infino-0.11.26 | infino-main | tantivy-0.27 | lucene-10.5.0 | lucene-10.5.0-bp | iresearch-26.10.3 | warm-0.7.5-bp |
+|---|---|---|---|---|---|---|---|---|
+| ALL | 962 | 722 / 361 | 737 / 371 | 1670 / 642 | 1558 / 670 | 1214 / 527 | 761 / 360 | 682 / 344 |
+| union | 301 | 575 / 364 | 587 / 370 | 2193 / 977 | 1226 / 748 | 916 / 578 | 639 / 390 | 736 / 389 |
+| intersection | 300 | 356 / 266 | 374 / 280 | 750 / 460 | 737 / 514 | 547 / 368 | 420 / 240 | 404 / 296 |
+| phrase | 300 | 1142 / 528 | 1176 / 552 | 1801 / 517 | 2416 / 706 | 1957 / 556 | 1136 / 432 | 776 / 362 |
+| intersection_union | 40 | 1142 / 816 | 1026 / 718 | 3497 / 2346 | 2950 / 1881 | 2179 / 1412 | 1174 / 850 | 1465 / 1134 |
+| negated | 19 | 160 / 147 | 159 / 149 | 513 / 367 | 1010 / 774 | 664 / 523 | 246 / 195 | 165 / 164 |
+| term | 1 | 292 / 292 | 286 / 286 | 1861 / 1861 | 3638 / 3638 | 1673 / 1673 | 315 / 315 | 280 / 280 |
+| global | 657 | 470 / 321 | 485 / 336 | 1375 / 681 | 1047 / 657 | 772 / 504 | 529 / 340 | 577 / 334 |
+
+## TOP_1000
+
+| category | n | infino-0.11.26 | infino-main | tantivy-0.27 | lucene-10.5.0 | lucene-10.5.0-bp | iresearch-26.10.3 | warm-0.7.5-bp |
+|---|---|---|---|---|---|---|---|---|
+| ALL | 962 | 1033 / 587 | 1038 / 595 | 2432 / 1122 | 2246 / 1231 | 1707 / 890 | 1070 / 649 | 1168 / 701 |
+| union | 301 | 1148 / 757 | 1143 / 764 | 4194 / 2108 | 2762 / 1963 | 2027 / 1421 | 1318 / 947 | 1646 / 1115 |
+| intersection | 300 | 517 / 353 | 523 / 357 | 1075 / 636 | 999 / 582 | 714 / 431 | 564 / 282 | 655 / 442 |
+| phrase | 300 | 1326 / 578 | 1354 / 572 | 1833 / 530 | 2709 / 741 | 2170 / 594 | 1235 / 442 | 940 / 424 |
+| intersection_union | 40 | 1645 / 1124 | 1528 / 1126 | 3940 / 2720 | 3545 / 2364 | 2735 / 1872 | 1608 / 1062 | 2967 / 2398 |
+| negated | 19 | 339 / 317 | 362 / 336 | 759 / 680 | 1200 / 978 | 938 / 716 | 320 / 281 | 528 / 512 |
+| term | 1 | 1336 / 1336 | 1333 / 1333 | 3713 / 3713 | 9471 / 9471 | 3850 / 3850 | 1379 / 1379 | 1969 / 1969 |
+| global | 657 | 821 / 585 | 832 / 602 | 2407 / 1452 | 1887 / 1456 | 1375 / 1046 | 915 / 710 | 1189 / 828 |
+
+## TOP_100_COUNT
+
+| category | n | infino-0.11.26 | infino-main | tantivy-0.27 | lucene-10.5.0 | lucene-10.5.0-bp | iresearch-26.10.3 | warm-0.7.5-bp |
+|---|---|---|---|---|---|---|---|---|
+| ALL | 962 | 1323 / 598 | 1302 / 582 | 2728 / 876 | 4663 / 1142 | 3888 / 776 | 1410 / 634 | 934 / 466 |
+| union | 301 | 1925 / 973 | 1876 / 950 | 5336 / 2142 | 10115 / 3376 | 8720 / 2577 | 2244 / 1145 | 1099 / 690 |
+| intersection | 300 | 549 / 296 | 552 / 304 | 933 / 407 | 1157 / 546 | 760 / 370 | 634 / 258 | 582 / 341 |
+| phrase | 300 | 1456 / 556 | 1439 / 558 | 1804 / 512 | 2890 / 737 | 2337 / 552 | 1289 / 441 | 1030 / 406 |
+| intersection_union | 40 | 1490 / 880 | 1468 / 874 | 3630 / 2402 | 3336 / 1933 | 2847 / 1538 | 1867 / 1098 | 1470 / 1147 |
+| negated | 19 | 297 / 256 | 301 / 247 | 510 / 378 | 1097 / 800 | 785 / 553 | 275 / 226 | 305 / 242 |
+| term | 1 | 4328 / 4328 | 4262 / 4262 | 13583 / 13583 | 32394 / 32394 | 23568 / 23568 | 3457 / 3457 | 279 / 279 |
+| global | 657 | 1150 / 603 | 1129 / 587 | 2914 / 1102 | 5037 / 1511 | 4234 / 982 | 1335 / 741 | 810 / 483 |
+
+## COUNT
+
+| category | n | infino-0.11.26 | infino-main | tantivy-0.27 | lucene-10.5.0 | lucene-10.5.0-bp | iresearch-26.10.3 | warm-0.7.5-bp |
+|---|---|---|---|---|---|---|---|---|
+| ALL | 962 | 639 / 234 | 636 / 236 | 1345 / 340 | 1353 / 458 | 1115 / 327 | 604 / 214 | 544 / 242 |
+| union | 301 | 302 / 226 | 303 / 224 | 1749 / 332 | 802 / 469 | 754 / 330 | 326 / 211 | 374 / 270 |
+| intersection | 300 | 244 / 180 | 246 / 184 | 672 / 294 | 614 / 372 | 386 / 250 | 299 / 164 | 316 / 206 |
+| phrase | 300 | 1413 / 530 | 1401 / 527 | 1753 / 499 | 2743 / 652 | 2280 / 529 | 1229 / 402 | 978 / 371 |
+| intersection_union | 40 | 27 / 26 | 29 / 29 | 130 / 87 | 40 / 38 | 39 / 38 | 23 / 21 | 19 / 20 |
+| negated | 19 | 176 / 156 | 180 / 164 | 354 / 228 | 661 / 477 | 557 / 392 | 173 / 150 | 202 / 163 |
+| term | 1 | 25 / 25 | 26 / 26 | 19 / 19 | 25 / 25 | 23 / 23 | 19 / 19 | 17 / 17 |
+| global | 657 | 248 / 185 | 249 / 185 | 1036 / 287 | 642 / 374 | 517 / 272 | 282 / 165 | 318 / 211 |
+
+## WARM losses (WARM slower than the named engine)
+
+Format: command / category: engine (WARM mean vs engine mean; WARM median vs engine median), listed when WARM is slower on that statistic.
+
+- TOP_10 / union (n=301): infino-0.11.26: mean only (WARM 342/192 vs 331/224)
+- TOP_10 / intersection (n=300): infino-0.11.26: mean+median (WARM 256/180 vs 229/170)
+- TOP_10 / intersection (n=300): infino-main: mean only (WARM 256/180 vs 248/184)
+- TOP_10 / intersection (n=300): iresearch-26.10.3: median only (WARM 256/180 vs 291/178)
+- TOP_10 / global (n=657): infino-0.11.26: mean only (WARM 288/189 vs 285/195)
+- TOP_100 / union (n=301): infino-0.11.26: mean+median (WARM 736/389 vs 575/364)
+- TOP_100 / union (n=301): infino-main: mean+median (WARM 736/389 vs 587/370)
+- TOP_100 / union (n=301): iresearch-26.10.3: mean only (WARM 736/389 vs 639/390)
+- TOP_100 / intersection (n=300): infino-0.11.26: mean+median (WARM 404/296 vs 356/266)
+- TOP_100 / intersection (n=300): infino-main: mean+median (WARM 404/296 vs 374/280)
+- TOP_100 / intersection (n=300): iresearch-26.10.3: median only (WARM 404/296 vs 420/240)
+- TOP_100 / intersection_union (n=40): infino-0.11.26: mean+median (WARM 1465/1134 vs 1142/816)
+- TOP_100 / intersection_union (n=40): infino-main: mean+median (WARM 1465/1134 vs 1026/718)
+- TOP_100 / intersection_union (n=40): iresearch-26.10.3: mean+median (WARM 1465/1134 vs 1174/850)
+- TOP_100 / negated (n=19): infino-0.11.26: mean+median (WARM 165/164 vs 160/147)
+- TOP_100 / negated (n=19): infino-main: mean+median (WARM 165/164 vs 159/149)
+- TOP_100 / global (n=657): infino-0.11.26: mean+median (WARM 577/334 vs 470/321)
+- TOP_100 / global (n=657): infino-main: mean only (WARM 577/334 vs 485/336)
+- TOP_100 / global (n=657): iresearch-26.10.3: mean only (WARM 577/334 vs 529/340)
+- TOP_1000 / ALL (n=962): infino-0.11.26: mean+median (WARM 1168/701 vs 1033/587)
+- TOP_1000 / ALL (n=962): infino-main: mean+median (WARM 1168/701 vs 1038/595)
+- TOP_1000 / ALL (n=962): iresearch-26.10.3: mean+median (WARM 1168/701 vs 1070/649)
+- TOP_1000 / union (n=301): infino-0.11.26: mean+median (WARM 1646/1115 vs 1148/757)
+- TOP_1000 / union (n=301): infino-main: mean+median (WARM 1646/1115 vs 1143/764)
+- TOP_1000 / union (n=301): iresearch-26.10.3: mean+median (WARM 1646/1115 vs 1318/947)
+- TOP_1000 / intersection (n=300): infino-0.11.26: mean+median (WARM 655/442 vs 517/353)
+- TOP_1000 / intersection (n=300): infino-main: mean+median (WARM 655/442 vs 523/357)
+- TOP_1000 / intersection (n=300): lucene-10.5.0-bp: median only (WARM 655/442 vs 714/431)
+- TOP_1000 / intersection (n=300): iresearch-26.10.3: mean+median (WARM 655/442 vs 564/282)
+- TOP_1000 / intersection_union (n=40): infino-0.11.26: mean+median (WARM 2967/2398 vs 1645/1124)
+- TOP_1000 / intersection_union (n=40): infino-main: mean+median (WARM 2967/2398 vs 1528/1126)
+- TOP_1000 / intersection_union (n=40): lucene-10.5.0: median only (WARM 2967/2398 vs 3545/2364)
+- TOP_1000 / intersection_union (n=40): lucene-10.5.0-bp: mean+median (WARM 2967/2398 vs 2735/1872)
+- TOP_1000 / intersection_union (n=40): iresearch-26.10.3: mean+median (WARM 2967/2398 vs 1608/1062)
+- TOP_1000 / negated (n=19): infino-0.11.26: mean+median (WARM 528/512 vs 339/317)
+- TOP_1000 / negated (n=19): infino-main: mean+median (WARM 528/512 vs 362/336)
+- TOP_1000 / negated (n=19): iresearch-26.10.3: mean+median (WARM 528/512 vs 320/281)
+- TOP_1000 / term (n=1): infino-0.11.26: mean+median (WARM 1969/1969 vs 1336/1336)
+- TOP_1000 / term (n=1): infino-main: mean+median (WARM 1969/1969 vs 1333/1333)
+- TOP_1000 / term (n=1): iresearch-26.10.3: mean+median (WARM 1969/1969 vs 1379/1379)
+- TOP_1000 / global (n=657): infino-0.11.26: mean+median (WARM 1189/828 vs 821/585)
+- TOP_1000 / global (n=657): infino-main: mean+median (WARM 1189/828 vs 832/602)
+- TOP_1000 / global (n=657): iresearch-26.10.3: mean+median (WARM 1189/828 vs 915/710)
+- TOP_100_COUNT / intersection (n=300): infino-0.11.26: mean+median (WARM 582/341 vs 549/296)
+- TOP_100_COUNT / intersection (n=300): infino-main: mean+median (WARM 582/341 vs 552/304)
+- TOP_100_COUNT / intersection (n=300): iresearch-26.10.3: median only (WARM 582/341 vs 634/258)
+- TOP_100_COUNT / intersection_union (n=40): infino-0.11.26: median only (WARM 1470/1147 vs 1490/880)
+- TOP_100_COUNT / intersection_union (n=40): infino-main: mean+median (WARM 1470/1147 vs 1468/874)
+- TOP_100_COUNT / intersection_union (n=40): iresearch-26.10.3: median only (WARM 1470/1147 vs 1867/1098)
+- TOP_100_COUNT / negated (n=19): infino-0.11.26: mean only (WARM 305/242 vs 297/256)
+- TOP_100_COUNT / negated (n=19): infino-main: mean only (WARM 305/242 vs 301/247)
+- TOP_100_COUNT / negated (n=19): iresearch-26.10.3: mean+median (WARM 305/242 vs 275/226)
+- COUNT / ALL (n=962): infino-0.11.26: median only (WARM 544/242 vs 639/234)
+- COUNT / ALL (n=962): infino-main: median only (WARM 544/242 vs 636/236)
+- COUNT / ALL (n=962): iresearch-26.10.3: median only (WARM 544/242 vs 604/214)
+- COUNT / union (n=301): infino-0.11.26: mean+median (WARM 374/270 vs 302/226)
+- COUNT / union (n=301): infino-main: mean+median (WARM 374/270 vs 303/224)
+- COUNT / union (n=301): iresearch-26.10.3: mean+median (WARM 374/270 vs 326/211)
+- COUNT / intersection (n=300): infino-0.11.26: mean+median (WARM 316/206 vs 244/180)
+- COUNT / intersection (n=300): infino-main: mean+median (WARM 316/206 vs 246/184)
+- COUNT / intersection (n=300): iresearch-26.10.3: mean+median (WARM 316/206 vs 299/164)
+- COUNT / negated (n=19): infino-0.11.26: mean+median (WARM 202/163 vs 176/156)
+- COUNT / negated (n=19): infino-main: mean only (WARM 202/163 vs 180/164)
+- COUNT / negated (n=19): iresearch-26.10.3: mean+median (WARM 202/163 vs 173/150)
+- COUNT / global (n=657): infino-0.11.26: mean+median (WARM 318/211 vs 248/185)
+- COUNT / global (n=657): infino-main: mean+median (WARM 318/211 vs 249/185)
+- COUNT / global (n=657): iresearch-26.10.3: mean+median (WARM 318/211 vs 282/165)
