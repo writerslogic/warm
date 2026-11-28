@@ -13,6 +13,10 @@
 //! keyed by its list's offset (skip table offset, or postings offset for dense tables). A
 //! reader whose constants differ from the header's computes the tables instead.
 //!
+//! Format 2 follows the tables with padding to eight bytes, a count of blocks and that many
+//! `(kind, offset, len)` words, then the blocks, which end the section (kind 3: champion
+//! postings, see `champions`). A reader skips kinds it does not know.
+//!
 //! The section is read in place: the direct frequency tables are views of the mapped file, not
 //! copies. Which lists get one is fixed by [`select_tabled`]: the longest lists meeting the
 //! length rule, within at most 1/8 of the checkpoint's bytes and 512 MiB (and never fewer
@@ -46,7 +50,10 @@ use super::{
     HEADER_LEN, H_FEATURES, H_SECTIONS,
 };
 
-const FORMAT: u64 = 1;
+/// Format 2 follows the tables with a directory of extra blocks (see the module comment).
+/// Format 1 is #554's, which this build opens with every extra structure off.
+const FORMAT: u64 = 2;
+const FORMAT_TABLES_ONLY: u64 = 1;
 const HEADER: usize = 12 * 8;
 /// The section the stored tables take: the slot version 3 gives compressed text blocks, which a
 /// version 4 checkpoint never holds.
@@ -70,6 +77,7 @@ pub(super) struct Parts {
     norms: Vec<f64>,
     /// By postings offset in the postings section.
     dense: Vec<(usize, Dense)>,
+    champions: super::champions::ChampionIndex,
 }
 
 /// The direct-table budget rule (see [`select_tabled`]) as one header word.
@@ -131,6 +139,7 @@ impl ServingImage {
             word_classes,
             norms,
             dense,
+            champions: Default::default(),
         }
     }
 
@@ -187,6 +196,24 @@ impl ServingImage {
             put(&mut out, *offset as u64);
             out.extend_from_slice(table.nibble_bytes());
         }
+        let mut blocks = Vec::new();
+        if let Some(block) = self.champion_block() {
+            blocks.push((super::champions::KIND, block));
+        }
+        while out.len() % 8 != 0 {
+            out.push(0);
+        }
+        put(&mut out, blocks.len() as u64);
+        let mut at = out.len() + 24 * blocks.len();
+        for (kind, block) in &blocks {
+            for value in [*kind, at as u64, block.len() as u64] {
+                put(&mut out, value);
+            }
+            at += block.len();
+        }
+        for (_, block) in &blocks {
+            out.extend_from_slice(block);
+        }
         out
     }
 
@@ -201,18 +228,19 @@ impl ServingImage {
         let header: Vec<u64> = (0..12).map(|_| reader.u64()).collect::<Result<_>>()?;
         let bm25 = super::super::Bm25::DEFAULT;
         let average = (self.words as f64 / (self.chunks as f64).max(1.0)).max(1.0);
-        let matches = header[..9]
-            == [
-                FORMAT,
-                average.to_bits(),
-                bm25.k1.to_bits(),
-                bm25.b.to_bits(),
-                class_checksum(),
-                dense_rule(),
-                DENSE_TABLES as u64,
-                DENSE_MIN_POSTINGS as u64,
-                self.slots as u64,
-            ];
+        let format = header[0];
+        let matches = (format == FORMAT || format == FORMAT_TABLES_ONLY)
+            && header[1..9]
+                == [
+                    average.to_bits(),
+                    bm25.k1.to_bits(),
+                    bm25.b.to_bits(),
+                    class_checksum(),
+                    dense_rule(),
+                    DENSE_TABLES as u64,
+                    DENSE_MIN_POSTINGS as u64,
+                    self.slots as u64,
+                ];
         if !matches {
             return Ok(None);
         }
@@ -334,7 +362,12 @@ impl ServingImage {
                 dense.push((offset, unsafe { Dense::mapped(nibbles) }));
             }
         }
-        ensure!(reader.0.is_empty(), "derived tables have trailing bytes");
+        let champions = if format == FORMAT_TABLES_ONLY {
+            ensure!(reader.0.is_empty(), "derived tables have trailing bytes");
+            Default::default()
+        } else {
+            self.stored_blocks(bytes, &mut reader)?
+        };
         Ok(Some(Parts {
             ranks: Ranks { average, tables },
             windows: windows.into_boxed_slice(),
@@ -342,7 +375,47 @@ impl ServingImage {
             word_classes,
             norms,
             dense,
+            champions,
         }))
+    }
+
+    /// The directory and blocks after the tables of a format 2 section: each known kind is
+    /// checked and read, an unknown one skipped, and the last block ends the section.
+    fn stored_blocks(
+        &self,
+        bytes: &[u8],
+        reader: &mut Reader<'_>,
+    ) -> Result<super::champions::ChampionIndex> {
+        let pad = (8 - (bytes.len() - reader.0.len()) % 8) % 8;
+        ensure!(
+            reader.take(pad)?.iter().all(|&byte| byte == 0),
+            "derived tables have nonzero padding"
+        );
+        let listed = usize::try_from(reader.u64()?)?;
+        let mut entries = Vec::new();
+        for _ in 0..listed {
+            entries.push((
+                reader.u64()?,
+                usize::try_from(reader.u64()?)?,
+                usize::try_from(reader.u64()?)?,
+            ));
+        }
+        let mut at = bytes.len() - reader.0.len();
+        let mut champions = Default::default();
+        let mut seen = HashSet::new();
+        for (kind, offset, len) in entries {
+            ensure!(
+                offset == at && seen.insert(kind),
+                "derived blocks are misplaced"
+            );
+            let block = reader.take(len)?;
+            at = offset.checked_add(len).context("derived tables size")?;
+            if kind == super::champions::KIND {
+                champions = self.parse_champions(block, offset)?;
+            }
+        }
+        ensure!(reader.0.is_empty(), "derived tables have trailing bytes");
+        Ok(champions)
     }
 
     /// The postings offsets of the lists that get direct tables, a function of the index alone.
@@ -394,6 +467,9 @@ impl ServingImage {
                 .map(|(at, table)| (offset + at, table)),
         );
         self.union_windows = parts.windows;
+        if super::champions::enabled() {
+            self.champions = parts.champions;
+        }
         self.norms = parts.norms;
         let _ = self.ranks.set(parts.ranks);
         let _ = self.word_counts.set(parts.word_counts);
@@ -401,7 +477,7 @@ impl ServingImage {
         Ok(self)
     }
 
-    fn derived_bytes(&self) -> Option<&[u8]> {
+    pub(super) fn derived_bytes(&self) -> Option<&[u8]> {
         self.derived.then(|| self.section(Section::Derived))
     }
 }

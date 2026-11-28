@@ -12,7 +12,6 @@
 //! decided by the exhaustive tie order (document id, then chunk index).
 
 use std::cmp::Ordering;
-use std::collections::BinaryHeap;
 
 mod count;
 mod lazy;
@@ -21,7 +20,7 @@ use self::count::keep_probed;
 use self::lazy::keep_common_lazy;
 use super::wand::{sum_bound, Bound};
 use super::*;
-use crate::core::documents::image::ServingImage;
+use crate::core::documents::image::{Champions, ServingImage, CHAMPIONS};
 use crate::core::documents::impact::{prefetch, Dense};
 use crate::core::documents::lists::{
     dense_word, holds, Cursor, ListRef, PositionIter, RankTable, NO_DOC, RUN_BLOCKS,
@@ -297,41 +296,53 @@ struct Shape {
     average: f64,
 }
 
-/// A hit as the top-k heap orders it: greater is worse. Ids are read only to break ties.
-struct Worse<'a> {
-    score: f64,
+/// A score as a key whose unsigned order is the reverse of `f64::total_cmp`, so a greater key is a
+/// worse hit.
+fn worse_key(score: f64) -> u64 {
+    let bits = score.to_bits();
+    !(if bits >> 63 == 1 {
+        !bits
+    } else {
+        bits | 1 << 63
+    })
+}
+
+/// The score `worse_key` was made from.
+fn key_score(key: u64) -> f64 {
+    let ordered = !key;
+    f64::from_bits(if ordered >> 63 == 1 {
+        ordered & !(1 << 63)
+    } else {
+        !ordered
+    })
+}
+
+/// A hit in the top-k heap: its score key and its slot. The tie order is read from the image
+/// only when two keys are equal.
+#[derive(Clone, Copy)]
+struct Entry {
+    key: u64,
     slot: u32,
-    image: &'a ServingImage,
 }
 
-impl PartialEq for Worse<'_> {
-    fn eq(&self, other: &Self) -> bool {
-        self.cmp(other) == Ordering::Equal
-    }
-}
-impl Eq for Worse<'_> {}
-impl PartialOrd for Worse<'_> {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-impl Ord for Worse<'_> {
-    fn cmp(&self, other: &Self) -> Ordering {
-        other.score.total_cmp(&self.score).then_with(|| {
-            if self.slot == other.slot {
-                return Ordering::Equal;
-            }
-            let mine = self.image.slot_tie_key(self.slot as usize);
-            let theirs = self.image.slot_tie_key(other.slot as usize);
-            mine.cmp(&theirs)
-        })
+impl Entry {
+    /// Whether this is a worse hit than `other` (ties are ordered by id).
+    #[inline(always)]
+    fn worse(&self, other: &Entry, image: &ServingImage) -> bool {
+        if self.key != other.key {
+            return self.key > other.key;
+        }
+        self.slot != other.slot
+            && image.slot_tie_key(self.slot as usize) > image.slot_tie_key(other.slot as usize)
     }
 }
 
+/// The k best hits so far: a binary heap whose root is the worst. A hit that scores below the
+/// root is dropped without reading its id.
 struct Top<'a> {
     image: &'a ServingImage,
     k: usize,
-    heap: BinaryHeap<Worse<'a>>,
+    heap: Vec<Entry>,
 }
 
 impl<'a> Top<'a> {
@@ -339,54 +350,127 @@ impl<'a> Top<'a> {
         Self {
             image,
             k,
-            heap: BinaryHeap::with_capacity(k + 1),
+            heap: Vec::with_capacity(k + 1),
         }
     }
 
     /// The k-th best score so far, once there are k.
     fn floor(&self) -> Option<f64> {
-        (self.k > 0 && self.heap.len() == self.k).then(|| self.heap.peek().expect("full").score)
+        (self.k > 0 && self.heap.len() == self.k).then(|| key_score(self.heap[0].key))
     }
 
     fn offer(&mut self, score: f64, slot: u32) {
         if self.k == 0 {
             return;
         }
-        let hit = Worse {
-            score,
-            slot,
-            image: self.image,
-        };
-        if self.heap.len() < self.k {
+        let image = self.image;
+        let key = worse_key(score);
+        let full = self.heap.len() == self.k;
+        if full && key > self.heap[0].key {
+            return;
+        }
+        let hit = Entry { key, slot };
+        if !full {
+            let mut at = self.heap.len();
             self.heap.push(hit);
-        } else if hit < *self.heap.peek().expect("full") {
-            self.heap.pop();
-            self.heap.push(hit);
+            while at > 0 {
+                let parent = (at - 1) / 2;
+                if !hit.worse(&self.heap[parent], image) {
+                    break;
+                }
+                self.heap[at] = self.heap[parent];
+                at = parent;
+            }
+            self.heap[at] = hit;
+        } else if self.heap[0].worse(&hit, image) {
+            let len = self.heap.len();
+            let mut at = 0;
+            loop {
+                let mut child = 2 * at + 1;
+                if child >= len {
+                    break;
+                }
+                if child + 1 < len && self.heap[child + 1].worse(&self.heap[child], image) {
+                    child += 1;
+                }
+                if !self.heap[child].worse(&hit, image) {
+                    break;
+                }
+                self.heap[at] = self.heap[child];
+                at = child;
+            }
+            self.heap[at] = hit;
         }
     }
 
-    fn finish(self) -> Vec<LexicalHit> {
+    /// The hits best first as `(score, slot)`.
+    fn ranked(self) -> Vec<(f64, u32)> {
         let image = self.image;
         let mut keyed: Vec<(f64, u64, u32)> = self
             .heap
-            .into_vec()
             .into_iter()
-            .map(|hit| (hit.score, image.slot_tie_key(hit.slot as usize), hit.slot))
+            .map(|hit| {
+                (
+                    key_score(hit.key),
+                    image.slot_tie_key(hit.slot as usize),
+                    hit.slot,
+                )
+            })
             .collect();
         // Best first: score descending, then the tie order.
         keyed.sort_unstable_by(|a, b| b.0.total_cmp(&a.0).then_with(|| a.1.cmp(&b.1)));
         keyed
             .into_iter()
-            .map(|(score, _, slot)| {
-                let (id, chunk) = image.slot_order(slot as usize);
-                LexicalHit {
-                    document_id: id.to_owned(),
-                    chunk_index: chunk,
-                    score,
-                }
-            })
+            .map(|(score, _, slot)| (score, slot))
             .collect()
     }
+
+    fn finish(self) -> Vec<LexicalHit> {
+        let image = self.image;
+        hits_of(image, self.ranked().into_iter())
+    }
+}
+
+/// The champions of `list` (see [`Champions`]): its first [`CHAMPIONS`] postings in ranking
+/// order under the default BM25 shape at `average` words, as `(weight, slot)`. `idf` is the
+/// list's, as the scorer computes it. Computed when a checkpoint is written, never by a query.
+pub(in crate::core::documents) fn build_champions(
+    image: &ServingImage,
+    list: ListRef<'_>,
+    idf: f64,
+    average: f64,
+) -> Result<Vec<(f64, u32)>> {
+    let bm25 = Bm25::DEFAULT;
+    let mut all = Top::new(image, CHAMPIONS);
+    let mut cursor = Cursor::open(list);
+    for block in 0..cursor.block_count() {
+        cursor.goto_block(block);
+        let (slots, frequencies) = cursor.block_postings();
+        for (&slot, &frequency) in slots.iter().zip(frequencies) {
+            let norm = bm25.norm(f64::from(image.slot_word_count(slot as usize)), average);
+            let score = 0.0 + bm25.weight(idf, f64::from(frequency), norm);
+            ensure!(
+                score.is_finite(),
+                "lexical score is nonfinite; reduce BM25 parameters"
+            );
+            all.offer(score, slot);
+        }
+    }
+    Ok(all.ranked())
+}
+
+/// The hits of ranked `(score, slot)` pairs.
+fn hits_of(image: &ServingImage, ranked: impl Iterator<Item = (f64, u32)>) -> Vec<LexicalHit> {
+    ranked
+        .map(|(score, slot)| {
+            let (id, chunk) = image.slot_order(slot as usize);
+            LexicalHit {
+                document_id: id.to_owned(),
+                chunk_index: chunk,
+                score,
+            }
+        })
+        .collect()
 }
 
 /// The score of the chunk in `slot` as the exhaustive scorer sums it.
@@ -1426,6 +1510,11 @@ impl<'a> Run<'a, '_> {
         terms: &mut [Rt<'a>],
         excluded: &mut [Rt<'a>],
     ) -> Result<(Vec<LexicalHit>, usize)> {
+        if !self.count && terms.len() == 1 && terms[0].twins.is_empty() {
+            if let Some(hits) = self.negated_champions(&mut terms[0], &*excluded)? {
+                return Ok((hits, 0));
+            }
+        }
         let mut top = Top::new(self.image, self.k);
         let count = self.negated_top_into(terms, excluded, &mut top, false)?;
         Ok((top.finish(), count))
@@ -1991,6 +2080,9 @@ impl<'a> Run<'a, '_> {
                 .is_some_and(|floor| sum_bound(weight, 1) < floor)
         };
         let image = self.image;
+        if let Some(found) = self.champions(cursor) {
+            return Ok(hits_of(image, found.iter(0..self.k.min(found.len()))));
+        }
         if let Some(table) = image.rank_table(cursor, self.shape.bm25, self.shape.average) {
             for &run in table.order.iter() {
                 let run = run as usize;
@@ -2024,6 +2116,59 @@ impl<'a> Run<'a, '_> {
             }
         }
         Ok(top.finish())
+    }
+
+    /// The champions of the list under `cursor` (see [`Champions`]), when this query's top `k`
+    /// is within them and its scores are the ones they were made under: the default constants at
+    /// the checkpoint's own average (the served paths run on the checkpoint alone).
+    fn champions(&self, cursor: &Cursor<'a>) -> Option<Champions<'a>> {
+        if self.k > CHAMPIONS || self.shape.bm25 != Bm25::DEFAULT {
+            return None;
+        }
+        self.image
+            .champions(cursor.list().skips, self.shape.average)
+    }
+
+    /// A required term's top `k` with exclusions, read from its champions: the champions that
+    /// survive the exclusions are the term's best surviving chunks once `k` do, because every
+    /// other chunk ranks after the last champion. Ranks are examined in windows that double from
+    /// `k`, so the work is at most twice that of the last window. `None` when the champions run
+    /// out before `k` survive.
+    fn negated_champions(
+        &self,
+        lead: &mut Rt<'a>,
+        excluded: &[Rt<'a>],
+    ) -> Result<Option<Vec<LexicalHit>>> {
+        let Some(found) = self.champions(&lead.cursors[0]) else {
+            return Ok(None);
+        };
+        let len = found.len();
+        let mut kept: Vec<(f64, u32)> = Vec::with_capacity(self.k);
+        let mut examined = 0usize;
+        while examined < len && kept.len() < self.k {
+            let end = (examined * 2).max(self.k).min(len);
+            let mut by_slot: Vec<(u32, u32)> = (examined..end)
+                .map(|rank| (found.hit(rank).1, (rank - examined) as u32))
+                .collect();
+            by_slot.sort_unstable();
+            let mut gone = vec![false; end - examined];
+            for rt in excluded.iter() {
+                // A fresh cursor: the clause's own stays where the ordinary path starts from.
+                let mut cursor = Cursor::open(rt.cursors[0].list());
+                for &(slot, at) in &by_slot {
+                    if !gone[at as usize] && cursor.advance_to(slot) == slot {
+                        gone[at as usize] = true;
+                    }
+                }
+            }
+            for (rank, &gone) in (examined..end).zip(&gone) {
+                if !gone && kept.len() < self.k {
+                    kept.push(found.hit(rank));
+                }
+            }
+            examined = end;
+        }
+        Ok((kept.len() == self.k).then(|| hits_of(self.image, kept.into_iter())))
     }
 
     /// Scores a block for the query's only clause with matching postings.
@@ -3184,6 +3329,28 @@ fn lone_required_count(image: &ServingImage, query: &LexicalQuery, form: usize) 
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn worse_keys_reverse_the_total_order_of_scores() {
+        let scores = [
+            f64::NEG_INFINITY,
+            -2.5,
+            -0.0,
+            0.0,
+            f64::MIN_POSITIVE,
+            0.3,
+            1.0,
+            1.0 + f64::EPSILON,
+            7.25,
+            f64::INFINITY,
+        ];
+        for a in scores {
+            assert_eq!(key_score(worse_key(a)).to_bits(), a.to_bits());
+            for b in scores {
+                assert_eq!(worse_key(a).cmp(&worse_key(b)), b.total_cmp(&a));
+            }
+        }
+    }
+
     use super::super::tests::insert;
     use super::*;
     use crate::core::documents::binary::put_varint;
@@ -3828,6 +3995,21 @@ mod tests {
         let list = image.list(0, "w0").unwrap();
         assert!(list.blocks() >= crate::core::documents::lists::RANKED_RUNS * RUN_BLOCKS);
         let average = (image.word_count() as f64 / image.chunk_count() as f64).max(1.0);
+        let found = image
+            .champions(list.skips, average)
+            .expect("the longest list has champions");
+        assert_eq!(found.len(), CHAMPIONS.min(list.count as usize));
+        let built = build_champions(
+            &image,
+            list,
+            Bm25::idf(image.chunk_count() as f64, f64::from(list.count)),
+            average,
+        )
+        .unwrap();
+        assert!(built
+            .iter()
+            .enumerate()
+            .all(|(i, &hit)| found.hit(i) == hit));
         let mut span = Cursor::open(list);
         let table = image
             .rank_table(&span, Bm25::DEFAULT, average)
@@ -3860,11 +4042,27 @@ mod tests {
             "+w0 +w1",
             "+w0 +w3 +w7",
             "w0 w2",
+            "+w0 -w7",
+            "+w0 -w3 -w5",
+            "+w1 -w0",
             "\"w0 w1\"",
         ] {
             let query = LexicalQuery::parse(text).unwrap();
             for (k1, b) in [(1.2, 0.75), (2.0, 0.3)] {
-                for k in [1usize, 10, 100, 1000] {
+                for k in [
+                    1usize,
+                    10,
+                    100,
+                    127,
+                    128,
+                    129,
+                    1000,
+                    CHAMPIONS - 1,
+                    CHAMPIONS,
+                    CHAMPIONS + 1,
+                    4096,
+                    5000,
+                ] {
                     for count in [false, true] {
                         let options = LexicalOptions {
                             k,
