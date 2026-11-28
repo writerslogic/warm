@@ -155,6 +155,49 @@ def test_experience_form_state_switch_off_stores_no_controls(tmp_path):
     assert store.experience_form_tables([("run-1", 0)]) == [""]
 
 
+def test_master_key_path_outside_the_store(tmp_path):
+    store, key = str(tmp_path / "store"), tmp_path / "keys" / "nested" / "master.key"
+    first = hm.Warm(1024, store, master_key_path=str(key))
+    first.memorize_document({"id": "harbor", "text": "The harbor opens at six."})
+    del first
+    assert key.stat().st_size == 32
+    if os.name == "posix":
+        assert key.stat().st_mode & 0o777 == 0o600
+    assert not (tmp_path / "store" / "master.key").exists()
+
+    kept = key.read_bytes()
+    key.unlink()
+    with pytest.raises(Exception, match="master key"):
+        hm.Warm(1024, store, master_key_path=str(key))
+    assert not key.exists()
+
+    key.write_bytes(b"\x07" * 32)
+    key.chmod(0o600)
+    with pytest.raises(Exception, match="does not open this store"):
+        hm.Warm(1024, store, master_key_path=str(key))
+
+    key.write_bytes(kept)
+    key.chmod(0o600)
+    reopened = hm.Warm(1024, store, master_key_path=str(key))
+    assert reopened.search_documents("harbor", {"k": 1})[0]["documentId"] == "harbor"
+    with pytest.raises(Exception, match="not a directory"):
+        hm.Warm(1024, str(tmp_path / "other"), master_key_path=str(key.parent))
+
+
+def test_read_only_reader_uses_the_external_master_key(tmp_path):
+    path, key = str(tmp_path / "store"), tmp_path / "keys" / "master.key"
+    with hm.Warm(1024, path, master_key_path=str(key)) as writer:
+        writer.memorize_document({"id": "one", "text": "harbor opens at six"})
+        reader = hm.Warm.open_read_only(1024, path, master_key_path=str(key))
+        assert reader.search_documents("harbor", {"k": 1})[0]["documentId"] == "one"
+        writer.memorize_document({"id": "two", "text": "market opens at nine"})
+        assert reader.refresh() is True
+        assert reader.search_documents("market", {"k": 1})[0]["documentId"] == "two"
+        reader.close()
+        with pytest.raises(Exception, match="master key"):
+            hm.Warm.open_read_only(1024, path)
+
+
 def test_read_only_reader_refresh_and_context_manager(tmp_path):
     path = str(tmp_path / "store")
     with hm.Warm(1024, path) as writer:

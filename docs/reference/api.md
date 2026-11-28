@@ -50,6 +50,21 @@ The memory API (`remember`, `recall`, `forget`, `explain`) is described in
 [concepts](../concepts.md#memory-api). Stability promises per surface are in
 [security](../security.md#stability-and-compatibility).
 
+## Master key location
+
+An encrypted store keeps its master key in `<store>/master.key` unless told otherwise. Precedence: the
+explicit option, then `WARM_MASTER_KEY_PATH` (legacy `HMS_MASTER_KEY_PATH`), then the store directory.
+
+| Surface | Option |
+|---|---|
+| Rust | `SecurityConfig::master_key_file` |
+| Node | `masterKeyPath` in the `WarmMemorySystem` options |
+| Python | `Warm(..., master_key_path=...)` |
+
+A new store creates the file (mode 0600 on Unix, parent directories included). The path must name a
+file; empty values and directories are rejected. An existing store never gets a fresh key: a missing
+key, or one that does not open the store, is an error. Reopen with the same path every time.
+
 ## Cargo features
 
 `default = []`: nothing is enabled unless you ask. The list is in `Cargo.toml` `[features]`.

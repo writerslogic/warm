@@ -611,6 +611,7 @@ export interface WarmConfigJs {
   diffusionNLangevin?: number
   signingEnabled?: boolean
   signingKeyPath?: string
+  masterKeyPath?: string
   encryptionEnabled?: boolean
   encryptionPassphrase?: string
   encryptionPassphraseEnv?: string

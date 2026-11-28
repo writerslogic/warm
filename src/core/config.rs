@@ -159,8 +159,11 @@ pub struct SecurityConfig {
     /// Explicit opt-out of the default: a new store is written unencrypted. An existing store keeps the
     /// protection it was created with, so a plaintext store opens without this.
     pub plaintext: bool,
-    /// Master key file of a default-encrypted store; `<store>/master.key` when unset.
-    /// Keeping it outside the store directory keeps a copy of the directory unreadable.
+    /// Master key file of a default-encrypted store. Precedence: this path, then
+    /// `WARM_MASTER_KEY_PATH` (`HMS_MASTER_KEY_PATH`), then `<store>/master.key`. Keeping it
+    /// outside the store directory keeps a copy of the directory unreadable. It must name a
+    /// file; a new store creates it (mode 0600 on Unix, parent directories included), and an
+    /// existing store refuses a missing or different key.
     pub master_key_file: Option<String>,
     pub encryption_passphrase: Option<String>,
     /// Name of an environment variable containing the encryption passphrase.
