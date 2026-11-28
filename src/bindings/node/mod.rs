@@ -12,7 +12,7 @@ use crate::{
 };
 
 mod api;
-pub use api::WarmMemorySystem;
+pub use api::{EmbeddingModelJs, WarmMemorySystem};
 mod compaction;
 pub use compaction::{
     CompactionJob, CompactionOptionsJs, CompactionProgressJs, CompactionReportJs,
@@ -31,6 +31,10 @@ fn napi_err(e: anyhow::Error) -> napi::Error {
         napi::Error::from_reason(format!("[mutation_committed] {e}"))
     } else if e.is::<crate::IndeterminateMutationError>() {
         napi::Error::from_reason(format!("[mutation_uncertain] {e}"))
+    } else if e.is::<crate::ReadOnlyError>() {
+        napi::Error::from_reason(format!("[read_only] {e}"))
+    } else if e.is::<crate::StoreLockedError>() {
+        napi::Error::from_reason(format!("[store_locked] {e}"))
     } else if let Some(limit) = e.downcast_ref::<crate::core::query_limits::QueryLimitExceeded>() {
         napi::Error::from_reason(format!(
             "[{}] {limit}",
@@ -47,6 +51,8 @@ fn memory_err(e: anyhow::Error) -> napi::Error {
     use crate::core::memory_api::MemoryError;
     if e.is::<crate::CommittedMutationError>()
         || e.is::<crate::IndeterminateMutationError>()
+        || e.is::<crate::ReadOnlyError>()
+        || e.is::<crate::StoreLockedError>()
         || e.is::<crate::core::query_limits::QueryLimitExceeded>()
     {
         return napi_err(e);

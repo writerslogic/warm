@@ -10,6 +10,15 @@ impl WarmCore {
         storage_path: Option<String>,
         config: Option<WarmConfig>,
     ) -> Result<Self> {
+        Self::open_engine(dimensions, storage_path, config, false)
+    }
+
+    pub(super) fn open_engine(
+        dimensions: u32,
+        storage_path: Option<String>,
+        config: Option<WarmConfig>,
+        read_only: bool,
+    ) -> Result<Self> {
         const MAX_DIMENSIONS: u32 = 1_000_000;
         if dimensions == 0 || dimensions > MAX_DIMENSIONS {
             return Err(anyhow::anyhow!(
@@ -33,11 +42,21 @@ impl WarmCore {
         let base_path = storage_path
             .map(PathBuf::from)
             .unwrap_or_else(|| Path::new(".").to_path_buf());
-        if !base_path.exists() {
-            std::fs::create_dir_all(&base_path)?;
-        }
-
-        let store_lock = StoreLock::acquire(&base_path)?;
+        // A reader takes no lock, creates nothing and writes nothing: the store must already
+        // exist, and every file it opens is opened for reading.
+        let store_lock = if read_only {
+            anyhow::ensure!(
+                base_path.join("store.json").is_file(),
+                "{} is not a WARM store: a read-only open needs an existing store",
+                base_path.display()
+            );
+            None
+        } else {
+            if !base_path.exists() {
+                std::fs::create_dir_all(&base_path)?;
+            }
+            Some(StoreLock::acquire(&base_path)?)
+        };
         let resolved = super::super::schema::resolve_protection(&base_path, &config)?;
         #[cfg(feature = "security")]
         {
@@ -46,25 +65,36 @@ impl WarmCore {
         }
         let (schema, analyzer) =
             super::super::schema::validate_store_resolved(&base_path, dim, &config, resolved)?;
-        let dense = dense_vectors::DenseVectors::open(&base_path)?;
+        let dense = if read_only {
+            dense_vectors::DenseVectors::open_reader(&base_path)
+        } else {
+            dense_vectors::DenseVectors::open(&base_path)?
+        };
         let base_path_sparse = base_path.clone();
 
-        let arena = PersistentArena::new(base_path.join("vectors_data.bin"))?;
+        let arena = if read_only {
+            PersistentArena::open_read_only(&base_path.join("vectors_data.bin"))?
+        } else {
+            PersistentArena::new(base_path.join("vectors_data.bin"))?
+        };
 
-        let audit = if config.security.audit_enabled {
+        // Audit, signing and provenance record what a writer does; a reader does nothing to
+        // record, and opening their files would create or append to them.
+        let audit = if config.security.audit_enabled && !read_only {
             Some(AuditLog::new(&base_path)?)
         } else {
             None
         };
 
-        let audit_effects = if schema >= super::super::format::AUDIT_EFFECTS_SCHEMA_VERSION {
-            Some(super::super::audit_effects::AuditEffectStream::open_existing(&base_path)?)
-        } else {
-            None
-        };
+        let audit_effects =
+            if schema >= super::super::format::AUDIT_EFFECTS_SCHEMA_VERSION && !read_only {
+                Some(super::super::audit_effects::AuditEffectStream::open_existing(&base_path)?)
+            } else {
+                None
+            };
 
         #[cfg(feature = "security")]
-        let signing = if config.security.signing_enabled {
+        let signing = if config.security.signing_enabled && !read_only {
             let key_path = config
                 .security
                 .key_path
@@ -111,7 +141,7 @@ impl WarmCore {
         };
 
         #[cfg(feature = "provenance")]
-        let provenance = if config.provenance.enabled {
+        let provenance = if config.provenance.enabled && !read_only {
             let key_path = config
                 .provenance
                 .key_path
@@ -187,7 +217,11 @@ impl WarmCore {
             image: image::ImageState::default(),
             vector_index: super::super::documents::VectorIndexSlot::default(),
             dense,
-            sparse: crate::core::index::sparse_store::SparseStore::open(&base_path_sparse)?,
+            sparse: if read_only {
+                crate::core::index::sparse_store::SparseStore::open_reader(&base_path_sparse)?
+            } else {
+                crate::core::index::sparse_store::SparseStore::open(&base_path_sparse)?
+            },
             #[cfg(feature = "local-models")]
             model_stages: RwLock::new(None),
             #[cfg(feature = "local-embed")]
@@ -233,18 +267,29 @@ impl WarmCore {
             scrub_gate: crate::core::sync::Mutex::new(()),
             experience: RwLock::new(None),
             _store_lock: store_lock,
+            read_only,
+            reader: read_only.then(Default::default),
         };
 
         let text_path = core.storage_path.join("documents.text");
         // A purge interrupted before renaming its canonical segment leaves a copy of the live
         // text, which a later purge would not reach.
         let staging = super::super::documents::canonical_staging_path(&text_path);
-        if staging.exists() {
+        if !read_only && staging.exists() {
             super::super::durable_file::scrub_remove_file(&staging)?;
         }
         match core.open_checkpoint()? {
+            image::Opened::Served if read_only => core.hydrate_documents()?,
             image::Opened::Served => {}
-            image::Opened::Overlaid => core.load_from_log()?,
+            image::Opened::Overlaid => {
+                if read_only {
+                    // A reader keeps no mapping of a file the writer may scrub, and no text
+                    // cache file of its own: the checkpoint is read once, into memory.
+                    core.hydrate_documents()?;
+                }
+                core.load_from_log()?;
+            }
+            image::Opened::Absent if read_only => core.load_from_log()?,
             image::Opened::Absent => {
                 core.documents.write().attach_text_segment(
                     &text_path,
@@ -254,6 +299,14 @@ impl WarmCore {
                 core.load_from_log()?;
             }
         }
+        if read_only {
+            // The checkpoint was copied out above; a compaction that published a generation
+            // meanwhile may have scrubbed it under the copy. `open_read_only` opens again.
+            anyhow::ensure!(
+                !core.arena.generation_replaced()?,
+                "the journal generation was replaced while the store was opened"
+            );
+        }
         *core.history_floor.write() = core.initial_history_floor();
         core.load_indices()?;
         {
@@ -262,11 +315,17 @@ impl WarmCore {
         }
         // Only a completely opened engine may write an image when it closes.
         core.flush_audit()?;
+        // Stamped before the read: an append after the stamp is seen as newer by the next
+        // refresh instead of being lost between the read and the stamp.
+        let experience_stamp = super::super::experience::store::disk_stamp(&core.storage_path);
         core.open_experience()?;
         core.mark_opened();
+        if read_only {
+            core.record_reader_position(experience_stamp);
+        }
         // A purge that died between its delete commit and the end of its compaction left the
         // deleted text in the journal; finish it before the store is handed out.
-        if core.purge_pending() {
+        if !read_only && core.purge_pending() {
             if let Err(error) = core.compact_scrubbing() {
                 // A full disk (or any failure) must not make the store unopenable: nothing
                 // acknowledged is lost, the deletes are committed, and the ticket stays on disk

@@ -272,10 +272,7 @@ pub(crate) fn validate_search(
         (1..=1000).contains(&k) && (k..=4096).contains(&limit),
         "require 1 <= k <= 1000 and k <= candidateLimit <= 4096"
     );
-    ensure!(
-        options.filter.as_ref().is_none_or(Value::is_object),
-        "filter must be a JSON object of exact metadata matches"
-    );
+    super::validate_filter(options.filter.as_ref())?;
     let lexical_weight = options.lexical_weight.unwrap_or(1.0);
     let semantic_weight = options.semantic_weight.unwrap_or(1.0);
     let total_weight = lexical_weight + semantic_weight;

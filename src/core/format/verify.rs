@@ -410,12 +410,16 @@ fn open_cipher(
     }
 }
 
-/// The cipher of a master-key store, read from `<store>/master.key`. A key kept elsewhere
-/// (`security.master_key_file`) leaves the payloads unauthenticated, as a missing passphrase does.
+/// The cipher of a master-key store, read from `WARM_MASTER_KEY_PATH` or `<store>/master.key`. A key
+/// kept at a path set only through `security.master_key_file` leaves the payloads
+/// unauthenticated, as a missing passphrase does.
 fn open_master_cipher(store: &Path, report: &mut Report) -> Option<Cipher> {
     #[cfg(feature = "security")]
     {
-        let (severity, code) = if store.join("master.key").exists() {
+        let key_exists = crate::core::security::master_key_path(store, None)
+            .map(|path| path.exists())
+            .unwrap_or(false);
+        let (severity, code) = if key_exists {
             (Severity::Error, "master-key-invalid")
         } else {
             (Severity::Info, "payloads-not-authenticated")

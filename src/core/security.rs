@@ -160,6 +160,41 @@ pub fn scrub_stack() {
     std::hint::black_box(&pad);
 }
 
+/// File name of the default master key, inside the store directory.
+#[cfg(feature = "security")]
+pub(crate) const MASTER_KEY_FILE: &str = "master.key";
+/// Environment variable naming the master key file (`HMS_MASTER_KEY_PATH` is the legacy name).
+#[cfg(feature = "security")]
+pub const MASTER_KEY_PATH_ENV: &str = "WARM_MASTER_KEY_PATH";
+
+/// Where the master key of the store at `dir` lives: the explicit path, else
+/// `WARM_MASTER_KEY_PATH`, else `<dir>/master.key`. A configured path must be non-empty and
+/// not an existing directory.
+#[cfg(feature = "security")]
+pub(crate) fn master_key_path(dir: &Path, explicit: Option<&str>) -> Result<std::path::PathBuf> {
+    let (configured, origin) = match explicit {
+        Some(path) => (Some(std::ffi::OsString::from(path)), "master key path"),
+        None => (
+            crate::compatibility::var_os(MASTER_KEY_PATH_ENV),
+            MASTER_KEY_PATH_ENV,
+        ),
+    };
+    let Some(configured) = configured else {
+        return Ok(dir.join(MASTER_KEY_FILE));
+    };
+    ensure!(
+        !configured.to_string_lossy().trim().is_empty(),
+        "{origin} is empty"
+    );
+    let path = std::path::PathBuf::from(configured);
+    ensure!(
+        !path.is_dir() && path.file_name().is_some(),
+        "{origin} must name a file, not a directory: {}",
+        path.display()
+    );
+    Ok(path)
+}
+
 #[cfg(feature = "security")]
 impl EncryptionManager {
     /// Derive an AES-256 key from a passphrase using Argon2id and create the cipher.
@@ -199,11 +234,9 @@ impl EncryptionManager {
     pub(crate) fn open_master(dir: &Path, key_file: Option<&str>, create: bool) -> Result<Self> {
         use super::sealed::KeySource;
         const CHECK: &[u8] = b"warm master key check v1";
-        let mut source = KeySource::file(
-            key_file
-                .map(std::path::PathBuf::from)
-                .unwrap_or_else(|| dir.join("master.key")),
-        );
+        let path = master_key_path(dir, key_file)?;
+        let default_path = dir.join(MASTER_KEY_FILE);
+        let mut source = KeySource::file(path.clone());
         let key = match source.load()? {
             Some(key) => key,
             None if create => {
@@ -211,7 +244,16 @@ impl EncryptionManager {
                 source.store_new(&key)?;
                 key
             }
-            None => bail!("the store is encrypted but its master key is missing"),
+            None if path != default_path && default_path.symlink_metadata().is_ok() => bail!(
+                "the store is encrypted but no master key exists at the configured path {}; \
+                 the store directory holds its own {MASTER_KEY_FILE}, so point the key path \
+                 at it or move the key",
+                path.display()
+            ),
+            None => bail!(
+                "the store is encrypted but its master key is missing at {}",
+                path.display()
+            ),
         };
         let manager = Self::from_key(&key)?;
         let check = dir.join("key.check");
@@ -220,7 +262,8 @@ impl EncryptionManager {
                 let opened = manager.decrypt_with_aad(&sealed, b"key.check");
                 ensure!(
                     opened.is_ok_and(|plain| plain == CHECK),
-                    "the master key does not open this store (wrong key, or key.check is damaged)"
+                    "the master key at {} does not open this store (wrong key, or key.check is damaged)",
+                    path.display()
                 );
             }
             Err(e) if e.kind() == std::io::ErrorKind::NotFound && create => {

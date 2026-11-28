@@ -25,6 +25,27 @@ export declare class WarmMemorySystem {
   queryVectraRecords(vector: number[], k: number, filter: Record<string, string | number | boolean>, options?: VectorRecordQueryOptions): Promise<VectorRecordQueryResult>
   constructor(dimensions: number, storagePath?: string | undefined | null, config?: WarmConfigJs | undefined | null)
   /**
+   * Opens an existing store without the writer lock, so another process can hold it for
+   * writing. Reads see the journal up to its last complete frame; `refresh()` moves to a
+   * newer one. Every mutation fails with code `read_only`.
+   */
+  static openReadOnly(dimensions: number, storagePath?: string | undefined | null, config?: WarmConfigJs | undefined | null): WarmMemorySystem
+  /** True for a store opened with `openReadOnly`. */
+  get readOnly(): boolean
+  /** True after `close()`. */
+  get closed(): boolean
+  /**
+   * Moves a read-only store to the writer's latest commit, reading only what was appended
+   * since (a compaction is read once, afresh). Returns false when nothing was committed.
+   */
+  refresh(): boolean
+  /**
+   * Flushes and releases the store lock so another process can open it for writing. Safe
+   * to call twice. Every later call fails with code `store_closed`. Waits up to 10 seconds
+   * for calls in flight; if they do not finish the store stays open and this throws.
+   */
+  close(): void
+  /**
    * Replaces the memory API's configuration (policies and defaults; see
    * docs/reference/api.md). Pass nothing to restore the defaults.
    */
@@ -37,6 +58,17 @@ export declare class WarmMemorySystem {
   memoryCall(op: string, request: any): Promise<any>
   memorizeDocument(input: DocumentInput): Promise<number>
   memorizeDocuments(inputs: Array<DocumentInput>): Promise<Array<number>>
+  /**
+   * Applies memorize and delete operations as one atomic unit: after a crash or in a
+   * read-only reader, all of the batch is visible or none of it. Operations apply in
+   * order; if any is invalid nothing is applied. 1..=4096 operations.
+   */
+  writeBatch(ops: Array<BatchOpJs>): Promise<Array<BatchResultJs>>
+  /**
+   * The embedding model the store was built with, or `null` without an embedding space.
+   * Compare `revision` (and `dimensions`) with your embedder's to detect a mismatch.
+   */
+  embeddingModel(): EmbeddingModel | null
   chunkDocument(input: DocumentInput): Promise<Array<DocumentChunk>>
   searchDocuments(text: string, options?: SearchOptions | undefined | null): Promise<Array<DocumentResult>>
   /**
@@ -171,6 +203,9 @@ export declare class WarmMemorySystem {
   federatedQuery(peerPaths: Array<string>, text: string, k: number): Promise<Array<RetrievalResult>>
 }
 
+/** The indexed terms of `text`, in order with repeats, as the indexer counts them. */
+export declare function analyze(text: string, analyzer?: string | undefined | null): Array<string>
+
 export interface AuditEntryJs {
   timestampMs: number
   op: string
@@ -179,6 +214,20 @@ export interface AuditEntryJs {
   effectId?: string
   signature: string
   signableBytes: string
+}
+
+/** One operation of `writeBatch`: `{op: 'memorize', document}` or `{op: 'delete', id}`. */
+export interface BatchOpJs {
+  op: string
+  document?: DocumentInput
+  id?: string
+}
+
+/** What one `writeBatch` operation did: `chunks` for a memorize, `existed` for a delete. */
+export interface BatchResultJs {
+  op: string
+  chunks?: number
+  existed?: boolean
 }
 
 export interface CleanupResultJs {
@@ -269,6 +318,17 @@ export interface DocumentResult {
   score: number
   lexicalScore: number
   semanticScore?: number
+}
+
+/** The embedding model a store was built with. */
+export interface EmbeddingModel {
+  model: string
+  revision: string
+  dimensions: number
+  normalization: string
+  metric: string
+  /** `null` while no embedder is installed. */
+  packSha256?: string
 }
 
 export interface GoalJs {
@@ -428,6 +488,12 @@ export interface SearchOptions {
   bm25B?: number
 }
 
+/**
+ * The indexed term of one word, stemmed as the indexer does. `analyzer` names the store's
+ * analyzer (default: the legacy English analyzer).
+ */
+export declare function stem(word: string, analyzer?: string | undefined | null): string
+
 /** Persistence health information suitable for diagnostics and monitoring. */
 export interface StorageHealth {
   formatVersion: number
@@ -459,6 +525,8 @@ export interface VectorRecordGetResult {
 export interface VectorRecordHit {
   item: VectorRecordInput
   score: number
+  /** Set instead of `item.vector` when the query asked for `rawVectors`. */
+  vectorBase64?: string
 }
 
 export interface VectorRecordInput {
@@ -504,6 +572,12 @@ export interface VectorRecordQueryOptions {
   minScore?: number
   mode?: string
   ef?: number
+  /**
+   * Return each hit's stored vector as base64 little-endian `f64` bytes in `vectorBase64`
+   * and leave `item.vector` empty, so a caller that may never read the vector pays for no
+   * decode and no per-element array.
+   */
+  rawVectors?: boolean
 }
 
 export interface VectorRecordQueryResult {
@@ -562,6 +636,7 @@ export interface WarmConfigJs {
   diffusionNLangevin?: number
   signingEnabled?: boolean
   signingKeyPath?: string
+  masterKeyPath?: string
   encryptionEnabled?: boolean
   encryptionPassphrase?: string
   encryptionPassphraseEnv?: string

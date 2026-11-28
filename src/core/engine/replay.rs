@@ -33,7 +33,24 @@ impl WarmCore {
 
     pub(super) fn load_from_log(&self) -> Result<()> {
         let shards = self.shards.write();
-        let mut offset = 0;
+        self.replay_from(0, &shards)?;
+        self.rebuild_meaning_indices();
+        Ok(())
+    }
+
+    pub(super) fn rebuild_meaning_indices(&self) {
+        if let Some(atoms) = &self.atom_memory {
+            atoms.rebuild_indices();
+        }
+        if let Some(composites) = &self.composite_memory {
+            composites.rebuild_indices();
+        }
+    }
+
+    /// Applies every committed frame from journal offset `from` to the end of the journal, in
+    /// order, and returns the offset after the last one.
+    pub(super) fn replay_from(&self, from: usize, shards: &ShardSet) -> Result<usize> {
+        let mut offset = from;
         while offset < self.arena.stats().used_bytes {
             let (data, _) = self
                 .arena
@@ -45,9 +62,9 @@ impl WarmCore {
                 format!("cannot decrypt arena frame at {offset}: wrong passphrase, or the store is corrupted")
             })?;
             if let Some(json) = payload.strip_prefix(mutation::TRANSACTION_MAGIC) {
-                self.replay_frame(json, &shards)?;
+                self.replay_frame(json, shards)?;
             } else if let Some(body) = payload.strip_prefix(journal::BINARY_MAGIC) {
-                self.replay_binary_frame(body, &shards)
+                self.replay_binary_frame(body, shards)
                     .with_context(|| format!("cannot replay arena frame at {offset}"))?;
             } else {
                 anyhow::bail!(match super::super::format::scan::classify_payload(&payload) {
@@ -65,13 +82,7 @@ impl WarmCore {
                 .release_pages(offset, next.saturating_sub(offset));
             offset = next;
         }
-        if let Some(atoms) = &self.atom_memory {
-            atoms.rebuild_indices();
-        }
-        if let Some(composites) = &self.composite_memory {
-            composites.rebuild_indices();
-        }
-        Ok(())
+        Ok(offset)
     }
 
     /// Decodes one committed journal frame and applies it in order, `REPLAY_CHUNK` mutations

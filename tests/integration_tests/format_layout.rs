@@ -311,6 +311,8 @@ fn open_changes_only_what_the_spec_lists() -> Result<()> {
             let allowed = file == ".hms.lock"
                 || file == "documents.text"
                 || file.contains("seg_")
+                // The committed-end word readers follow; advisory, rewritten at every open.
+                || file.ends_with("/committed_end")
                 || (golden.meta["storageFormat"] == 1
                     && file.starts_with("vectors_data.bin/format.json"));
             ensure!(allowed, "{}: open changed {file}", golden.name);

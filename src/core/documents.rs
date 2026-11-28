@@ -24,7 +24,7 @@ mod image;
 mod impact;
 mod lists;
 mod screen;
-pub use analysis::Analyzer;
+pub use analysis::{analyze, stem, Analyzer};
 mod index;
 mod lexical;
 mod listing;
@@ -96,6 +96,7 @@ mod chunking;
 #[cfg(test)]
 mod cosine_batch_tests;
 mod embedding;
+mod filter;
 mod prepare;
 mod query;
 mod stored;
@@ -105,6 +106,10 @@ mod tests;
 mod types;
 pub use self::chunking::*;
 pub(crate) use self::embedding::*;
+pub(crate) use self::filter::{
+    indexed_equality, matches_metadata, operators, unsupported_operator,
+};
+pub use self::filter::{validate_filter, UnsupportedFilterOperator, SUPPORTED_FILTER_OPERATORS};
 pub(crate) use self::prepare::*;
 pub(crate) use self::query::*;
 pub(crate) use self::stored::*;

@@ -192,6 +192,7 @@ impl WarmCore {
     /// the reorder off, [`Self::compact_without_reorder`] skips it for one call, and
     /// [`Self::last_reorder`] reports what the call did.
     pub fn compact(&self) -> Result<()> {
+        self.ensure_writable()?;
         if self.purge.status().committed > 0 {
             return self.compact_scrubbing();
         }
@@ -313,6 +314,7 @@ impl WarmCore {
     /// Clears the `purge.pending` ticket of every purge whose deletes had committed when the
     /// compaction began, and no other.
     pub fn compact_scrubbing(&self) -> Result<()> {
+        self.ensure_writable()?;
         let _gate = self.scrub_gate.lock();
         self.scrub_covering_committed()
     }
@@ -421,6 +423,7 @@ impl WarmCore {
         scrub: bool,
         job: &JobState,
     ) -> Result<()> {
+        self.ensure_writable()?;
         self.compact_documents(after_snapshot, before_publication, scrub, job)?;
         self.experience_checkpoint()
     }

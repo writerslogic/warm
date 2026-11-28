@@ -153,3 +153,171 @@ def test_experience_form_state_switch_off_stores_no_controls(tmp_path):
     store = hm.Warm(1024, str(tmp_path / "store"), experience_form_state=False)
     store.remember(_observation(0, FORM_PAGE))
     assert store.experience_form_tables([("run-1", 0)]) == [""]
+
+
+def test_master_key_path_outside_the_store(tmp_path):
+    store, key = str(tmp_path / "store"), tmp_path / "keys" / "nested" / "master.key"
+    first = hm.Warm(1024, store, master_key_path=str(key))
+    first.memorize_document({"id": "harbor", "text": "The harbor opens at six."})
+    del first
+    assert key.stat().st_size == 32
+    if os.name == "posix":
+        assert key.stat().st_mode & 0o777 == 0o600
+    assert not (tmp_path / "store" / "master.key").exists()
+
+    kept = key.read_bytes()
+    key.unlink()
+    with pytest.raises(Exception, match="master key"):
+        hm.Warm(1024, store, master_key_path=str(key))
+    assert not key.exists()
+
+    key.write_bytes(b"\x07" * 32)
+    key.chmod(0o600)
+    with pytest.raises(Exception, match="does not open this store"):
+        hm.Warm(1024, store, master_key_path=str(key))
+
+    key.write_bytes(kept)
+    key.chmod(0o600)
+    reopened = hm.Warm(1024, store, master_key_path=str(key))
+    assert reopened.search_documents("harbor", {"k": 1})[0]["documentId"] == "harbor"
+    with pytest.raises(Exception, match="not a directory"):
+        hm.Warm(1024, str(tmp_path / "other"), master_key_path=str(key.parent))
+
+
+def test_read_only_reader_uses_the_external_master_key(tmp_path):
+    path, key = str(tmp_path / "store"), tmp_path / "keys" / "master.key"
+    with hm.Warm(1024, path, master_key_path=str(key)) as writer:
+        writer.memorize_document({"id": "one", "text": "harbor opens at six"})
+        reader = hm.Warm.open_read_only(1024, path, master_key_path=str(key))
+        assert reader.search_documents("harbor", {"k": 1})[0]["documentId"] == "one"
+        writer.memorize_document({"id": "two", "text": "market opens at nine"})
+        assert reader.refresh() is True
+        assert reader.search_documents("market", {"k": 1})[0]["documentId"] == "two"
+        reader.close()
+        with pytest.raises(Exception, match="master key"):
+            hm.Warm.open_read_only(1024, path)
+
+
+def test_read_only_reader_refresh_and_context_manager(tmp_path):
+    path = str(tmp_path / "store")
+    with hm.Warm(1024, path) as writer:
+        writer.memorize_document({"id": "one", "text": "first committed document"})
+        reader = hm.Warm.open_read_only(1024, path)
+        assert reader.read_only and not writer.read_only
+        assert reader.refresh() is False
+
+        writer.memorize_document({"id": "two", "text": "second committed document"})
+        with pytest.raises(hm.ReadOnlyError):
+            reader.memorize_document({"id": "x", "text": "denied"})
+        assert reader.refresh() is True
+        assert reader.refresh() is False
+        hits = reader.search_documents("second committed", {"k": 2})
+        assert "two" in {hit["documentId"] for hit in hits}
+        reader.close()
+        assert not os.path.exists(os.path.join(path, ".hms.readers"))
+
+
+def test_close_releases_the_lock_and_later_calls_fail(tmp_path):
+    path = str(tmp_path / "store")
+    store = hm.Warm(1024, path)
+    store.memorize_document({"id": "one", "text": "committed before close"})
+    with pytest.raises(hm.StoreLockedError, match="already open"):
+        hm.Warm(1024, path)
+    store.close()
+    store.close()
+    assert store.closed
+    with pytest.raises(hm.StoreClosedError):
+        store.memorize_document({"id": "two", "text": "late"})
+    with hm.Warm(1024, path) as again:
+        assert not again.closed
+    assert again.closed
+
+
+def test_write_batch_is_atomic_ordered_and_reports_each_operation(tmp_path):
+    path = str(tmp_path / "store")
+    store = hm.Warm(1024, path)
+    store.memorize_document({"id": "old", "text": "old document to remove"})
+    put = lambda i, t: {"op": "memorize", "document": {"id": i, "text": t}}
+    delete = lambda i: {"op": "delete", "id": i}
+
+    results = store.write_batch(
+        [put("a", "first document"), delete("old"), put("a", "final version of a"), delete("missing")]
+    )
+    assert results == [
+        {"op": "memorize", "chunks": 1},
+        {"op": "delete", "existed": True},
+        {"op": "memorize", "chunks": 1},
+        {"op": "delete", "existed": False},
+    ]
+    assert store.get_document("old") is None
+    assert store.search_documents("final version", {"k": 1})[0]["documentId"] == "a"
+
+    before = store.search_documents("final version", {"k": 5})
+    for bad in (put("", "no id"), delete(""), {"op": "upsert", "id": "x"}, {"op": "delete"}):
+        with pytest.raises(ValueError):
+            store.write_batch([put("new", "would be added"), delete("a"), bad])
+        assert store.get_document("new") is None
+        assert store.get_document("a") is not None
+    with pytest.raises(ValueError):
+        store.write_batch([])
+    with pytest.raises(ValueError, match="4096"):
+        store.write_batch([delete(f"x{i}") for i in range(4097)])
+    assert store.search_documents("final version", {"k": 5}) == before
+
+    del store
+    reopened = hm.Warm(1024, path)
+    assert reopened.get_document("old") is None
+    assert reopened.search_documents("final version", {"k": 1})[0]["documentId"] == "a"
+
+
+def test_write_batch_is_visible_whole_to_a_reader_and_denied_to_it(tmp_path):
+    path = str(tmp_path / "store")
+    writer = hm.Warm(1024, path)
+    writer.memorize_document({"id": "seed", "text": "seed document"})
+    reader = hm.Warm.open_read_only(1024, path)
+    with pytest.raises(hm.ReadOnlyError):
+        reader.write_batch([{"op": "delete", "id": "seed"}])
+    writer.write_batch(
+        [
+            {"op": "memorize", "document": {"id": "p", "text": "pair zebra"}},
+            {"op": "memorize", "document": {"id": "q", "text": "pair zebra"}},
+            {"op": "delete", "id": "seed"},
+        ]
+    )
+    assert reader.refresh()
+    ids = sorted(h["documentId"] for h in reader.search_documents("pair zebra", {"k": 5}))
+    assert ids == ["p", "q"]
+    assert reader.get_document("seed") is None
+
+
+def _filter_ids(store, filter):
+    return sorted(hit["documentId"] for hit in store.search_documents("memo", {"filter": filter, "k": 10}))
+
+
+def test_in_eq_and_list_filters_and_unsupported_operators(tmp_path):
+    store = hm.Warm(1024, str(tmp_path / "store"))
+    store.memorize_document({"id": "a", "text": "memo a", "metadata": {"team": "red", "n": 1, "tags": ["x", "y"]}})
+    store.memorize_document({"id": "b", "text": "memo b", "metadata": {"team": "blue", "n": 2, "tags": ["y", "z"]}})
+    store.memorize_document({"id": "c", "text": "memo c", "metadata": {"team": "green", "n": 3}})
+    assert _filter_ids(store, {"team": {"$eq": "red"}}) == ["a"]
+    assert _filter_ids(store, {"team": {"$in": ["red", "green"]}}) == ["a", "c"]
+    assert _filter_ids(store, {"n": {"$in": [2, 3]}}) == ["b", "c"]
+    assert _filter_ids(store, {"tags": "y"}) == ["a", "b"]
+    assert _filter_ids(store, {"tags": {"$in": ["x", "z"]}}) == ["a", "b"]
+    with pytest.raises(Exception, match=r"\$gt"):
+        _filter_ids(store, {"n": {"$gt": 1}})
+    with pytest.raises(Exception, match=r"\$or"):
+        _filter_ids(store, {"$or": [{"team": "red"}]})
+
+
+def test_semantic_score_embedding_model_and_stemmer(tmp_path):
+    store = hm.Warm(1024, str(tmp_path / "store"), embedding_dimensions=4, embedding_model="fixture", embedding_revision="rev-1")
+    for doc_id, vector in (("a", [1, 0, 0, 0]), ("b", [0, 1, 0, 0])):
+        store.memorize_document({"id": doc_id, "text": f"memo {doc_id}", "embeddings": [vector]})
+    hits = store.search_documents("memo", {"embedding": [1, 1, 0, 0], "k": 2, "minSemanticScore": -1})
+    assert hits and all(isinstance(hit["semanticScore"], float) for hit in hits)
+    assert hits[0]["semanticScore"] == pytest.approx(2 ** -0.5, abs=1e-6)
+    model = store.embedding_model()
+    assert model["model"] == "fixture" and model["dimensions"] == 4
+    assert hm.Warm(1024, str(tmp_path / "plain")).embedding_model() is None
+    assert hm.analyze("harbors harbor") == [hm.stem("harbors"), hm.stem("harbor")]

@@ -53,7 +53,7 @@ use serde::{Deserialize, Serialize};
 
 use super::dense::{MAX_DELTA_CHUNKS, MAX_DELTA_DOCUMENTS};
 use super::index::{text_scrubbed, try_text_of, StoreIdentity};
-use super::{DocumentResult, DocumentStore, Embedding, StoredDocument, TextSegment};
+use super::{DocumentResult, DocumentStore, Embedding, ScreenBound, StoredDocument, TextSegment};
 use crate::core::qgraph::{BuildParams, Graph, VGraph, VSearchParams};
 use crate::core::{EmbeddingSpace, VectorCandidateConfig};
 

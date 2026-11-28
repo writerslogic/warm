@@ -1,10 +1,10 @@
 import json, glob, collections, numpy as np, os
-P = '/Volumes/A/.hms-lb/locomo-20261114/pilot'; H = os.path.expanduser('~')
+P = '$WARM_BENCH_DATA/pilot'; H = os.path.expanduser('~')
 res = {}
 for f in glob.glob(H + '/pilot-out/all/predicted_all/conv*_q*.json'):
     e = json.load(open(f)); res[e['question_id']] = e
-m0 = {e['question_id']: e for e in json.load(open('/Volumes/A/.hms-lb/locomo-20261114/mem0-benchmarks/f/results/platform/locomo_results.json'))['evaluations']}
-data = json.load(open('/Volumes/A/.hms-lb/locomo-20261114/locomo10.json'))
+m0 = {e['question_id']: e for e in json.load(open('$WARM_BENCH_DATA/mem0-benchmarks/f/results/platform/locomo_results.json'))['evaluations']}
+data = json.load(open('$WARM_BENCH_DATA/locomo10.json'))
 turn = {(ci, t['dia_id']): t['text'] for ci, c in enumerate(data) for k, v in c['conversation'].items() if isinstance(v, list) for t in v}
 rng = np.random.default_rng(0)
 def ci_(d):

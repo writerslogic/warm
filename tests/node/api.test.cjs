@@ -178,3 +178,45 @@ test('a requested security capability is active or construction fails', () => {
     `, directory)
   } finally { rmSync(directory, { recursive: true, force: true }) }
 })
+
+test('masterKeyPath keeps the master key outside the store and refuses a missing or wrong key', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'warm-keypath-'))
+  // Each phase runs in its own process: a store admits one engine at a time.
+  const phase = body => run(`
+    const assert = require('node:assert/strict');
+    const fs = require('node:fs');
+    const path = require('node:path');
+    const { WarmMemorySystem } = require('./index.js');
+    const store = path.join(process.argv[1], 'store');
+    const keyPath = path.join(process.argv[1], 'keys', 'nested', 'master.key');
+    const options = { masterKeyPath: keyPath };
+    (async () => { ${body} })().catch(e => { console.error(e); process.exitCode = 1; });
+  `, directory)
+  try {
+    phase(`
+      const warm = new WarmMemorySystem(4096, store, options);
+      await warm.memorizeDocument({ id: 'private', text: 'Private source document.' });
+      await warm.flush();
+      assert.equal(warm.securityStatus().encryptionActive, true);
+      assert.equal(fs.statSync(keyPath).size, 32);
+      if (process.platform !== 'win32') assert.equal(fs.statSync(keyPath).mode & 0o777, 0o600);
+      assert.equal(fs.existsSync(path.join(store, 'master.key')), false);
+      fs.copyFileSync(keyPath, keyPath + '.saved');
+    `)
+    phase(`
+      fs.rmSync(keyPath);
+      assert.throws(() => new WarmMemorySystem(4096, store, options), /master key/);
+      assert.equal(fs.existsSync(keyPath), false);
+      fs.writeFileSync(keyPath, Buffer.alloc(32, 7), { mode: 0o600 });
+      assert.throws(() => new WarmMemorySystem(4096, store, options), /does not open this store/);
+      fs.copyFileSync(keyPath + '.saved', keyPath);
+      fs.chmodSync(keyPath, 0o600);
+    `)
+    phase(`
+      const again = new WarmMemorySystem(4096, store, options);
+      assert.equal(again.securityStatus().encryptionActive, true);
+      assert.throws(() => new WarmMemorySystem(4096, path.join(process.argv[1], 'other'),
+        { masterKeyPath: path.dirname(keyPath) }), /not a directory/);
+    `)
+  } finally { rmSync(directory, { recursive: true, force: true }) }
+})

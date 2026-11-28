@@ -51,7 +51,10 @@ struct Inner {
     dim: usize,
     slots: HashMap<String, u32>,
     names: Vec<String>,
-    log: File,
+    /// Absent for a reader, which never appends.
+    log: Option<File>,
+    /// Bytes of the id log a reader has parsed.
+    seen_names: u64,
 }
 
 fn build_params(dim: usize) -> BuildParams {
@@ -63,8 +66,21 @@ fn build_params(dim: usize) -> BuildParams {
 }
 
 fn read_names(path: &Path) -> Result<(Vec<String>, u64)> {
+    read_names_from(path, 0)
+}
+
+/// The names recorded at and after byte `from` (a position `read_names` returned), and the
+/// position after the last whole one.
+fn read_names_from(path: &Path, from: u64) -> Result<(Vec<String>, u64)> {
+    use std::io::{Seek, SeekFrom};
+    let mut file = File::open(path)?;
+    ensure!(
+        file.metadata()?.len() >= from,
+        "dense id log is shorter than read"
+    );
+    file.seek(SeekFrom::Start(from))?;
     let mut bytes = Vec::new();
-    File::open(path)?.read_to_end(&mut bytes)?;
+    file.read_to_end(&mut bytes)?;
     let (mut names, mut at) = (Vec::new(), 0usize);
     while at + 2 <= bytes.len() {
         let len = u16::from_le_bytes([bytes[at], bytes[at + 1]]) as usize;
@@ -77,7 +93,7 @@ fn read_names(path: &Path) -> Result<(Vec<String>, u64)> {
         names.push(name.to_owned());
         at += 2 + len;
     }
-    Ok((names, at as u64))
+    Ok((names, from + at as u64))
 }
 
 fn encode_names<'a>(names: impl IntoIterator<Item = &'a String>) -> Vec<u8> {
@@ -117,7 +133,8 @@ impl DenseVectors {
                 graph,
                 slots,
                 names,
-                log,
+                log: Some(log),
+                seen_names: valid,
             });
         } else {
             if this.dir.exists() {
@@ -128,6 +145,91 @@ impl DenseVectors {
             }
         }
         Ok(this)
+    }
+
+    /// Opens the index of the store at `store` for reading beside its writer: no lock, no
+    /// repair, no write. The dense graph is a side index (dense vectors are not in the
+    /// journal), so a reader that cannot open it serves the sparse path instead, as a store
+    /// without one does; it says so in the log.
+    pub(super) fn open_reader(store: &Path) -> Self {
+        let this = Self {
+            dir: store.join(DIR),
+            names_path: store.join(NAMES),
+            inner: RwLock::new(None),
+        };
+        match this.read_inner() {
+            Ok(inner) => *this.inner.write() = inner,
+            Err(error) => tracing::warn!(
+                error = %format!("{error:#}"),
+                "dense vector index not opened by a reader; queries use the sparse path"
+            ),
+        }
+        this
+    }
+
+    fn read_inner(&self) -> Result<Option<Inner>> {
+        if !self.dir.join("CURRENT").exists() {
+            return Ok(None);
+        }
+        // The graph first: the writer logs a row's id before it commits the row, so the ids
+        // read after the graph cover every row in it.
+        let graph = UpdatableVGraph::open_reader(&self.dir).context("open dense vector index")?;
+        let (names, seen_names) = read_names(&self.names_path).context("read dense id log")?;
+        let slots = names
+            .iter()
+            .enumerate()
+            .map(|(i, n)| (n.clone(), i as u32))
+            .collect();
+        Ok(Some(Inner {
+            dim: graph.dim(),
+            graph,
+            slots,
+            names,
+            log: None,
+            seen_names,
+        }))
+    }
+
+    /// Whether the writer changed the index since this reader last read it.
+    pub(super) fn reader_is_stale(&self) -> bool {
+        match self.inner.read().as_ref() {
+            None => self.dir.join("CURRENT").exists(),
+            Some(inner) => {
+                inner.graph.reader_is_stale()
+                    || std::fs::metadata(&self.names_path)
+                        .map_or(true, |meta| meta.len() != inner.seen_names)
+            }
+        }
+    }
+
+    /// Follows the writer: the graph's new log tail and the new ids are read, nothing else. A
+    /// consolidation or a rebuilt index is read whole. Returns whether anything changed.
+    pub(super) fn refresh(&self) -> Result<bool> {
+        let mut guard = self.inner.write();
+        let followed = match guard.as_mut() {
+            None => Err(anyhow::anyhow!("no dense index yet")),
+            Some(inner) => (|| {
+                let moved = inner.graph.refresh_reader()?;
+                let (fresh, end) = read_names_from(&self.names_path, inner.seen_names)?;
+                let grew = !fresh.is_empty();
+                for name in fresh {
+                    inner.slots.insert(name.clone(), inner.names.len() as u32);
+                    inner.names.push(name);
+                }
+                inner.seen_names = end;
+                Ok(moved || grew)
+            })(),
+        };
+        match followed {
+            Ok(changed) => Ok(changed),
+            Err(_) => {
+                // Created since, rebuilt, or unreadable in place: read it afresh.
+                let fresh = self.read_inner()?;
+                let changed = fresh.is_some() || guard.is_some();
+                *guard = fresh;
+                Ok(changed)
+            }
+        }
     }
 
     pub(super) fn is_active(&self) -> bool {
@@ -185,7 +287,8 @@ impl DenseVectors {
                 dim,
                 slots,
                 names,
-                log,
+                log: Some(log),
+                seen_names: 0,
             });
             return Ok(());
         };
@@ -206,8 +309,12 @@ impl DenseVectors {
             "dense vector id space exhausted"
         );
         if !fresh.is_empty() {
-            inner.log.write_all(&encode_names(&fresh))?;
-            inner.log.sync_data()?;
+            let log = inner
+                .log
+                .as_mut()
+                .ok_or_else(|| anyhow::anyhow!("the dense index is open read-only"))?;
+            log.write_all(&encode_names(&fresh))?;
+            log.sync_data()?;
             for id in fresh {
                 inner.slots.insert(id.clone(), inner.names.len() as u32);
                 inner.names.push(id);
@@ -299,7 +406,9 @@ impl DenseVectors {
         let slots = inner.graph.search(query, k, params)?;
         let mut hits = Vec::with_capacity(slots.len());
         for slot in slots {
-            let Some(row) = inner.graph.vector(slot)? else {
+            let (Some(row), Some(name)) =
+                (inner.graph.vector(slot)?, inner.names.get(slot as usize))
+            else {
                 continue;
             };
             let dot: f64 = query
@@ -307,7 +416,7 @@ impl DenseVectors {
                 .zip(&row)
                 .map(|(a, b)| f64::from(*a) * f64::from(*b))
                 .sum();
-            hits.push((inner.names[slot as usize].clone(), dot / norm));
+            hits.push((name.clone(), dot / norm));
         }
         hits.sort_by(|a, b| b.1.total_cmp(&a.1).then_with(|| a.0.cmp(&b.0)));
         Ok(Some(hits))

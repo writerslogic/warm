@@ -2,8 +2,8 @@
 Key: read from the key file into this process's environment only; never printed. Spend guard, usage log and a call cache
 (so calibration answers are reused) wrap the OpenAI SDK; the first quota or billing error stops the process."""
 import hashlib, json, os, re, subprocess, sys, threading, time, runpy
-P = '/Volumes/A/.hms-lb/locomo-20261114/context3'; import glob
-SRC = '/Users/davidcondrey/warm-locomo2/benchmarks/public/locomo'; GLOBAL_CAP = 47.0
+P = '$WARM_BENCH_DATA/context3'; import glob
+SRC = '$WARM_REPO/benchmarks/public/locomo'; GLOBAL_CAP = 47.0
 phase, cap, dataset, outdir, extra = sys.argv[1], float(sys.argv[2]), sys.argv[3], sys.argv[4], sys.argv[5:]
 os.environ['OPENAI_API_KEY'] = open(os.path.expanduser('~/.config/warm-bench/lme2-openai.key')).read().strip()
 names = sorted(os.environ)
@@ -11,7 +11,7 @@ open(f'{P}/{phase}-child-env-names.txt', 'w').write('\n'.join(names) + '\n')
 bad = [n for n in names if re.search(r'(KEY|TOKEN|SECRET|PASSWORD)', n) and n != 'OPENAI_API_KEY']
 assert not bad, bad
 os.environ.update({'WARM_EMBED_BASE_URL': 'https://api.openai.com/v1', 'WARM_EMBED_DIM': '1536', 'WARM_MAX_TOP_K': os.environ.get('WARM_MAX_TOP_K', '200'),
-                   'WARM_SERVER_BIN': '/Volumes/C/.hms-tgt/locomo/release/pilot-memsrv'})
+                   'WARM_SERVER_BIN': '$WARM_BENCH_TARGET/locomo/release/pilot-memsrv'})
 PRICE = {'in': 1.25, 'cached': 0.125, 'out': 10.0}
 lock = threading.Lock(); spent = [0.0]; CACHE = f'{P}/call-cache-{phase}.jsonl'; USAGE = f'{P}/{phase}-usage.jsonl'
 cache = {}
@@ -55,7 +55,7 @@ async def create(self, **kw):
     return resp
 AsyncCompletions.create = create
 sys.path.insert(0, SRC)
-sys.argv = ['run_mem0_harness.py', '--harness', '/Volumes/A/.hms-lb/locomo-20261114/mem0-benchmarks/repo', '--benchmark', 'locomo', '--', '--project-name', phase,
+sys.argv = ['run_mem0_harness.py', '--harness', '$WARM_BENCH_DATA/mem0-benchmarks/repo', '--benchmark', 'locomo', '--', '--project-name', phase,
             '--dataset-path', dataset, '--conversations', os.environ.get('PILOT_CONVS', '0,1,2'), '--top-k', '200', '--top-k-cutoffs', '200', '--output-dir', outdir,
             '--max-workers', os.environ.get('PILOT_WORKERS', '4'), '--answerer-model', 'gpt-5', '--judge-model', 'gpt-5', '--provider', 'openai'] + extra
 runpy.run_path(SRC + '/run_mem0_harness.py', run_name='__main__')
