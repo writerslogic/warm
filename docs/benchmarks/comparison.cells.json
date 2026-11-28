@@ -79061,5 +79061,2681 @@
   "verdict": "n/v",
   "interval_kind": null,
   "text": "inf"
+ },
+ {
+  "section": "js fiqa dense",
+  "file": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "ndcg",
+  "system": "vectra",
+  "value": 0.391905482,
+  "ci": null,
+  "n": 500,
+  "source": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json#systems.vectra",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.3919"
+ },
+ {
+  "section": "js fiqa dense",
+  "file": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "qps",
+  "system": "vectra",
+  "value": 30.857907393022955,
+  "ci": [
+   30.580135011801936,
+   30.99373230225808
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json#systems.vectra",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "31"
+ },
+ {
+  "section": "js fiqa dense",
+  "file": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "p50",
+  "system": "vectra",
+  "value": 32343.441,
+  "ci": [
+   32215.714,
+   32653.341
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json#systems.vectra",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "32,343"
+ },
+ {
+  "section": "js fiqa dense",
+  "file": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "p99",
+  "system": "vectra",
+  "value": 33452.4345,
+  "ci": [
+   33034.05,
+   33763.612
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json#systems.vectra",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "33,452"
+ },
+ {
+  "section": "js fiqa dense",
+  "file": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "build",
+  "system": "vectra",
+  "value": 14.424191363,
+  "ci": [
+   14.132204153,
+   14.471320579
+  ],
+  "n": 8,
+  "source": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json#systems.vectra",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "14.42"
+ },
+ {
+  "section": "js fiqa dense",
+  "file": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "size",
+  "system": "vectra",
+  "value": 447.59765243530273,
+  "ci": [
+   447.59765243530273,
+   447.59765243530273
+  ],
+  "n": 8,
+  "source": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json#systems.vectra",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "447.6"
+ },
+ {
+  "section": "js fiqa dense",
+  "file": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "rss",
+  "system": "vectra",
+  "value": 1311.439453125,
+  "ci": [
+   1311.140625,
+   1311.546875
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json#systems.vectra",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "1,311"
+ },
+ {
+  "section": "js fiqa dense",
+  "file": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "cold",
+  "system": "vectra",
+  "value": 2.2205838890000003,
+  "ci": [
+   2.209285603,
+   2.2459520775
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json#systems.vectra",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "2.22"
+ },
+ {
+  "section": "js fiqa dense",
+  "file": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "ndcg",
+  "system": "warm-vector",
+  "value": 0.391905482,
+  "ci": null,
+  "n": 500,
+  "source": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json#systems.warm-vector",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.3919"
+ },
+ {
+  "section": "js fiqa dense",
+  "file": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "qps",
+  "system": "warm-vector",
+  "value": 70.79204651969926,
+  "ci": [
+   68.16878471609459,
+   72.61833035949942
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json#systems.warm-vector",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "71"
+ },
+ {
+  "section": "js fiqa dense",
+  "file": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "p50",
+  "system": "warm-vector",
+  "value": 14083.926,
+  "ci": [
+   13709.295,
+   14637.425
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json#systems.warm-vector",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "14,084"
+ },
+ {
+  "section": "js fiqa dense",
+  "file": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "p99",
+  "system": "warm-vector",
+  "value": 15053.6695,
+  "ci": [
+   14700.935,
+   15575.454
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json#systems.warm-vector",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "15,054"
+ },
+ {
+  "section": "js fiqa dense",
+  "file": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "build",
+  "system": "warm-vector",
+  "value": 5.5598001365,
+  "ci": [
+   5.549981327,
+   5.630128938
+  ],
+  "n": 8,
+  "source": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json#systems.warm-vector",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "5.56"
+ },
+ {
+  "section": "js fiqa dense",
+  "file": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "size",
+  "system": "warm-vector",
+  "value": 318.26070499420166,
+  "ci": [
+   318.25875186920166,
+   318.26265811920166
+  ],
+  "n": 8,
+  "source": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json#systems.warm-vector",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "318.3"
+ },
+ {
+  "section": "js fiqa dense",
+  "file": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "rss",
+  "system": "warm-vector",
+  "value": 683.177734375,
+  "ci": [
+   683.0546875,
+   683.30078125
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json#systems.warm-vector",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "683"
+ },
+ {
+  "section": "js fiqa dense",
+  "file": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "cold",
+  "system": "warm-vector",
+  "value": 1.8774874525,
+  "ci": [
+   1.865453359,
+   1.916746114
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json#systems.warm-vector",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "1.88"
+ },
+ {
+  "section": "js fiqa hybrid",
+  "file": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "ndcg",
+  "system": "vectra-bm25",
+  "value": 0.3058116,
+  "ci": null,
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json#systems.vectra-bm25",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.3058"
+ },
+ {
+  "section": "js fiqa hybrid",
+  "file": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "qps",
+  "system": "vectra-bm25",
+  "value": 0.022199403842587652,
+  "ci": [
+   0.022019630293686532,
+   0.02246825817918375
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json#systems.vectra-bm25",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.02"
+ },
+ {
+  "section": "js fiqa hybrid",
+  "file": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "p50",
+  "system": "vectra-bm25",
+  "value": 44984968.132,
+  "ci": [
+   44427683.306,
+   45372075.435
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json#systems.vectra-bm25",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "44,984,968"
+ },
+ {
+  "section": "js fiqa hybrid",
+  "file": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "p99",
+  "system": "vectra-bm25",
+  "value": 45326924.86399999,
+  "ci": [
+   44764808.972,
+   45710967.694
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json#systems.vectra-bm25",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "45,326,925"
+ },
+ {
+  "section": "js fiqa hybrid",
+  "file": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "rss",
+  "system": "vectra-bm25",
+  "value": 2278.53515625,
+  "ci": [
+   2076.17578125,
+   2434.82421875
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json#systems.vectra-bm25",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "2,279"
+ },
+ {
+  "section": "js fiqa hybrid",
+  "file": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "cold",
+  "system": "vectra-bm25",
+  "value": 45.18123085,
+  "ci": [
+   44.7962278285,
+   45.691333147
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json#systems.vectra-bm25",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "45.18"
+ },
+ {
+  "section": "js fiqa hybrid",
+  "file": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "ndcg",
+  "system": "warm-hybrid",
+  "value": 0.30213100000000004,
+  "ci": null,
+  "n": 500,
+  "source": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json#systems.warm-hybrid",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.3021"
+ },
+ {
+  "section": "js fiqa hybrid",
+  "file": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "qps",
+  "system": "warm-hybrid",
+  "value": 308.0230786491905,
+  "ci": [
+   291.3348097567112,
+   334.90582827892007
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json#systems.warm-hybrid",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "308"
+ },
+ {
+  "section": "js fiqa hybrid",
+  "file": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "p50",
+  "system": "warm-hybrid",
+  "value": 3183.0955000000004,
+  "ci": [
+   2930.667,
+   3365.9415
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json#systems.warm-hybrid",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "3,183"
+ },
+ {
+  "section": "js fiqa hybrid",
+  "file": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "p99",
+  "system": "warm-hybrid",
+  "value": 4728.246,
+  "ci": [
+   4390.409,
+   4993.9755000000005
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json#systems.warm-hybrid",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "4,728"
+ },
+ {
+  "section": "js fiqa hybrid",
+  "file": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "build",
+  "system": "warm-hybrid",
+  "value": 6.9676494545,
+  "ci": [
+   6.958408158,
+   6.988252295
+  ],
+  "n": 8,
+  "source": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json#systems.warm-hybrid",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "6.97"
+ },
+ {
+  "section": "js fiqa hybrid",
+  "file": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "size",
+  "system": "warm-hybrid",
+  "value": 97.91091346740723,
+  "ci": [
+   97.91091346740723,
+   97.91091346740723
+  ],
+  "n": 8,
+  "source": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json#systems.warm-hybrid",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "97.9"
+ },
+ {
+  "section": "js fiqa hybrid",
+  "file": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "rss",
+  "system": "warm-hybrid",
+  "value": 321.841796875,
+  "ci": [
+   321.689453125,
+   321.990234375
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json#systems.warm-hybrid",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "322"
+ },
+ {
+  "section": "js fiqa hybrid",
+  "file": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "cold",
+  "system": "warm-hybrid",
+  "value": 1.505726786,
+  "ci": [
+   1.4757114365000001,
+   1.5304400955
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json#systems.warm-hybrid",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "1.51"
+ },
+ {
+  "section": "js fiqa keyword",
+  "file": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "ndcg",
+  "system": "warm-lexical",
+  "value": 0.2653779,
+  "ci": null,
+  "n": 500,
+  "source": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json#systems.warm-lexical",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.2654"
+ },
+ {
+  "section": "js fiqa keyword",
+  "file": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "qps",
+  "system": "warm-lexical",
+  "value": 781.8385620617887,
+  "ci": [
+   769.7610658903785,
+   789.0448555878044
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json#systems.warm-lexical",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "782"
+ },
+ {
+  "section": "js fiqa keyword",
+  "file": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "p50",
+  "system": "warm-lexical",
+  "value": 1231.0410000000002,
+  "ci": [
+   1221.2404999999999,
+   1246.8445000000002
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json#systems.warm-lexical",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "1,231"
+ },
+ {
+  "section": "js fiqa keyword",
+  "file": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "p99",
+  "system": "warm-lexical",
+  "value": 2672.5365,
+  "ci": [
+   2663.776,
+   2717.638
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json#systems.warm-lexical",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "2,673"
+ },
+ {
+  "section": "js fiqa keyword",
+  "file": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "build",
+  "system": "warm-lexical",
+  "value": 6.9676494545,
+  "ci": [
+   6.958408158,
+   6.988252295
+  ],
+  "n": 8,
+  "source": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json#systems.warm-lexical",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "6.97"
+ },
+ {
+  "section": "js fiqa keyword",
+  "file": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "size",
+  "system": "warm-lexical",
+  "value": 97.91091346740723,
+  "ci": [
+   97.91091346740723,
+   97.91091346740723
+  ],
+  "n": 8,
+  "source": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json#systems.warm-lexical",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "97.9"
+ },
+ {
+  "section": "js fiqa keyword",
+  "file": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "rss",
+  "system": "warm-lexical",
+  "value": 321.158203125,
+  "ci": [
+   321.033203125,
+   321.30078125
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json#systems.warm-lexical",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "321"
+ },
+ {
+  "section": "js fiqa keyword",
+  "file": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "cold",
+  "system": "warm-lexical",
+  "value": 1.504006041,
+  "ci": [
+   1.472369421,
+   1.533843295
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-fiqa-gcp-n2-icelake-8c-16g.json#systems.warm-lexical",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "1.50"
+ },
+ {
+  "section": "js memory dense",
+  "file": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "ndcg",
+  "system": "vectra",
+  "value": 0.28469660999999996,
+  "ci": null,
+  "n": 100,
+  "source": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json#systems.vectra",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.2847"
+ },
+ {
+  "section": "js memory dense",
+  "file": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "qps",
+  "system": "vectra",
+  "value": 435.0997908122037,
+  "ci": [
+   433.58051893517046,
+   438.5834292622646
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json#systems.vectra",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "435"
+ },
+ {
+  "section": "js memory dense",
+  "file": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "p50",
+  "system": "vectra",
+  "value": 2244.085,
+  "ci": [
+   2225.226,
+   2259.601
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json#systems.vectra",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "2,244"
+ },
+ {
+  "section": "js memory dense",
+  "file": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "p99",
+  "system": "vectra",
+  "value": 2533.944,
+  "ci": [
+   2484.902,
+   2620.63
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json#systems.vectra",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "2,534"
+ },
+ {
+  "section": "js memory dense",
+  "file": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "build",
+  "system": "vectra",
+  "value": 0.982332712,
+  "ci": [
+   0.970228544,
+   0.992753332
+  ],
+  "n": 8,
+  "source": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json#systems.vectra",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.98"
+ },
+ {
+  "section": "js memory dense",
+  "file": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "size",
+  "system": "vectra",
+  "value": 35.459038734436035,
+  "ci": [
+   35.459038734436035,
+   35.459038734436035
+  ],
+  "n": 8,
+  "source": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json#systems.vectra",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "35.5"
+ },
+ {
+  "section": "js memory dense",
+  "file": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "rss",
+  "system": "vectra",
+  "value": 287.658203125,
+  "ci": [
+   286.79296875,
+   289.61328125
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json#systems.vectra",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "288"
+ },
+ {
+  "section": "js memory dense",
+  "file": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "cold",
+  "system": "vectra",
+  "value": 0.5566186725,
+  "ci": [
+   0.550459742,
+   0.563324227
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json#systems.vectra",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.56"
+ },
+ {
+  "section": "js memory dense",
+  "file": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "ndcg",
+  "system": "warm-vector",
+  "value": 0.28484096000000003,
+  "ci": null,
+  "n": 100,
+  "source": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json#systems.warm-vector",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.2848"
+ },
+ {
+  "section": "js memory dense",
+  "file": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "qps",
+  "system": "warm-vector",
+  "value": 1256.6500274820214,
+  "ci": [
+   1132.6526659259544,
+   1277.5973157373771
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json#systems.warm-vector",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "1,257"
+ },
+ {
+  "section": "js memory dense",
+  "file": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "p50",
+  "system": "warm-vector",
+  "value": 776.1425,
+  "ci": [
+   764.721,
+   843.583
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json#systems.warm-vector",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "776"
+ },
+ {
+  "section": "js memory dense",
+  "file": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "p99",
+  "system": "warm-vector",
+  "value": 1183.8519999999999,
+  "ci": [
+   1152.905,
+   1249.632
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json#systems.warm-vector",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "1,184"
+ },
+ {
+  "section": "js memory dense",
+  "file": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "build",
+  "system": "warm-vector",
+  "value": 0.5624638385,
+  "ci": [
+   0.560539334,
+   0.568187241
+  ],
+  "n": 8,
+  "source": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json#systems.warm-vector",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.56"
+ },
+ {
+  "section": "js memory dense",
+  "file": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "size",
+  "system": "warm-vector",
+  "value": 25.262656211853027,
+  "ci": [
+   25.262656211853027,
+   25.262656211853027
+  ],
+  "n": 8,
+  "source": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json#systems.warm-vector",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "25.3"
+ },
+ {
+  "section": "js memory dense",
+  "file": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "rss",
+  "system": "warm-vector",
+  "value": 136.85546875,
+  "ci": [
+   136.61328125,
+   137.046875
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json#systems.warm-vector",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "137"
+ },
+ {
+  "section": "js memory dense",
+  "file": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "cold",
+  "system": "warm-vector",
+  "value": 0.1945493715,
+  "ci": [
+   0.193054955,
+   0.1957933945
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json#systems.warm-vector",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.19"
+ },
+ {
+  "section": "js memory hybrid",
+  "file": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "ndcg",
+  "system": "vectra-bm25",
+  "value": 0.2964697,
+  "ci": null,
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json#systems.vectra-bm25",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.2965"
+ },
+ {
+  "section": "js memory hybrid",
+  "file": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "qps",
+  "system": "vectra-bm25",
+  "value": 0.022424997403954414,
+  "ci": [
+   0.022355483849982594,
+   0.022492702172937987
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json#systems.vectra-bm25",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.02"
+ },
+ {
+  "section": "js memory hybrid",
+  "file": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "p50",
+  "system": "vectra-bm25",
+  "value": 44530737.8845,
+  "ci": [
+   44403352.317,
+   44606743.577
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json#systems.vectra-bm25",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "44,530,738"
+ },
+ {
+  "section": "js memory hybrid",
+  "file": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "p99",
+  "system": "vectra-bm25",
+  "value": 44723914.1715,
+  "ci": [
+   44666755.4735,
+   44908256.46
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json#systems.vectra-bm25",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "44,723,914"
+ },
+ {
+  "section": "js memory hybrid",
+  "file": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "rss",
+  "system": "vectra-bm25",
+  "value": 1298.615234375,
+  "ci": [
+   1287.91015625,
+   1307.580078125
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json#systems.vectra-bm25",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "1,299"
+ },
+ {
+  "section": "js memory hybrid",
+  "file": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "cold",
+  "system": "vectra-bm25",
+  "value": 43.1723417365,
+  "ci": [
+   42.973028516,
+   43.345112932
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json#systems.vectra-bm25",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "43.17"
+ },
+ {
+  "section": "js memory hybrid",
+  "file": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "ndcg",
+  "system": "warm-hybrid",
+  "value": 0.4874836,
+  "ci": null,
+  "n": 100,
+  "source": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json#systems.warm-hybrid",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.4875"
+ },
+ {
+  "section": "js memory hybrid",
+  "file": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "qps",
+  "system": "warm-hybrid",
+  "value": 1545.88797758661,
+  "ci": [
+   1435.5800087909029,
+   1564.4006000665245
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json#systems.warm-hybrid",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "1,546"
+ },
+ {
+  "section": "js memory hybrid",
+  "file": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "p50",
+  "system": "warm-hybrid",
+  "value": 620.0740000000001,
+  "ci": [
+   617.562,
+   670.2149999999999
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json#systems.warm-hybrid",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "620"
+ },
+ {
+  "section": "js memory hybrid",
+  "file": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "p99",
+  "system": "warm-hybrid",
+  "value": 999.1815,
+  "ci": [
+   984.185,
+   1131.809
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json#systems.warm-hybrid",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "999"
+ },
+ {
+  "section": "js memory hybrid",
+  "file": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "build",
+  "system": "warm-hybrid",
+  "value": 2.644017282,
+  "ci": [
+   2.63335187,
+   2.65965397
+  ],
+  "n": 8,
+  "source": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json#systems.warm-hybrid",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "2.64"
+ },
+ {
+  "section": "js memory hybrid",
+  "file": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "size",
+  "system": "warm-hybrid",
+  "value": 11.184349060058594,
+  "ci": [
+   11.184349060058594,
+   11.184349060058594
+  ],
+  "n": 8,
+  "source": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json#systems.warm-hybrid",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "11.2"
+ },
+ {
+  "section": "js memory hybrid",
+  "file": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "rss",
+  "system": "warm-hybrid",
+  "value": 122.224609375,
+  "ci": [
+   121.064453125,
+   122.748046875
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json#systems.warm-hybrid",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "122"
+ },
+ {
+  "section": "js memory hybrid",
+  "file": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "cold",
+  "system": "warm-hybrid",
+  "value": 0.2951333175,
+  "ci": [
+   0.293748573,
+   0.297500219
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json#systems.warm-hybrid",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.30"
+ },
+ {
+  "section": "js memory keyword",
+  "file": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "ndcg",
+  "system": "warm-lexical",
+  "value": 0.45614195,
+  "ci": null,
+  "n": 100,
+  "source": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json#systems.warm-lexical",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.4561"
+ },
+ {
+  "section": "js memory keyword",
+  "file": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "qps",
+  "system": "warm-lexical",
+  "value": 3001.489027885822,
+  "ci": [
+   2923.998405635791,
+   3125.970516158689
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json#systems.warm-lexical",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "3,001"
+ },
+ {
+  "section": "js memory keyword",
+  "file": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "p50",
+  "system": "warm-lexical",
+  "value": 309.0715,
+  "ci": [
+   298.332,
+   320.32550000000003
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json#systems.warm-lexical",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "309"
+ },
+ {
+  "section": "js memory keyword",
+  "file": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "p99",
+  "system": "warm-lexical",
+  "value": 642.3499999999999,
+  "ci": [
+   635.181,
+   676.742
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json#systems.warm-lexical",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "642"
+ },
+ {
+  "section": "js memory keyword",
+  "file": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "build",
+  "system": "warm-lexical",
+  "value": 2.644017282,
+  "ci": [
+   2.63335187,
+   2.65965397
+  ],
+  "n": 8,
+  "source": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json#systems.warm-lexical",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "2.64"
+ },
+ {
+  "section": "js memory keyword",
+  "file": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "size",
+  "system": "warm-lexical",
+  "value": 11.184349060058594,
+  "ci": [
+   11.184349060058594,
+   11.184349060058594
+  ],
+  "n": 8,
+  "source": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json#systems.warm-lexical",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "11.2"
+ },
+ {
+  "section": "js memory keyword",
+  "file": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "rss",
+  "system": "warm-lexical",
+  "value": 120.76953125,
+  "ci": [
+   120.27734375,
+   121.99609375
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json#systems.warm-lexical",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "121"
+ },
+ {
+  "section": "js memory keyword",
+  "file": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "cold",
+  "system": "warm-lexical",
+  "value": 0.296108679,
+  "ci": [
+   0.294109732,
+   0.2990301785
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-memory-gcp-n2-icelake-8c-16g.json#systems.warm-lexical",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.30"
+ },
+ {
+  "section": "js nfcorpus dense",
+  "file": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "ndcg",
+  "system": "vectra",
+  "value": 0.31057842592592594,
+  "ci": null,
+  "n": 324,
+  "source": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json#systems.vectra",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.3106"
+ },
+ {
+  "section": "js nfcorpus dense",
+  "file": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "qps",
+  "system": "vectra",
+  "value": 559.2905885271292,
+  "ci": [
+   553.4339696880552,
+   560.1957970068908
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json#systems.vectra",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "559"
+ },
+ {
+  "section": "js nfcorpus dense",
+  "file": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "p50",
+  "system": "vectra",
+  "value": 1774.2635,
+  "ci": [
+   1771.0785,
+   1792.087
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json#systems.vectra",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "1,774"
+ },
+ {
+  "section": "js nfcorpus dense",
+  "file": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "p99",
+  "system": "vectra",
+  "value": 1853.6770000000001,
+  "ci": [
+   1841.91,
+   1883.3229999999999
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json#systems.vectra",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "1,854"
+ },
+ {
+  "section": "js nfcorpus dense",
+  "file": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "build",
+  "system": "vectra",
+  "value": 0.7776331665,
+  "ci": [
+   0.772217734,
+   0.788917085
+  ],
+  "n": 8,
+  "source": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json#systems.vectra",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.78"
+ },
+ {
+  "section": "js nfcorpus dense",
+  "file": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "size",
+  "system": "vectra",
+  "value": 28.225241661071777,
+  "ci": [
+   28.225241661071777,
+   28.225241661071777
+  ],
+  "n": 8,
+  "source": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json#systems.vectra",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "28.2"
+ },
+ {
+  "section": "js nfcorpus dense",
+  "file": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "rss",
+  "system": "vectra",
+  "value": 274.900390625,
+  "ci": [
+   274.76171875,
+   275.18359375
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json#systems.vectra",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "275"
+ },
+ {
+  "section": "js nfcorpus dense",
+  "file": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "cold",
+  "system": "vectra",
+  "value": 0.529357678,
+  "ci": [
+   0.524262968,
+   0.533342512
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json#systems.vectra",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.53"
+ },
+ {
+  "section": "js nfcorpus dense",
+  "file": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "ndcg",
+  "system": "warm-vector",
+  "value": 0.3109198024691358,
+  "ci": null,
+  "n": 324,
+  "source": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json#systems.warm-vector",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.3109"
+ },
+ {
+  "section": "js nfcorpus dense",
+  "file": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "qps",
+  "system": "warm-vector",
+  "value": 1439.353850047977,
+  "ci": [
+   1354.015664399822,
+   1489.600382514666
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json#systems.warm-vector",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "1,439"
+ },
+ {
+  "section": "js nfcorpus dense",
+  "file": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "p50",
+  "system": "warm-vector",
+  "value": 659.254,
+  "ci": [
+   638.2275,
+   701.318
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json#systems.warm-vector",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "659"
+ },
+ {
+  "section": "js nfcorpus dense",
+  "file": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "p99",
+  "system": "warm-vector",
+  "value": 1025.1570000000002,
+  "ci": [
+   983.319,
+   1059.2645
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json#systems.warm-vector",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "1,025"
+ },
+ {
+  "section": "js nfcorpus dense",
+  "file": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "build",
+  "system": "warm-vector",
+  "value": 0.4347629665,
+  "ci": [
+   0.43380854,
+   0.439257924
+  ],
+  "n": 8,
+  "source": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json#systems.warm-vector",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.43"
+ },
+ {
+  "section": "js nfcorpus dense",
+  "file": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "size",
+  "system": "warm-vector",
+  "value": 20.090781211853027,
+  "ci": [
+   20.090781211853027,
+   20.090781211853027
+  ],
+  "n": 8,
+  "source": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json#systems.warm-vector",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "20.1"
+ },
+ {
+  "section": "js nfcorpus dense",
+  "file": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "rss",
+  "system": "warm-vector",
+  "value": 168.447265625,
+  "ci": [
+   168.275390625,
+   168.74609375
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json#systems.warm-vector",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "168"
+ },
+ {
+  "section": "js nfcorpus dense",
+  "file": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "cold",
+  "system": "warm-vector",
+  "value": 0.164520414,
+  "ci": [
+   0.162006598,
+   0.165110323
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json#systems.warm-vector",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.16"
+ },
+ {
+  "section": "js nfcorpus hybrid",
+  "file": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "ndcg",
+  "system": "vectra-bm25",
+  "value": 0.3365414,
+  "ci": null,
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json#systems.vectra-bm25",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.3365"
+ },
+ {
+  "section": "js nfcorpus hybrid",
+  "file": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "qps",
+  "system": "vectra-bm25",
+  "value": 0.1663904948664251,
+  "ci": [
+   0.16450319124184365,
+   0.1681554035703447
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json#systems.vectra-bm25",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.17"
+ },
+ {
+  "section": "js nfcorpus hybrid",
+  "file": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "p50",
+  "system": "vectra-bm25",
+  "value": 5988267.057,
+  "ci": [
+   5939731.368,
+   6071335.528
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json#systems.vectra-bm25",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "5,988,267"
+ },
+ {
+  "section": "js nfcorpus hybrid",
+  "file": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "p99",
+  "system": "vectra-bm25",
+  "value": 6065305.216,
+  "ci": [
+   5995789.5835,
+   6207329.679
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json#systems.vectra-bm25",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "6,065,305"
+ },
+ {
+  "section": "js nfcorpus hybrid",
+  "file": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "rss",
+  "system": "vectra-bm25",
+  "value": 664.203125,
+  "ci": [
+   656.22265625,
+   708.263671875
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json#systems.vectra-bm25",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "664"
+ },
+ {
+  "section": "js nfcorpus hybrid",
+  "file": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "cold",
+  "system": "vectra-bm25",
+  "value": 6.45733672,
+  "ci": [
+   6.421751705,
+   6.5062137765
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json#systems.vectra-bm25",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "6.46"
+ },
+ {
+  "section": "js nfcorpus hybrid",
+  "file": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "ndcg",
+  "system": "warm-hybrid",
+  "value": 0.38403010000000004,
+  "ci": null,
+  "n": 324,
+  "source": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json#systems.warm-hybrid",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.3840"
+ },
+ {
+  "section": "js nfcorpus hybrid",
+  "file": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "qps",
+  "system": "warm-hybrid",
+  "value": 2636.5146305786175,
+  "ci": [
+   2423.2535805748694,
+   2667.6507751301056
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json#systems.warm-hybrid",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "2,637"
+ },
+ {
+  "section": "js nfcorpus hybrid",
+  "file": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "p50",
+  "system": "warm-hybrid",
+  "value": 373.0685,
+  "ci": [
+   366.561,
+   404.0635
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json#systems.warm-hybrid",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "373"
+ },
+ {
+  "section": "js nfcorpus hybrid",
+  "file": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "p99",
+  "system": "warm-hybrid",
+  "value": 508.589,
+  "ci": [
+   493.706,
+   528.388
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json#systems.warm-hybrid",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "509"
+ },
+ {
+  "section": "js nfcorpus hybrid",
+  "file": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "build",
+  "system": "warm-hybrid",
+  "value": 0.6583285065,
+  "ci": [
+   0.650878602,
+   0.660682733
+  ],
+  "n": 8,
+  "source": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json#systems.warm-hybrid",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.66"
+ },
+ {
+  "section": "js nfcorpus hybrid",
+  "file": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "size",
+  "system": "warm-hybrid",
+  "value": 6.590598106384277,
+  "ci": [
+   6.590598106384277,
+   6.590598106384277
+  ],
+  "n": 8,
+  "source": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json#systems.warm-hybrid",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "6.6"
+ },
+ {
+  "section": "js nfcorpus hybrid",
+  "file": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "rss",
+  "system": "warm-hybrid",
+  "value": 91.416015625,
+  "ci": [
+   90.9296875,
+   91.619140625
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json#systems.warm-hybrid",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "91"
+ },
+ {
+  "section": "js nfcorpus hybrid",
+  "file": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "cold",
+  "system": "warm-hybrid",
+  "value": 0.140738248,
+  "ci": [
+   0.138521681,
+   0.143254857
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json#systems.warm-hybrid",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.14"
+ },
+ {
+  "section": "js nfcorpus keyword",
+  "file": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "ndcg",
+  "system": "warm-lexical",
+  "value": 0.2915822530864198,
+  "ci": null,
+  "n": 324,
+  "source": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json#systems.warm-lexical",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.2916"
+ },
+ {
+  "section": "js nfcorpus keyword",
+  "file": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "qps",
+  "system": "warm-lexical",
+  "value": 9903.90955124156,
+  "ci": [
+   9183.589113868542,
+   10876.199380581622
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json#systems.warm-lexical",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "9,904"
+ },
+ {
+  "section": "js nfcorpus keyword",
+  "file": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "p50",
+  "system": "warm-lexical",
+  "value": 89.93100000000001,
+  "ci": [
+   80.05,
+   95.8665
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json#systems.warm-lexical",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "90"
+ },
+ {
+  "section": "js nfcorpus keyword",
+  "file": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "p99",
+  "system": "warm-lexical",
+  "value": 195.002,
+  "ci": [
+   185.02100000000002,
+   213.995
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json#systems.warm-lexical",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "195"
+ },
+ {
+  "section": "js nfcorpus keyword",
+  "file": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "build",
+  "system": "warm-lexical",
+  "value": 0.6583285065,
+  "ci": [
+   0.650878602,
+   0.660682733
+  ],
+  "n": 8,
+  "source": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json#systems.warm-lexical",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.66"
+ },
+ {
+  "section": "js nfcorpus keyword",
+  "file": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "size",
+  "system": "warm-lexical",
+  "value": 6.590598106384277,
+  "ci": [
+   6.590598106384277,
+   6.590598106384277
+  ],
+  "n": 8,
+  "source": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json#systems.warm-lexical",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "6.6"
+ },
+ {
+  "section": "js nfcorpus keyword",
+  "file": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "rss",
+  "system": "warm-lexical",
+  "value": 90.439453125,
+  "ci": [
+   90.29296875,
+   90.58203125
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json#systems.warm-lexical",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "90"
+ },
+ {
+  "section": "js nfcorpus keyword",
+  "file": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "cold",
+  "system": "warm-lexical",
+  "value": 0.14115031849999998,
+  "ci": [
+   0.13957141,
+   0.142347575
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-nfcorpus-gcp-n2-icelake-8c-16g.json#systems.warm-lexical",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.14"
+ },
+ {
+  "section": "js scifact dense",
+  "file": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "ndcg",
+  "system": "vectra",
+  "value": 0.7461149579728059,
+  "ci": null,
+  "n": 809,
+  "source": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json#systems.vectra",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.7461"
+ },
+ {
+  "section": "js scifact dense",
+  "file": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "qps",
+  "system": "vectra",
+  "value": 387.5772482499975,
+  "ci": [
+   326.6668413987777,
+   396.9044373992566
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json#systems.vectra",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "388"
+ },
+ {
+  "section": "js scifact dense",
+  "file": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "p50",
+  "system": "vectra",
+  "value": 2562.5344999999998,
+  "ci": [
+   2500.9665,
+   3049.6555
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json#systems.vectra",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "2,563"
+ },
+ {
+  "section": "js scifact dense",
+  "file": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "p99",
+  "system": "vectra",
+  "value": 2786.365,
+  "ci": [
+   2662.582,
+   3405.458
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json#systems.vectra",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "2,786"
+ },
+ {
+  "section": "js scifact dense",
+  "file": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "build",
+  "system": "vectra",
+  "value": 1.089046348,
+  "ci": [
+   1.047144128,
+   1.118204492
+  ],
+  "n": 8,
+  "source": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json#systems.vectra",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "1.09"
+ },
+ {
+  "section": "js scifact dense",
+  "file": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "size",
+  "system": "vectra",
+  "value": 40.258538246154785,
+  "ci": [
+   40.258538246154785,
+   40.258538246154785
+  ],
+  "n": 8,
+  "source": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json#systems.vectra",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "40.3"
+ },
+ {
+  "section": "js scifact dense",
+  "file": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "rss",
+  "system": "vectra",
+  "value": 372.0703125,
+  "ci": [
+   318.453125,
+   373.796875
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json#systems.vectra",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "372"
+ },
+ {
+  "section": "js scifact dense",
+  "file": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "cold",
+  "system": "vectra",
+  "value": 0.593041095,
+  "ci": [
+   0.5860849969999999,
+   0.6056008045
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json#systems.vectra",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.59"
+ },
+ {
+  "section": "js scifact dense",
+  "file": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "ndcg",
+  "system": "warm-vector",
+  "value": 0.7461149579728059,
+  "ci": null,
+  "n": 809,
+  "source": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json#systems.warm-vector",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.7461"
+ },
+ {
+  "section": "js scifact dense",
+  "file": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "qps",
+  "system": "warm-vector",
+  "value": 1033.0091217232275,
+  "ci": [
+   957.8583807277498,
+   1075.359736177915
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json#systems.warm-vector",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "1,033"
+ },
+ {
+  "section": "js scifact dense",
+  "file": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "p50",
+  "system": "warm-vector",
+  "value": 928.6685,
+  "ci": [
+   871.44,
+   1002.597
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json#systems.warm-vector",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "929"
+ },
+ {
+  "section": "js scifact dense",
+  "file": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "p99",
+  "system": "warm-vector",
+  "value": 1356.171,
+  "ci": [
+   1330.514,
+   1488.317
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json#systems.warm-vector",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "1,356"
+ },
+ {
+  "section": "js scifact dense",
+  "file": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "build",
+  "system": "warm-vector",
+  "value": 0.6309041735,
+  "ci": [
+   0.626463074,
+   0.639943785
+  ],
+  "n": 8,
+  "source": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json#systems.warm-vector",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.63"
+ },
+ {
+  "section": "js scifact dense",
+  "file": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "size",
+  "system": "warm-vector",
+  "value": 28.657187461853027,
+  "ci": [
+   28.657187461853027,
+   28.657187461853027
+  ],
+  "n": 8,
+  "source": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json#systems.warm-vector",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "28.7"
+ },
+ {
+  "section": "js scifact dense",
+  "file": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "rss",
+  "system": "warm-vector",
+  "value": 248.982421875,
+  "ci": [
+   248.79296875,
+   249.158203125
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json#systems.warm-vector",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "249"
+ },
+ {
+  "section": "js scifact dense",
+  "file": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "cold",
+  "system": "warm-vector",
+  "value": 0.2260213305,
+  "ci": [
+   0.222576661,
+   0.232324203
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json#systems.warm-vector",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.23"
+ },
+ {
+  "section": "js scifact hybrid",
+  "file": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "ndcg",
+  "system": "vectra-bm25",
+  "value": 0.45,
+  "ci": null,
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json#systems.vectra-bm25",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.4500"
+ },
+ {
+  "section": "js scifact hybrid",
+  "file": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "qps",
+  "system": "vectra-bm25",
+  "value": 0.12017946428508725,
+  "ci": [
+   0.11875770801801012,
+   0.12166099386713143
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json#systems.vectra-bm25",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.12"
+ },
+ {
+  "section": "js scifact hybrid",
+  "file": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "p50",
+  "system": "vectra-bm25",
+  "value": 8288049.0315000005,
+  "ci": [
+   8192482.933,
+   8389221.159500001
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json#systems.vectra-bm25",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "8,288,049"
+ },
+ {
+  "section": "js scifact hybrid",
+  "file": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "p99",
+  "system": "vectra-bm25",
+  "value": 8458915.3495,
+  "ci": [
+   8341726.275,
+   8495872.820999999
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json#systems.vectra-bm25",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "8,458,915"
+ },
+ {
+  "section": "js scifact hybrid",
+  "file": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "rss",
+  "system": "vectra-bm25",
+  "value": 648.302734375,
+  "ci": [
+   639.021484375,
+   700.55078125
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json#systems.vectra-bm25",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "648"
+ },
+ {
+  "section": "js scifact hybrid",
+  "file": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "cold",
+  "system": "vectra-bm25",
+  "value": 8.824879948,
+  "ci": [
+   8.673270128999999,
+   8.952732937
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json#systems.vectra-bm25",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "8.82"
+ },
+ {
+  "section": "js scifact hybrid",
+  "file": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "ndcg",
+  "system": "warm-hybrid",
+  "value": 0.550707,
+  "ci": null,
+  "n": 809,
+  "source": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json#systems.warm-hybrid",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.5507"
+ },
+ {
+  "section": "js scifact hybrid",
+  "file": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "qps",
+  "system": "warm-hybrid",
+  "value": 1668.6947500948736,
+  "ci": [
+   1545.9064164422703,
+   1713.1883635903919
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json#systems.warm-hybrid",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "1,669"
+ },
+ {
+  "section": "js scifact hybrid",
+  "file": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "p50",
+  "system": "warm-hybrid",
+  "value": 595.986,
+  "ci": [
+   578.5935,
+   633.4935
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json#systems.warm-hybrid",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "596"
+ },
+ {
+  "section": "js scifact hybrid",
+  "file": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "p99",
+  "system": "warm-hybrid",
+  "value": 761.0965,
+  "ci": [
+   747.643,
+   930.0
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json#systems.warm-hybrid",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "761"
+ },
+ {
+  "section": "js scifact hybrid",
+  "file": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "build",
+  "system": "warm-hybrid",
+  "value": 0.9771716225,
+  "ci": [
+   0.965709883,
+   0.98078749
+  ],
+  "n": 8,
+  "source": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json#systems.warm-hybrid",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.98"
+ },
+ {
+  "section": "js scifact hybrid",
+  "file": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "size",
+  "system": "warm-hybrid",
+  "value": 9.356223106384277,
+  "ci": [
+   9.356223106384277,
+   9.356223106384277
+  ],
+  "n": 8,
+  "source": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json#systems.warm-hybrid",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "9.4"
+ },
+ {
+  "section": "js scifact hybrid",
+  "file": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "rss",
+  "system": "warm-hybrid",
+  "value": 108.986328125,
+  "ci": [
+   108.7734375,
+   109.3828125
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json#systems.warm-hybrid",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "109"
+ },
+ {
+  "section": "js scifact hybrid",
+  "file": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "cold",
+  "system": "warm-hybrid",
+  "value": 0.194905421,
+  "ci": [
+   0.189835133,
+   0.20361045049999998
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json#systems.warm-hybrid",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.19"
+ },
+ {
+  "section": "js scifact keyword",
+  "file": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "ndcg",
+  "system": "warm-lexical",
+  "value": 0.7026997503090235,
+  "ci": null,
+  "n": 809,
+  "source": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json#systems.warm-lexical",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.7027"
+ },
+ {
+  "section": "js scifact keyword",
+  "file": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "qps",
+  "system": "warm-lexical",
+  "value": 3848.0714272166406,
+  "ci": [
+   3635.69199548119,
+   4239.475309958704
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json#systems.warm-lexical",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "3,848"
+ },
+ {
+  "section": "js scifact keyword",
+  "file": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "p50",
+  "system": "warm-lexical",
+  "value": 256.1895,
+  "ci": [
+   229.959,
+   268.75149999999996
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json#systems.warm-lexical",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "256"
+ },
+ {
+  "section": "js scifact keyword",
+  "file": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "p99",
+  "system": "warm-lexical",
+  "value": 420.501,
+  "ci": [
+   389.88,
+   438.135
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json#systems.warm-lexical",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "421"
+ },
+ {
+  "section": "js scifact keyword",
+  "file": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "build",
+  "system": "warm-lexical",
+  "value": 0.9771716225,
+  "ci": [
+   0.965709883,
+   0.98078749
+  ],
+  "n": 8,
+  "source": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json#systems.warm-lexical",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.98"
+ },
+ {
+  "section": "js scifact keyword",
+  "file": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "size",
+  "system": "warm-lexical",
+  "value": 9.356223106384277,
+  "ci": [
+   9.356223106384277,
+   9.356223106384277
+  ],
+  "n": 8,
+  "source": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json#systems.warm-lexical",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "9.4"
+ },
+ {
+  "section": "js scifact keyword",
+  "file": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "rss",
+  "system": "warm-lexical",
+  "value": 105.287109375,
+  "ci": [
+   105.046875,
+   105.56640625
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json#systems.warm-lexical",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "105"
+ },
+ {
+  "section": "js scifact keyword",
+  "file": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json",
+  "hardware_class": "gcp-n2-icelake-8c-16g",
+  "metric": "cold",
+  "system": "warm-lexical",
+  "value": 0.1969199485,
+  "ci": [
+   0.19082558300000002,
+   0.203312901
+  ],
+  "n": 10,
+  "source": "benchmarks/results/competitive/standard-js-scifact-gcp-n2-icelake-8c-16g.json#systems.warm-lexical",
+  "validity": "valid",
+  "uncertainty": "sampled",
+  "interval_kind": "bootstrap",
+  "text": "0.20"
  }
 ]

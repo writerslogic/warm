@@ -212,5 +212,25 @@ _Generated from `benchmarks/results/competitive/` by `warm-bench table`; method 
 | beir:scifact (ids) | `linux-x86_64-intel-xeon-2-60ghz-8c-16g` | Ingest/build time (s) | 0.32 | SQLite FTS5 0.28 | 0.87x | - |
 | beir:scifact (ids) | `linux-x86_64-intel-xeon-2-60ghz-8c-16g` | Peak RSS, serving (MiB) | 19 | SQLite FTS5 51 | 2.73x | W |
 | beir:scifact (ids) | `linux-x86_64-intel-xeon-2-60ghz-8c-16g` | On-disk size (MiB) | 1.3 | Apache Lucene 10.6.0 (JVM) 2.0 | 1.60x | W |
+| fiqa (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | nDCG@10 | 0.3919 | Vectra 0.3919 | +0.0000 nDCG | T |
+| fiqa (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | QPS | 71 | Vectra 31 | 2.29x | W |
+| fiqa (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | p50 (us) | 14,084 | Vectra 32,343 | 2.30x | W |
+| fiqa (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | Build (s) | 5.56 | Vectra 14.42 | 2.59x | W |
+| fiqa (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | Index (MiB) | 318.3 | Vectra 447.6 | 1.41x | W |
+| memory (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | nDCG@10 | 0.2848 | Vectra 0.2847 | +0.0001 nDCG | T |
+| memory (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | QPS | 1,257 | Vectra 435 | 2.89x | W |
+| memory (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | p50 (us) | 776 | Vectra 2,244 | 2.89x | W |
+| memory (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | Build (s) | 0.56 | Vectra 0.98 | 1.75x | W |
+| memory (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | Index (MiB) | 25.3 | Vectra 35.5 | 1.40x | W |
+| nfcorpus (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | nDCG@10 | 0.3109 | Vectra 0.3106 | +0.0003 nDCG | T |
+| nfcorpus (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | QPS | 1,439 | Vectra 559 | 2.57x | W |
+| nfcorpus (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | p50 (us) | 659 | Vectra 1,774 | 2.69x | W |
+| nfcorpus (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | Build (s) | 0.43 | Vectra 0.78 | 1.79x | W |
+| nfcorpus (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | Index (MiB) | 20.1 | Vectra 28.2 | 1.40x | W |
+| scifact (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | nDCG@10 | 0.7461 | Vectra 0.7461 | +0.0000 nDCG | T |
+| scifact (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | QPS | 1,033 | Vectra 388 | 2.67x | W |
+| scifact (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | p50 (us) | 929 | Vectra 2,563 | 2.76x | W |
+| scifact (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | Build (s) | 0.63 | Vectra 1.09 | 1.73x | W |
+| scifact (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | Index (MiB) | 28.7 | Vectra 40.3 | 1.40x | W |
 
 <!-- BENCH:END -->
