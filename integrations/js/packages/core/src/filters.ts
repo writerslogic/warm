@@ -4,7 +4,7 @@
 /**
  * Metadata filter AST, equal in semantics to the Python core.
  *
- * Top-level equality terms ANDed together are pushed to the native engine, which evaluates them
+ * Top-level equality and `in` terms ANDed together are pushed to the native engine, which evaluates them
  * before ranking. Every other term (comparison, in, or, not, nested keys, existence) is evaluated
  * here on an over-fetched candidate list, so such filters can return fewer than `k` results.
  */
@@ -23,6 +23,12 @@ export type CmpOp = 'ne' | 'gt' | 'gte' | 'lt' | 'lte' | 'in' | 'nin' | 'exists'
 export type FilterLike = Filter | Record<string, unknown> | null | undefined
 
 const MISSING = Symbol('missing')
+
+/** Equality, or for a list field and a non-list value, equality with any element. */
+function equalAny(found: unknown, value: unknown): boolean {
+  if (deepEqual(found, value)) return true
+  return Array.isArray(found) && !Array.isArray(value) && found.some((item) => deepEqual(item, value))
+}
 
 function lookup(metadata: Metadata, key: string): unknown {
   if (key in metadata) return metadata[key]
@@ -61,7 +67,7 @@ export function matches(filter: Filter, metadata: Metadata): boolean {
   switch (filter.type) {
     case 'eq': {
       const found = lookup(metadata, filter.key)
-      return found !== MISSING && deepEqual(found, filter.value)
+      return found !== MISSING && equalAny(found, filter.value)
     }
     case 'and':
       return filter.terms.every((t) => matches(t, metadata))
@@ -80,11 +86,11 @@ export function matches(filter: Filter, metadata: Metadata): boolean {
         case 'exists':
           return present === Boolean(filter.value)
         case 'ne':
-          return !present || !deepEqual(found, filter.value)
+          return !present || !equalAny(found, filter.value)
         case 'nin':
-          return !present || !list().some((v) => deepEqual(found, v))
+          return !present || !list().some((v) => equalAny(found, v))
         case 'in':
-          return present && list().some((v) => deepEqual(found, v))
+          return present && list().some((v) => equalAny(found, v))
         case 'gt':
         case 'gte':
         case 'lt':
@@ -210,7 +216,9 @@ export function splitFilter(filter: Filter | undefined): { pushed: Record<string
   const rest: Filter[] = []
   for (const t of terms) {
     if (t.type === 'eq' && !t.key.includes('.') && !(t.key in pushed) && isPushable(t.value)) pushed[t.key] = t.value
-    else rest.push(t)
+    else if (t.type === 'cmp' && t.op === 'in' && !t.key.includes('.') && !(t.key in pushed) && isPushableList(t.value)) {
+      pushed[t.key] = { $in: t.value }
+    } else rest.push(t)
   }
   return { pushed, residual: allOf(rest) }
 }
@@ -218,4 +226,10 @@ export function splitFilter(filter: Filter | undefined): { pushed: Record<string
 /** The engine's equality is exact for scalars; arrays and objects are matched here instead. */
 function isPushable(v: unknown): boolean {
   return v === null || ['string', 'number', 'boolean'].includes(typeof v)
+}
+
+const MAX_PUSHED_IN = 1024
+
+function isPushableList(v: unknown): v is unknown[] {
+  return Array.isArray(v) && v.length <= MAX_PUSHED_IN && v.every(isPushable)
 }

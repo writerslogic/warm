@@ -337,6 +337,14 @@ fn scalar_key(value: &serde_json::Value) -> Option<String> {
     }
 }
 
+/// Index keys of a metadata value: its scalar key, or for a list every distinct element's.
+fn metadata_keys(value: &serde_json::Value) -> BTreeSet<String> {
+    match value {
+        serde_json::Value::Array(items) => items.iter().filter_map(scalar_key).collect(),
+        value => scalar_key(value).into_iter().collect(),
+    }
+}
+
 /// A stored document serialized exactly as the derived form of [`StoredDocument`] with every
 /// chunk's text inline, resolving text moved to a segment; the journal and compaction frames
 /// carry documents this way, so a restart sees the same bytes as a fresh commit.
@@ -807,7 +815,7 @@ impl DocumentStore {
             .into_iter()
             .flatten()
         {
-            if let Some(value) = scalar_key(value) {
+            if let Some(value) = super::indexed_equality(value).and_then(scalar_key) {
                 let Some(ids) = self.metadata.get(&(key.clone(), value)) else {
                     return Some(&EMPTY);
                 };
@@ -1181,7 +1189,7 @@ impl DocumentStore {
         }
         if let Some(metadata) = document.metadata.as_object() {
             for (key, value) in metadata {
-                if let Some(value) = scalar_key(value) {
+                for value in metadata_keys(value) {
                     self.metadata
                         .entry((key.clone(), value))
                         .or_default()
@@ -1199,7 +1207,7 @@ impl DocumentStore {
         }
         if let Some(metadata) = document.metadata.as_object() {
             for (key, value) in metadata {
-                if let Some(value) = scalar_key(value) {
+                for value in metadata_keys(value) {
                     remove_secondary(&mut self.metadata, &(key.clone(), value), &document.id);
                 }
             }

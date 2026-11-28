@@ -1,15 +1,15 @@
 # Offline retrieval and prompt-size metrics for the context shapes (zero spend; cached query embeddings; no provider key).
 import sys, os, json, importlib.util, time
-MH = '/Volumes/A/.hms-lb/locomo-20261114/multihop2'
+MH = '$WARM_BENCH_DATA/multihop2'
 sys.path.insert(0, MH); sys.path.insert(0, os.path.expanduser('~/warm-locomo2/benchmarks/public/locomo'))
 os.chdir(MH)
 from exp_lib import *            # qs, tt, by_dia, f2t, rows0, gold_pos, metrics, boot_ci, base ...
 import context_shapes as cs
 import tiktoken
 enc = tiktoken.get_encoding('o200k_base')
-spec = importlib.util.spec_from_file_location('prompts', '/Volumes/A/.hms-lb/locomo-20261114/mem0-benchmarks/repo/benchmarks/locomo/prompts.py')
+spec = importlib.util.spec_from_file_location('prompts', '$WARM_BENCH_DATA/mem0-benchmarks/repo/benchmarks/locomo/prompts.py')
 prompts = importlib.util.module_from_spec(spec); spec.loader.exec_module(prompts)
-OUT = '/Volumes/A/.hms-lb/locomo-20261114/context3'
+OUT = '$WARM_BENCH_DATA/context3'
 ce = CacheOnly()
 idx = {}
 for ci in range(10):

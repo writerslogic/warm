@@ -67,6 +67,7 @@ impl WarmCore {
         filter: Option<&Value>,
         mut visit: impl FnMut(DocumentView<'_>) -> Result<()>,
     ) -> Result<u64> {
+        documents::validate_filter(filter)?;
         let _transaction = self.mutation_gate.read();
         let revision = self.revision();
         let store = self.documents.read();

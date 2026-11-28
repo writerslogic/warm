@@ -41,6 +41,19 @@ pub struct DocumentInput {
     pub title_weight: Option<u32>,
 }
 
+/// The embedding model a store was built with ([`crate::core::WarmCore::embedding_model`]).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EmbeddingModelInfo {
+    pub model: String,
+    pub revision: String,
+    pub dimensions: usize,
+    pub normalization: String,
+    pub metric: String,
+    /// sha256 of the model pack; `None` while no embedder is installed.
+    pub pack_sha256: Option<String>,
+}
+
 /// When a document's chunk hypervectors are computed. Terms, postings and text are stored at
 /// ingest in every mode, so lexical search sees the document at once; only the vector side
 /// (`WarmCore::query` over chunk vectors) differs.

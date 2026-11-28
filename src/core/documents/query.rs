@@ -136,15 +136,7 @@ pub(super) fn matches_document_metadata(
         .source_uri
         .as_ref()
         .is_none_or(|uri| document.source_uri.as_ref() == Some(uri))
-        && matches_metadata(&document.metadata, options.filter.as_ref())
-}
-
-pub(crate) fn matches_metadata(metadata: &Value, filter: Option<&Value>) -> bool {
-    filter.and_then(Value::as_object).is_none_or(|filter| {
-        filter
-            .iter()
-            .all(|(key, value)| metadata.get(key) == Some(value))
-    })
+        && super::matches_metadata(&document.metadata, options.filter.as_ref())
 }
 
 pub(super) fn top_ranked<T>(
@@ -177,10 +169,7 @@ pub(super) fn search_impl(
         (1..=1000).contains(&k) && (k..=4096).contains(&limit),
         "require 1 <= k <= 1000 and k <= candidateLimit <= 4096"
     );
-    ensure!(
-        options.filter.as_ref().is_none_or(Value::is_object),
-        "filter must be a JSON object of exact metadata matches"
-    );
+    super::validate_filter(options.filter.as_ref())?;
     let lexical_weight = options.lexical_weight.unwrap_or(1.0);
     let semantic_weight = options.semantic_weight.unwrap_or(1.0);
     ensure!(

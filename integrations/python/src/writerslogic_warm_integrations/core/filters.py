@@ -3,10 +3,11 @@
 
 """Metadata filter AST.
 
-The service filters by equality on top-level metadata keys only. Equality terms that are
-ANDed at the top level are pushed to the service; every other term (comparison, `in`, `or`,
-`not`, nested keys, existence) is evaluated here on an over-fetched candidate list, so a
-filter with such terms can return fewer than `k` results (see `WarmConfig.overfetch`).
+The service filters by equality and `$in` on top-level metadata keys; a list-valued field
+matches when any element matches. Equality and `in` terms that are ANDed at the top level are
+pushed to the service; every other term (comparison, `or`, `not`, nested keys, existence) is
+evaluated here on an over-fetched candidate list, so a filter with such terms can return
+fewer than `k` results (see `WarmConfig.overfetch`).
 """
 
 from __future__ import annotations
@@ -36,6 +37,13 @@ def _equal(a: Any, b: Any) -> bool:
     return a == b
 
 
+def _equal_any(found: Any, value: Any) -> bool:
+    """Equality, or for a list field and a non-list value, equality with any element."""
+    if _equal(found, value):
+        return True
+    return isinstance(found, list) and not isinstance(value, list) and any(_equal(item, value) for item in found)
+
+
 def _ordered(a: Any, b: Any, op: str) -> bool:
     if isinstance(a, bool) or isinstance(b, bool):
         return False
@@ -58,7 +66,7 @@ class Eq(Filter):
 
     def matches(self, metadata: Mapping[str, Any]) -> bool:
         found = _lookup(metadata, self.key)
-        return found is not _MISSING and _equal(found, self.value)
+        return found is not _MISSING and _equal_any(found, self.value)
 
 
 @dataclass(frozen=True)
@@ -83,13 +91,13 @@ class Cmp(Filter):
             is_empty = not present or found is None or found == "" or found == []
             return is_empty == bool(self.value)
         if op == "ne":
-            return not present or not _equal(found, self.value)
+            return not present or not _equal_any(found, self.value)
         if op == "nin":
-            return not present or not any(_equal(found, v) for v in self.value)
+            return not present or not any(_equal_any(found, v) for v in self.value)
         if not present:
             return False
         if op == "in":
-            return any(_equal(found, v) for v in self.value)
+            return any(_equal_any(found, v) for v in self.value)
         if op in ("gt", "gte", "lt", "lte"):
             return _ordered(found, self.value, op)
         if op == "icontains":
@@ -182,8 +190,15 @@ def parse(spec: FilterLike) -> Optional[Filter]:
     return all_of(terms)
 
 
+_MAX_PUSHED_IN = 1024
+
+
+def _scalar(value: Any) -> bool:
+    return value is None or isinstance(value, (str, bool, int))
+
+
 def split(flt: Optional[Filter]) -> Tuple[Dict[str, Any], Optional[Filter]]:
-    """Separate the part the service evaluates (top-level equalities) from the residual."""
+    """Separate the part the service evaluates (top-level equalities and `in`) from the residual."""
     if flt is None:
         return {}, None
     terms = flt.terms if isinstance(flt, And) else (flt,)
@@ -198,6 +213,16 @@ def split(flt: Optional[Filter]) -> Tuple[Dict[str, Any], Optional[Filter]]:
             and t.key not in pushed
         ):
             pushed[t.key] = t.value
+        elif (
+            isinstance(t, Cmp)
+            and t.op == "in"
+            and isinstance(t.value, (list, tuple))
+            and len(t.value) <= _MAX_PUSHED_IN
+            and all(_scalar(v) for v in t.value)
+            and "." not in t.key
+            and t.key not in pushed
+        ):
+            pushed[t.key] = {"$in": list(t.value)}
         else:
             rest.append(t)
     return pushed, all_of(rest)
