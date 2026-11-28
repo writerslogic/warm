@@ -13,6 +13,9 @@ import { createRequire } from "node:module";
 import { join } from "node:path";
 
 const require = createRequire(import.meta.url);
+// WARM_MEMORY_DIR: a warm-memory checkout built from source (index.js, vectra.js and the .node next to it); default is the pinned npm package.
+const warmRoot = process.env.WARM_MEMORY_DIR ?? "warm-memory";
+const warmModule = (sub) => require(process.env.WARM_MEMORY_DIR ? join(warmRoot, sub ? `${sub}.js` : "index.js") : sub ? `warm-memory/${sub}` : "warm-memory");
 const [phase, system, dataDir, store, outPath, maxQueriesArg] = process.argv.slice(2);
 const DIM = 384;
 const TOP_K = 10;
@@ -29,6 +32,8 @@ const json = (name) => JSON.parse(readFileSync(join(dataDir, name), "utf8"));
 const rss = () => process.resourceUsage().maxRSS * 1024; // libuv reports KiB on Linux and macOS
 const ns = () => process.hrtime.bigint();
 const secs = (t0) => Number(ns() - t0) / 1e9;
+// Set by each build just before its final flush: Vectra's batchInsertItems persists inside the call, so its close time is 0.
+let ingestEnd = null;
 
 const kind = system.startsWith("vectra") ? "vectra" : "warm";
 const WARM_CONFIG = { embeddingModel: MODEL.model, embeddingRevision: MODEL.revision, embeddingDimensions: DIM };
@@ -48,7 +53,7 @@ async function buildVectra(corpus, vectors) {
 }
 
 async function buildWarmVector(corpus, vectors) {
-  const { VectraMigrationIndex } = require("warm-memory/vectra");
+  const { VectraMigrationIndex } = warmModule("vectra");
   const index = await VectraMigrationIndex.create({ path: store, embeddingSpace: MODEL });
   for (let from = 0; from < corpus.ids.length; from += 1000) {
     const operations = [];
@@ -57,11 +62,12 @@ async function buildWarmVector(corpus, vectors) {
     }
     await index.applyBatch(operations);
   }
+  ingestEnd = ns();
   await index.flush();
 }
 
 async function buildWarmDocs(corpus, vectors) {
-  const { WarmMemorySystem } = require("warm-memory");
+  const { WarmMemorySystem } = warmModule("");
   const memory = new WarmMemorySystem(DIM, store, WARM_CONFIG);
   for (let from = 0; from < corpus.ids.length; from += 500) {
     const inputs = [];
@@ -77,6 +83,7 @@ async function buildWarmDocs(corpus, vectors) {
     }
     await memory.memorizeDocuments(inputs);
   }
+  ingestEnd = ns();
   if (typeof memory.flush === "function") await memory.flush();
 }
 
@@ -89,7 +96,8 @@ async function build() {
   else if (system === "warm-vector") await buildWarmVector(corpus, vectors);
   else await buildWarmDocs(corpus, vectors);
   const buildSeconds = secs(t0);
-  writeFileSync(outPath, JSON.stringify({ system, documents: corpus.ids.length, build_seconds: buildSeconds, peak_rss_bytes: rss() }));
+  const ingestSeconds = ingestEnd === null ? buildSeconds : Number(ingestEnd - t0) / 1e9;
+  writeFileSync(outPath, JSON.stringify({ system, documents: corpus.ids.length, build_seconds: buildSeconds, ingest_s: ingestSeconds, close_s: buildSeconds - ingestSeconds, peak_rss_bytes: rss() }));
   process.exit(0);
 }
 
@@ -109,11 +117,11 @@ async function openSearcher(corpusTexts) {
     return async (vector, text) => (await index.queryItems(vector, text, TOP_K, undefined, bm25)).map((r) => r.item.id);
   }
   if (system === "warm-vector") {
-    const { VectraMigrationIndex } = require("warm-memory/vectra");
+    const { VectraMigrationIndex } = warmModule("vectra");
     const index = await VectraMigrationIndex.open({ path: store });
     return async (vector) => (await index.queryItems(vector, { k: TOP_K, mode: "exact" })).results.map((r) => r.item.id);
   }
-  const { WarmMemorySystem } = require("warm-memory");
+  const { WarmMemorySystem } = warmModule("");
   const memory = new WarmMemorySystem(DIM, store, WARM_CONFIG);
   if (system === "warm-lexical") {
     return async (_vector, text) => (await memory.searchDocuments(text, { k: TOP_K, candidateLimit: TOP_K, lexicalWeight: 1, semanticWeight: 0 })).map((r) => r.documentId);

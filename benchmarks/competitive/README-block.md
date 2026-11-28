@@ -212,25 +212,20 @@ _Generated from `benchmarks/results/competitive/` by `warm-bench table`; method 
 | beir:scifact (ids) | `linux-x86_64-intel-xeon-2-60ghz-8c-16g` | Ingest/build time (s) | 0.32 | SQLite FTS5 0.28 | 0.87x | - |
 | beir:scifact (ids) | `linux-x86_64-intel-xeon-2-60ghz-8c-16g` | Peak RSS, serving (MiB) | 19 | SQLite FTS5 51 | 2.73x | W |
 | beir:scifact (ids) | `linux-x86_64-intel-xeon-2-60ghz-8c-16g` | On-disk size (MiB) | 1.3 | Apache Lucene 10.6.0 (JVM) 2.0 | 1.60x | W |
-| fiqa (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | nDCG@10 | 0.3919 | Vectra 0.3919 | +0.0000 nDCG | T |
-| fiqa (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | QPS | 29 | Vectra 31 | 0.95x | L |
-| fiqa (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | p50 (us) | 34,053 | Vectra 32,456 | 0.95x | L |
-| fiqa (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | Build (s) | 5.49 | Vectra 15.67 | 2.86x | - |
-| fiqa (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | Index (MiB) | 318.3 | Vectra 447.6 | 1.41x | - |
 | memory (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | nDCG@10 | 0.2848 | Vectra 0.2847 | +0.0001 nDCG | T |
-| memory (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | QPS | 330 | Vectra 414 | 0.80x | L |
-| memory (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | p50 (us) | 3,021 | Vectra 2,314 | 0.77x | L |
-| memory (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | Build (s) | 0.56 | Vectra 1.03 | 1.83x | W |
+| memory (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | QPS | 433 | Vectra 298 | 1.45x | W |
+| memory (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | p50 (us) | 2,277 | Vectra 3,220 | 1.41x | W |
+| memory (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | Build (s) | 0.65 | Vectra 1.21 | 1.85x | W |
 | memory (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | Index (MiB) | 25.3 | Vectra 35.5 | 1.40x | W |
 | nfcorpus (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | nDCG@10 | 0.3109 | Vectra 0.3106 | +0.0003 nDCG | T |
-| nfcorpus (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | QPS | 404 | Vectra 553 | 0.73x | L |
-| nfcorpus (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | p50 (us) | 2,472 | Vectra 1,796 | 0.73x | L |
-| nfcorpus (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | Build (s) | 0.43 | Vectra 0.80 | 1.85x | W |
+| nfcorpus (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | QPS | 545 | Vectra 390 | 1.40x | W |
+| nfcorpus (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | p50 (us) | 1,788 | Vectra 2,509 | 1.40x | W |
+| nfcorpus (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | Build (s) | 0.49 | Vectra 0.93 | 1.90x | W |
 | nfcorpus (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | Index (MiB) | 20.1 | Vectra 28.2 | 1.40x | W |
 | scifact (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | nDCG@10 | 0.7461 | Vectra 0.7461 | +0.0000 nDCG | T |
-| scifact (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | QPS | 303 | Vectra 378 | 0.80x | L |
-| scifact (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | p50 (us) | 3,282 | Vectra 2,614 | 0.80x | L |
-| scifact (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | Build (s) | 0.61 | Vectra 1.08 | 1.78x | W |
+| scifact (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | QPS | 449 | Vectra 260 | 1.73x | W |
+| scifact (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | p50 (us) | 2,203 | Vectra 3,821 | 1.73x | W |
+| scifact (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | Build (s) | 0.68 | Vectra 1.21 | 1.78x | W |
 | scifact (JS, vs Vectra 0.15.0) | `gcp-n2-icelake-8c-16g` | Index (MiB) | 28.7 | Vectra 40.3 | 1.40x | W |
 
 <!-- BENCH:END -->

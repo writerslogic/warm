@@ -114,6 +114,28 @@ def comparisons(data, contract):
     return out
 
 
+def cells_for(path, data):
+    """Every table cell of one results file, recomputed from the recorded observations."""
+    hw, ds, systems = data["hardware"]["class"], data["dataset"], data["systems"]
+    out = []
+    for contract in ("dense", "hybrid", "keyword"):
+        subset = set(systems["vectra-bm25"]["quality"]["per_query_ndcg@10"]) if contract == "hybrid" and "vectra-bm25" in systems else None
+        for key, entry in systems.items():
+            if entry["contract"] != contract:
+                continue
+            for metric, label, higher, dec in COLUMNS:
+                if metric in ("build", "size") and contract == "hybrid" and key == "vectra-bm25":
+                    continue
+                v = value(entry, metric, subset)
+                rounds = per_round(entry, metric) if metric != "ndcg" else None
+                out.append({"section": f"js {ds['name']} {contract}", "file": rel(path), "hardware_class": hw, "metric": metric, "system": key,
+                            "value": v, "ci": common.bootstrap_ci(rounds) if rounds else None,
+                            "n": len(rounds) if rounds else entry["quality"]["queries"],
+                            "source": f"{rel(path)}#systems.{key}", "validity": "valid", "uncertainty": "sampled",
+                            "interval_kind": "bootstrap", "text": fmt(v, dec)})
+    return out
+
+
 def lines(results, cells):
     if not results:
         return []
@@ -131,6 +153,7 @@ def lines(results, cells):
                 f"Versions: Node {data['versions']['node']}, vectra {data['versions']['vectra']}, warm-memory {data['versions']['warm-memory']}. "
                 f"Embedding: {data['embedding']['model']} {data['embedding']['quantization']}, {data['embedding']['dimensions']} dimensions. "
                 f"{data['protocol']['rounds']} rounds, {data['protocol']['build_repeats']} builds, results `{rel(path)}`.", ""]
+        cells.extend(cells_for(path, data))
         for contract in ("dense", "hybrid", "keyword"):
             rows = [(k, s) for k, s in systems.items() if s["contract"] == contract]
             if not rows and contract != "keyword":
@@ -145,10 +168,6 @@ def lines(results, cells):
                         continue
                     v = value(entry, metric, subset)
                     cell.append(fmt(v, dec))
-                    ci = common.bootstrap_ci(per_round(entry, metric)) if metric not in ("ndcg",) else None
-                    cells.append({"section": f"js {ds['name']} {contract}", "file": rel(path), "hardware_class": hw, "metric": metric, "system": key,
-                                  "value": v, "ci": ci, "n": len(per_round(entry, metric)) if metric != "ndcg" else entry["quality"]["queries"],
-                                  "source": f"{rel(path)}#systems.{key}", "validity": "valid", "uncertainty": "sampled", "interval_kind": "bootstrap", "text": fmt(v, dec)})
                 out.append(f"| {entry['display']} | " + " | ".join(cell) + " |")
             for _, unsupported in [(k, v) for k, v in data.get("unsupported", {}).items()]:
                 if contract in unsupported:

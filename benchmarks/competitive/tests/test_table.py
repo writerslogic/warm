@@ -15,7 +15,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from warmbench import analyze, registry, table  # noqa: E402
+from warmbench import analyze, jsvector, registry, table  # noqa: E402
 from warmbench.common import ROOT  # noqa: E402
 
 HAVE_RESULTS = bool(list(table.RESULTS.glob("*.json"))) and table.CELLS.exists()
@@ -65,6 +65,12 @@ def test_every_cell_recomputes_from_its_results_file():
     for file, group in by_file.items():
         path = ROOT / file
         whole = json.loads(path.read_text())
+        if whole.get("kind") == "js":  # JavaScript runs carry their own schema (build_seconds, ingest_s, close_s); jsvector recomputes them
+            fresh = {(c["section"], c["metric"], c["system"]): json.loads(json.dumps(c)) for c in jsvector.cells_for(path, whole)}
+            for cell in group:
+                assert fresh[(cell["section"], cell["metric"], cell["system"])] == cell, (file, cell["metric"], cell["system"])
+                assert cell["text"] in markdown, (file, cell["metric"], cell["text"])
+            continue
         # A file written under two text timing contracts is read as one view per contract; a cell belongs to the view
         # named in its section title. Both views share the file's Bonferroni family.
         views = [d for _, d in table.contract_views(path, whole)]
@@ -307,3 +313,12 @@ def common_ci(values):
     from warmbench.common import bootstrap_ci
     import statistics
     return bootstrap_ci(values, statistics.fmean, rounds=1000)
+
+
+@pytest.mark.skipif(not HAVE_RESULTS, reason="no committed competitive results yet")
+def test_js_builds_record_ingest_and_close_time():
+    for _, data in jsvector.load():
+        for key, entry in data["systems"].items():
+            for build in entry["build_runs"]:
+                assert build["ingest_s"] >= 0 and build["close_s"] >= 0, (data["dataset"]["name"], key)
+                assert build["ingest_s"] + build["close_s"] == pytest.approx(build["build_seconds"]), (data["dataset"]["name"], key)

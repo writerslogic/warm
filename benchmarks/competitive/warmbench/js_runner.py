@@ -54,7 +54,10 @@ def versions():
     def pkg(name):
         return json.loads((JS / "node_modules" / name / "package.json").read_text())["version"]
     node = subprocess.run(["node", "--version"], capture_output=True, text=True, check=True).stdout.strip()
-    return {"node": node, "vectra": pkg("vectra"), "warm-memory": pkg("warm-memory")}
+    warm = pkg("warm-memory")
+    if os.environ.get("WARM_MEMORY_DIR"):
+        warm = json.loads((Path(os.environ["WARM_MEMORY_DIR"]) / "package.json").read_text())["version"] + " (built from source)"
+    return {"node": node, "vectra": pkg("vectra"), "warm-memory": warm}
 
 
 def sha256(path):
@@ -98,7 +101,7 @@ def build_store(store, data, work):
     result = work / "build.json"
     _, _, wall, peak = node("build", store, data, path, result)
     report = json.loads(result.read_text())
-    return {"build_seconds": report["build_seconds"], "wall_seconds": wall, "peak_rss_bytes": peak, "index_bytes": common.dir_bytes(path)}
+    return {"build_seconds": report["build_seconds"], "ingest_s": report["ingest_s"], "close_s": report["close_s"], "wall_seconds": wall, "peak_rss_bytes": peak, "index_bytes": common.dir_bytes(path)}
 
 
 def serve_row(row, data, work):
@@ -161,7 +164,7 @@ def run(dataset, embed_bin, out_dir=None, rounds=ROUNDS, build_repeats=BUILD_REP
             if entry["store"] == store:
                 entry["build_runs"] = builds[store]
     result = {
-        "schema_version": 1, "kind": "js", "suite": suite, "commit": common.commit(), "date": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S%z"),
+        "schema_version": 1, "kind": "js", "suite": suite, "commit": common.commit(), "harness_commit": os.environ.get("WARM_BENCH_HARNESS_COMMIT", common.commit()), "date": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S%z"),
         "hardware": hw,
         "dataset": {"id": DATASETS[dataset], "name": dataset, "documents": len(json.loads((data / "corpus.json").read_text())["ids"]),
                     "queries": len(json.loads((data / "queries.json").read_text())["ids"]), **digests},

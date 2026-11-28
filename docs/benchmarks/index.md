@@ -26,12 +26,12 @@ Retain the raw result with its hardware class, then regenerate the table and sub
 ### JavaScript: WARM and Vectra
 
 `warm-bench js` compares `warm-memory` with Vectra (`vectra`, npm), both called in-process from Node, on the text datasets of the
-lexical protocol (SciFact, NFCorpus, LongMemEval-dev sessions, FiQA). Both index the same 384-dimension document vectors from one file
+lexical protocol (SciFact, NFCorpus, LongMemEval-dev sessions; FiQA is supported by the command but its committed run is pending, because embedding its 57,638 documents takes about 3.5 hours on the 8-core host). Both index the same 384-dimension document vectors from one file
 (WARM's local embedder, embedded once by `examples/competitive_hybrid embed`) and answer with the same query vectors, so the
 comparison is the stores. Rows: exact cosine top 10 (`warm-memory/vectra` against `LocalIndex.queryItems`), hybrid (WARM's fused BM25 and
 cosine against Vectra's `isBm25` option, which appends BM25 hits after the semantic list and rebuilds its engine per query, so it runs on a
 10-query sample per round) and keyword only (Vectra has none). Package versions are pinned exactly in
-`benchmarks/competitive/js/package.json` and recorded in each results file (`kind: js`).
+`benchmarks/competitive/js/package.json` and recorded in each results file (`kind: js`). Set `WARM_MEMORY_DIR` to a checkout built with `npm run build` to measure WARM from source instead of the pinned npm package; the results then record the source commit (`commit`) and the harness commit (`harness_commit`).
 
 ```sh
 (cd benchmarks/competitive/js && npm ci)
