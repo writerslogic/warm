@@ -232,8 +232,10 @@ impl ServingImage {
         let word_classes = reader.take(self.slots)?.to_vec();
         let word_counts: Vec<u16> = reader
             .take(self.slots.checked_mul(2).context("derived tables size")?)?
-            .chunks_exact(2)
-            .map(|pair| u16::from_le_bytes([pair[0], pair[1]]))
+            .as_chunks::<2>()
+            .0
+            .iter()
+            .map(|pair| u16::from_le_bytes(*pair))
             .collect();
         let (_, class_of) = classes();
         let last = class_of.len() - 1;
@@ -427,8 +429,10 @@ impl<'a> Reader<'a> {
     fn u32s(&mut self, count: usize) -> Result<Vec<u32>> {
         let bytes = self.take(count.checked_mul(4).context("derived tables size")?)?;
         Ok(bytes
-            .chunks_exact(4)
-            .map(|b| u32::from_le_bytes([b[0], b[1], b[2], b[3]]))
+            .as_chunks::<4>()
+            .0
+            .iter()
+            .map(|b| u32::from_le_bytes(*b))
             .collect())
     }
 
@@ -439,8 +443,10 @@ impl<'a> Reader<'a> {
     fn f64s(&mut self, count: usize) -> Result<Vec<f64>> {
         let bytes = self.take(count.checked_mul(8).context("derived tables size")?)?;
         Ok(bytes
-            .chunks_exact(8)
-            .map(|b| f64::from_le_bytes(b.try_into().expect("eight bytes")))
+            .as_chunks::<8>()
+            .0
+            .iter()
+            .map(|b| f64::from_le_bytes(*b))
             .collect())
     }
 }

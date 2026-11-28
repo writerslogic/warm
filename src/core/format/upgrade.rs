@@ -184,7 +184,7 @@ static MIGRATIONS: &[Migration] = &[
     Migration {
         step: UpgradeStep {
             id: "arena-4-derived-tables",
-            artefact: "arena",
+            artefact: "arena-manifest",
             from: 4,
             to: 4,
             description: "record `derived_tables` in the arena manifest of the copy, so its \
