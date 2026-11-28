@@ -18,7 +18,7 @@
 use std::cmp::Reverse;
 use std::collections::{BTreeSet, BinaryHeap};
 
-use super::image::SLOT_BYTES;
+use super::image::{CHAMPIONS, SLOT_BYTES};
 use super::lexical::wand::{sum_bound, up, Bound};
 use super::lists::{BlockBounds, Cursor, ListRef, RankTable};
 use super::postings::{get_varint, unpack, unpack_values, Postings, CHECKPOINT_BLOCK};
@@ -1052,6 +1052,7 @@ pub(super) fn rank<S: LexicalSource>(
     scratch.terms.clear();
     scratch.stats = PruneStats::default();
     let mut lists = Vec::new();
+    let mut spans = Vec::new();
     let mut windows = Vec::new();
     let mut aligned = [None; MAX_TERMS];
     for (form, set) in terms.iter().enumerate() {
@@ -1062,6 +1063,7 @@ pub(super) fn rank<S: LexicalSource>(
             let idf = Bm25::idf(n, f64::from(list.count));
             let bound = Bound::new(idf, average, bm25)?;
             lists.push((list, idf, bound));
+            spans.push(skips);
             let next_aligned = aligned.get_mut(windows.len());
             windows.push(skips.map(|skips| {
                 let table = image.rank_table_for(skips.skips, bm25, average);
@@ -1190,6 +1192,18 @@ pub(super) fn rank<S: LexicalSource>(
         if pilot.len() >= limit {
             let (_, nth, _) = pilot.select_nth_unstable_by(limit - 1, |a, b| b.total_cmp(a));
             pilot_floor = *nth;
+        }
+    }
+    // A long list's `limit`-th best weight is a score `limit` chunks are sure to reach: a chunk's
+    // score is at least any one of its weights.
+    if limit <= CHAMPIONS && bm25 == Bm25::DEFAULT {
+        for span in &spans {
+            let Some(list) = *span else { continue };
+            if let Some(found) = image.champions(list.skips, average) {
+                if limit <= found.len() {
+                    pilot_floor = pilot_floor.max(found.hit(limit - 1).0);
+                }
+            }
         }
     }
     const INFINITY: u64 = 0x7FF0_0000_0000_0000;

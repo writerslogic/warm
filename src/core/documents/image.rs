@@ -56,7 +56,9 @@ const MAGIC_V1: &[u8; 8] = b"HMSCKP\x00\x01";
 pub(crate) fn known_magic(magic: &[u8]) -> bool {
     magic == MAGIC || magic == MAGIC_V3 || magic == MAGIC_V2 || magic == MAGIC_V1
 }
+mod champions;
 mod derived;
+pub(super) use champions::{Champions, CHAMPIONS};
 mod merge;
 pub(crate) use merge::{bisection_order, can_merge, merge, SlotOrder, REORDER_MAX_EDGES};
 
@@ -902,6 +904,8 @@ pub(crate) struct ServingImage {
     decoded: DecodedBlocks,
     /// Aligned bounds for dense union terms, sorted by skip-table offset.
     union_windows: Box<[(usize, WindowBounds)]>,
+    /// Champion postings of the longest lists, set at open.
+    champions: champions::ChampionIndex,
 }
 
 /// Where a chunk's text is.
@@ -1100,6 +1104,7 @@ impl ServingImage {
             text_blocks,
             decoded: DecodedBlocks::default(),
             union_windows: Box::default(),
+            champions: champions::ChampionIndex::default(),
         };
         if text_blocks {
             image.text_stream()?;
