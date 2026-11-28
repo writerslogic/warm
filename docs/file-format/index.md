@@ -69,6 +69,18 @@ are then computed at each open. `warm-format upgrade` writes a new store with th
 leaves the source untouched; the copy keeps its existing checkpoint as it was, so the tables are
 written at the copy's next compaction, and until then it opens like the old store.
 
+A checkpoint of at most 32,768 slots, the size the unpruned ranker serves, also stores in the
+derived section (layout 2, after the direct tables) the length normalization of every slot under
+the default BM25 constants and the `(slot, weight)` pairs of its longest lists with more than 128
+postings: longest first, 16 bytes of entry head plus 12 per posting, within the direct tables'
+byte budget `max(32 MiB, min(512 MiB, index/8))`. The weights are the exhaustive scorer's own
+expression, so a query adds them in posting order and scores are bit-identical. The pairs cost
+space: a small store's index grows by 2 to 3 times (see the PR that introduced them for sizes).
+A build that knows only layout 1 (0.7.5) finds a header word it does not match, computes its
+tables and ignores the new bytes, so it opens such a store and ranks the same; no manifest field
+is involved. A layout-1 section is still read: the new tables are computed at open.
+`WARM_SMALL_TABLES=0` opens without them.
+
 ## Encryption
 
 Requires the `security` feature. With it compiled in, a new store is encrypted unless
