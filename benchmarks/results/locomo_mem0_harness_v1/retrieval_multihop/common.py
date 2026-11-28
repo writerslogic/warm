@@ -1,7 +1,7 @@
 import json, glob, os, re, hashlib, sqlite3, subprocess, urllib.request, time, shutil, tempfile
 import numpy as np
 H = os.path.expanduser('~')
-ROOT = '/Volumes/A/.hms-lb/locomo-20261114'
+ROOT = '$WARM_BENCH_DATA'
 DATA = json.load(open(f'{ROOT}/locomo10.json'))
 CACHE = f'{ROOT}/../memeval-20261112/locomo/cache.sqlite'
 CATS = {1: 'multi-hop', 2: 'temporal', 3: 'open-domain', 4: 'single-hop'}
