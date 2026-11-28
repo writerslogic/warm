@@ -1,6 +1,6 @@
 """analyze_final.py DIR [DIR...]: paired bootstrap of the new WARM run (results in each DIR/predicted_*/conv*_q*.json) against Mem0's published per-question file and against the earlier WARM run, on the questions present."""
 import json, glob, sys, os, numpy as np
-B = '/Users/davidcondrey/warm-locomo2/benchmarks/results/locomo_mem0_harness_v1'
+B = '$WARM_REPO/benchmarks/results/locomo_mem0_harness_v1'
 m0 = {e['question_id']: e for e in json.load(open(f'{B}/mem0_published/locomo_results.json'))['evaluations']}
 old = {json.loads(l)['question_id']: json.loads(l) for l in open(f'{B}/per_question.jsonl')}
 res = {}
