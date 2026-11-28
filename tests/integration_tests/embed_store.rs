@@ -481,7 +481,7 @@ fn a_lexical_store_can_adopt_an_embedder_and_default_encoding_is_unchanged() {
     let embedder = Arc::new(
         Embedder::new(&EmbedOptions {
             model: pack.to_string_lossy().into(),
-            sha256: Some(sha),
+            sha256: Some(sha.clone()),
             ..EmbedOptions::default()
         })
         .unwrap(),
@@ -498,7 +498,19 @@ fn a_lexical_store_can_adopt_an_embedder_and_default_encoding_is_unchanged() {
     )
     .unwrap();
     let lexical_before = core.encode_text("the cat sat on the mat");
+    let space = embedder.space();
+    assert_eq!(
+        core.embedding_model().unwrap().pack_sha256,
+        None,
+        "the pack hash is reported only while an embedder is installed"
+    );
     core.set_text_embedder(Some(embedder)).unwrap();
+    let info = core.embedding_model().unwrap();
+    assert_eq!(info.pack_sha256.as_deref(), Some(sha.as_str()));
+    assert_eq!(
+        (info.model, info.revision, info.dimensions),
+        (space.model, space.revision, space.dimensions)
+    );
     // The text encoder stays lexical: installing an embedder adds dense vectors, nothing else.
     assert_eq!(
         lexical_before.indices(),

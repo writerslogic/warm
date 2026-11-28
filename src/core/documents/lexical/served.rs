@@ -3283,7 +3283,10 @@ mod tests {
 
     fn image_of(store: &DocumentStore) -> ServingImage {
         let bytes = encode(store, 7, 64).unwrap().expect("checkpointable");
-        ServingImage::new(Backing::Owned(bytes)).unwrap()
+        ServingImage::new(Backing::Owned(bytes))
+            .unwrap()
+            .with_derived_tables()
+            .unwrap()
     }
 
     #[test]
@@ -3334,6 +3337,24 @@ mod tests {
         let Some(served) = served::execute(image, query, options, bm25, ranker).unwrap() else {
             return false;
         };
+        // The same answer from the checkpoint opened without its direct frequency tables.
+        let bytes = encode(live, 7, 64).unwrap().expect("checkpointable");
+        let off = ServingImage::new(Backing::Owned(bytes))
+            .unwrap()
+            .with_derived_tables_using(false)
+            .unwrap();
+        let unserved = served::execute(&off, query, options, bm25, None).unwrap();
+        if let Some(unserved) = unserved {
+            assert_eq!(
+                unserved.count, served.count,
+                "tables off: {query:?} {options:?}"
+            );
+            assert_eq!(
+                format!("{:?}", unserved.hits),
+                format!("{:?}", served.hits),
+                "tables off: {query:?} {options:?}"
+            );
+        }
         assert_eq!(served.count, reference.count, "{query:?} {options:?}");
         assert_eq!(
             served.hits.len(),
@@ -3629,7 +3650,7 @@ mod tests {
             })
             .collect();
         let live = corpus(&docs, true);
-        let image = image_of(&live).with_rank_tables();
+        let image = image_of(&live).with_derived_tables().unwrap();
         assert!(image.list(0, "w0").unwrap().blocks() >= 256);
         PATHS.with(|c| c.set([0; 11]));
         for text in ["+w0 w1 w9", "+w0 w9", "+w9 w0 w1", "+w1 w2 w9 w0"] {
@@ -3652,9 +3673,10 @@ mod tests {
     }
 
     #[test]
-    fn unranked_checkpoint_queries_leave_word_counts_unbuilt() {
+    fn opened_checkpoint_has_its_word_counts_before_any_query() {
         let live = corpus(&[vec![0, 1, 0], vec![0, 2], vec![1, 2]], true);
         let image = image_of(&live);
+        assert!(image.has_word_counts());
         let options = LexicalOptions {
             k: 0,
             count: true,
@@ -3669,7 +3691,6 @@ mod tests {
         ] {
             let query = LexicalQuery::parse(text).unwrap();
             assert!(assert_same(&image, &live, &query, &options), "{text}");
-            assert!(!image.has_word_counts(), "{text}");
         }
     }
 
@@ -3801,7 +3822,7 @@ mod tests {
             })
             .collect();
         let live = corpus(&docs, true);
-        let image = image_of(&live).with_rank_tables();
+        let image = image_of(&live).with_derived_tables().unwrap();
         // The default options are the shape the tables were built for.
         assert!(prepare(&LexicalOptions::default()).unwrap() == Bm25::DEFAULT);
         let list = image.list(0, "w0").unwrap();

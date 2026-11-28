@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { matches, parseFilter } from '../dist/index.js'
+import { matches, parseFilter, splitFilter } from '../dist/index.js'
 
 test('filter semantics match the Python core', () => {
   const f = parseFilter({ a: 1, b: { $in: [1, 2] }, $not: { c: true } })
@@ -32,4 +32,16 @@ test('a metadata field named type is a plain equality, not an AST node', () => {
   const f = parseFilter({ type: 'eq', key: 'k' })
   assert.equal(f.type, 'and')
   assert.ok(matches(f, { type: 'eq', key: 'k' }))
+})
+
+test('eq and in match any element of a list field and in is pushed to the engine', () => {
+  assert.ok(matches(parseFilter({ tags: 'x' }), { tags: ['x', 'y'] }))
+  assert.ok(matches(parseFilter({ tags: { $in: ['q', 'y'] } }), { tags: ['x', 'y'] }))
+  assert.ok(!matches(parseFilter({ tags: { $in: ['q'] } }), { tags: ['x', 'y'] }))
+  assert.ok(!matches(parseFilter({ tags: { $ne: 'x' } }), { tags: ['x', 'y'] }))
+  assert.ok(matches(parseFilter({ tags: ['x', 'y'] }), { tags: ['x', 'y'] }))
+  const { pushed, residual } = splitFilter(parseFilter({ team: { $in: ['a', 'b'] }, n: 1, m: { $gt: 1 } }))
+  assert.deepEqual(pushed, { team: { $in: ['a', 'b'] }, n: 1 })
+  assert.equal(residual?.type, 'cmp')
+  assert.throws(() => parseFilter({ a: { $regexx: 1 } }), /unsupported operator \$regexx/)
 })

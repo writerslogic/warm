@@ -203,6 +203,20 @@ impl Analyzer {
         }
     }
 
+    /// The indexed term of one word: lowercased and stemmed exactly as the indexer does. Text
+    /// that is not a single word is not split; use [`Self::analyze`].
+    pub fn stem(self, word: &str) -> String {
+        let mut lower = String::new();
+        let prepared = self.prepare(word);
+        self.term(&prepared, true, &mut lower).into_owned()
+    }
+
+    /// The indexed terms of `text`, in text order and with repeats: the tokens the indexer
+    /// counts and a query clause matches.
+    pub fn analyze(self, text: &str) -> Vec<String> {
+        self.tokens(text, true)
+    }
+
     /// Every term of `text` in one form, in text order.
     pub(crate) fn tokens(self, text: &str, stem: bool) -> Vec<String> {
         // One ASCII word, the common query clause: its unstemmed legacy term is its lowercase.
@@ -505,6 +519,16 @@ fn hindi_stem(word: &mut String) {
 #[cfg(test)]
 pub(super) fn tests_names() -> &'static [(Analyzer, &'static str)] {
     &NAMES
+}
+
+/// [`Analyzer::stem`] under the default analyzer.
+pub fn stem(word: &str) -> String {
+    Analyzer::default().stem(word)
+}
+
+/// [`Analyzer::analyze`] under the default analyzer.
+pub fn analyze(text: &str) -> Vec<String> {
+    Analyzer::default().analyze(text)
 }
 
 #[cfg(test)]

@@ -1,0 +1,100 @@
+{
+  "nq_open": {
+    "NQ-open.train.jsonl": {
+      "url": "https://raw.githubusercontent.com/google-research-datasets/natural-questions/master/nq_open/NQ-open.train.jsonl",
+      "sha256": "0c93aaf13b12f855628489665e4ef85ffb8573ad444646f11f4fabdc57a0aabf"
+    },
+    "NQ-open.dev.jsonl": {
+      "url": "https://raw.githubusercontent.com/google-research-datasets/natural-questions/master/nq_open/NQ-open.dev.jsonl",
+      "sha256": "f15567f38099f3615f5b8a685c0aef449c11ad90d3da3735e8d1b98115b40616"
+    }
+  },
+  "gutenberg": {
+    "pg11.txt": {
+      "url": "https://gutenberg.pglaf.org/cache/epub/11/pg11.txt",
+      "sha256": "01b38ea4c710a84bc18d0bd41271a5a1a92b94e97b2812f4dece97d4a694725e"
+    },
+    "pg1184.txt": {
+      "url": "https://gutenberg.pglaf.org/cache/epub/1184/pg1184.txt",
+      "sha256": "99245b8f3f6b637a3670d37305bb1ba52003f05797b6638571562999fd623f9c"
+    },
+    "pg1260.txt": {
+      "url": "https://gutenberg.pglaf.org/cache/epub/1260/pg1260.txt",
+      "sha256": "13414dee2951c3ee731d76d2ffd822016b2479c892162760c5d0eb2aa5fa7631"
+    },
+    "pg1342.txt": {
+      "url": "https://gutenberg.pglaf.org/cache/epub/1342/pg1342.txt",
+      "sha256": "3f6bb9d6f78e0293b56acd4714dd68cb7d6d1d293402031ce9d5a216bcaf9d75"
+    },
+    "pg1400.txt": {
+      "url": "https://gutenberg.pglaf.org/cache/epub/1400/pg1400.txt",
+      "sha256": "9a637118af8e953e9764ec603d9b0a032883384d465acac2e27966a80cf1c6f8"
+    },
+    "pg158.txt": {
+      "url": "https://gutenberg.pglaf.org/cache/epub/158/pg158.txt",
+      "sha256": "532b122b4e6a76cc556d6fdcd729b5892f5c4ce4a1b7060b9f832adfad8680dc"
+    },
+    "pg161.txt": {
+      "url": "https://gutenberg.pglaf.org/cache/epub/161/pg161.txt",
+      "sha256": "7bcd77c45cb32fb8d9f89402561270cc6a911c0a4e20667176d5be779fc3974a"
+    },
+    "pg1661.txt": {
+      "url": "https://gutenberg.pglaf.org/cache/epub/1661/pg1661.txt",
+      "sha256": "922e2a12ccb43a4c9544c260b2166c6ad2097aeb5957faeee113f173bb857cd0"
+    },
+    "pg174.txt": {
+      "url": "https://gutenberg.pglaf.org/cache/epub/174/pg174.txt",
+      "sha256": "38f36b510417177aa87a6a24c968e3ec63a447b7df36a9c1a7c5a3f2d9e51547"
+    },
+    "pg205.txt": {
+      "url": "https://gutenberg.pglaf.org/cache/epub/205/pg205.txt",
+      "sha256": "2d9a76a2e3e8195c69430516ebd33c4d0757a53ad432ff6186b7b794e6fe99f9"
+    },
+    "pg2554.txt": {
+      "url": "https://gutenberg.pglaf.org/cache/epub/2554/pg2554.txt",
+      "sha256": "4a84a709a6e355f5fa555c7276c8a90125eb9d06f63bc8663410c3d1297eb688"
+    },
+    "pg2600.txt": {
+      "url": "https://gutenberg.pglaf.org/cache/epub/2600/pg2600.txt",
+      "sha256": "2d5bb2ad5f422765e714617e21fa31bbaf8958aa79682c86fca6660fcc5d1b2b"
+    },
+    "pg2701.txt": {
+      "url": "https://gutenberg.pglaf.org/cache/epub/2701/pg2701.txt",
+      "sha256": "b5e88b71a1cda068e9ab1d94344c9d932338ba6da1a66def97a1aecd9cfcc87d"
+    },
+    "pg2814.txt": {
+      "url": "https://gutenberg.pglaf.org/cache/epub/2814/pg2814.txt",
+      "sha256": "6be7d8400ac2549459307d1c1a20a25c86a736984269d3e9d989c817814be60c"
+    },
+    "pg3207.txt": {
+      "url": "https://gutenberg.pglaf.org/cache/epub/3207/pg3207.txt",
+      "sha256": "3de1e492641d939567a8b0de827fb13e1ad992324f9ac8b204f60475009b7294"
+    },
+    "pg345.txt": {
+      "url": "https://gutenberg.pglaf.org/cache/epub/345/pg345.txt",
+      "sha256": "96cd16eacdbfebae8fdda5591f66e0cc8ee76be18e0cd1aca02bc00615782d28"
+    },
+    "pg76.txt": {
+      "url": "https://gutenberg.pglaf.org/cache/epub/76/pg76.txt",
+      "sha256": "d617a37aa7ae1e1a93dcde2634db2bccb86824e31e29a55230bdbf77d6872d59"
+    },
+    "pg768.txt": {
+      "url": "https://gutenberg.pglaf.org/cache/epub/768/pg768.txt",
+      "sha256": "e533fe750589f0421d5d744576315f5c2b9b0d69e981179ea0551bbf134c5e02"
+    },
+    "pg84.txt": {
+      "url": "https://gutenberg.pglaf.org/cache/epub/84/pg84.txt",
+      "sha256": "2b97b7f8aad508649481d8dd4f6b54f9b965ddb3ba634e9151c815f537b49e42"
+    },
+    "pg98.txt": {
+      "url": "https://gutenberg.pglaf.org/cache/epub/98/pg98.txt",
+      "sha256": "d54c2b80d40a40b982cd88852c6180bb944d95acdb028af3d0e01a1750681784"
+    }
+  },
+  "vocabulary": {
+    "vocab5m.tsv": {
+      "sha256": "fa4b997e2bfb498d72a60bc7d7d81058738ee90a51841b9faf65fda00045a073",
+      "note": "sbg_fuzz vocab over the benchmark corpus.json, 5,032,104 articles"
+    }
+  }
+}

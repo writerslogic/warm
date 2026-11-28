@@ -240,10 +240,20 @@ fn schema_only_upgrade_preserves_checkpoint_and_source_bytes() -> anyhow::Result
     after.remove(".hms.lock");
     assert_eq!(before, after);
     assert!(plan_upgrade(&output)?.up_to_date);
+    // The arena is copied unchanged except for the manifest, which records `derived_tables`.
+    let arena_without_manifest = |dir: &std::path::Path| -> anyhow::Result<_> {
+        let mut prints = file_fingerprints(&dir.join("vectors_data.bin"))?;
+        prints.retain(|name, _| !name.contains("format.json"));
+        Ok(prints)
+    };
     assert_eq!(
-        file_fingerprints(&source.join("vectors_data.bin"))?,
-        file_fingerprints(&output.join("vectors_data.bin"))?
+        arena_without_manifest(&source)?,
+        arena_without_manifest(&output)?
     );
+    let manifest: serde_json::Value = serde_json::from_slice(&std::fs::read(
+        output.join("vectors_data.bin").join("format.json"),
+    )?)?;
+    assert_eq!(manifest["derived_tables"], true);
     let core = writerslogic_warm::WarmCore::new(
         fixture.dimensions(),
         Some(output.display().to_string()),

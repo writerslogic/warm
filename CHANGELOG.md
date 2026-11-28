@@ -5,6 +5,31 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) +
 [Conventional Commits](https://www.conventionalcommits.org/).
 
 [v0.6.3 migration and integrity notes](https://writerslogic.com/warm/docs/latest/releasing/v0.6.3/).
+## [0.7.5] - 2026-11-28
+
+### Added
+- Add native in and eq filters, list matching, exact vector scores, model id and stemmer API (#558)
+- Add a configurable master key path with a WARM_MASTER_KEY_PATH fallback (#552)
+- Add atomic write_batch for mixed memorize and delete operations (#553)
+- Read-only store opens beside one writer, and close() that releases the lock (#545)
+- Publish the JavaScript adapters under the @writerslogic scope and depend on warm-memory (#538)
+- Ship the Node engine as warm-memory with all eight bindings and the MCP launcher as warm-mcp (#533)
+
+### Performance
+- Store index-derived tables in the checkpoint and drop query-carried caches (#554)
+- Screen exact vector scans and defer hit vector decoding (#547)
+- Rank long deep unions from their strongest windows first (#542)
+- Scan query lists from contiguous code copies for VIBE llama and yi (#541)
+
+### Bench
+- Count the warm-rust dependency tree and fail instead of recording zero (#560)
+- Add a carried-state probe and its first run on the search-benchmark-game engines (#555)
+- Add ANN mechanism ablation and paired SIFT/GloVe factor runs (#548)
+- Add the same-host VIBE comparison of WARM, RoarGraph and MLANN on llama and yi (#544)
+- Commit the long-union search-benchmark-game tables and exactness logs (#543)
+- Commit the exhaustive differential log that the global ignore dropped (#540)
+- Record that served BM25 top-k matches exhaustive scoring on the search-benchmark-game queries (#539)
+- Add the pinned search-benchmark-game results for WARM 0.7.4 on c3-highcpu-8 (#534)
 ## [0.7.4] - 2026-11-26
 
 ### Documentation

@@ -26,21 +26,6 @@ pub(in super::super) trait LexicalSource {
     fn impact_image(&self) -> Option<&super::super::image::ServingImage> {
         None
     }
-    /// The shortest posting list and the most postings a thread keeps decoded and weighted
-    /// for this source (see [`HotList`]).
-    fn hot_policy(&self) -> HotPolicy {
-        HotPolicy {
-            min_len: HOT_MIN_LEN.max(self.slot_count() / HOT_MIN_SLOTS),
-            postings: HOT_POSTINGS,
-        }
-    }
-}
-
-/// How much of a source's posting lists a thread keeps decoded and weighted.
-#[derive(Clone, Copy)]
-pub(in super::super) struct HotPolicy {
-    pub(super) min_len: usize,
-    pub(super) postings: usize,
 }
 
 /// A term's postings as [`LexicalScratch::rank`] reads them.
@@ -98,14 +83,6 @@ impl LexicalSource for DocumentStore {
 
     fn slot_order(&self, slot: usize) -> (&str, usize) {
         DocumentStore::slot_order(self, slot)
-    }
-
-    /// A live store's lists are short and its queries long: keep every list of 16 postings or more.
-    fn hot_policy(&self) -> HotPolicy {
-        HotPolicy {
-            min_len: LIVE_HOT_MIN_LEN,
-            postings: LIVE_HOT_POSTINGS,
-        }
     }
 }
 

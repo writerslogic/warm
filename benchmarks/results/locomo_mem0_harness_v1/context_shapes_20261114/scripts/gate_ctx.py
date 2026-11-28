@@ -5,14 +5,14 @@ os.environ['OPENAI_API_KEY'] = open(H + '/.config/warm-bench/lme2-openai.key').r
 os.environ['WARM_EMBED_BASE_URL'] = 'https://api.openai.com/v1'
 sys.path.insert(0, H + '/warm-locomo2/benchmarks/public/locomo')
 import mem0_harness_warm as w
-data = json.load(open('/Volumes/A/.hms-lb/locomo-20261114/locomo10.json'))
+data = json.load(open('$WARM_BENCH_DATA/locomo10.json'))
 counts = {}
 for l in open(SERVERLOG, errors='replace'):
     if '/memory/remember' not in l: continue
     try: r = json.loads(l)
     except Exception: continue
     if r.get('status') == 200: counts[r['tenant']] = counts.get(r['tenant'], 0) + 1
-sys.path.insert(0, '/Volumes/A/.hms-lb/locomo-20261114/multihop2')
+sys.path.insert(0, '$WARM_BENCH_DATA/multihop2')
 import common
 INDEX_DIR = os.path.dirname(OUT.rstrip('/')) + '/' + os.path.basename(OUT) + '-index'
 c = w.WarmClient()

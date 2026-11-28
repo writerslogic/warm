@@ -137,3 +137,5 @@ The separately declared exact byte-VNNI intervention was rejected by its six-poi
 Source: [supplied standing JSON](../vibe_v1/llama-128-ip-standing-wl02.json); current audit and strict-ID reconstructions are in [provenance.json](provenance.json).
 
 Regenerate this file with `uv run --no-project python benchmarks/results/query_aware_graph_v1/generate_report.py` after pulling completed run reports; add `--checks benchmarks/results/query_aware_graph_v1/checks.json` when the sole final-gate receipt exists.
+
+Absolute local paths in these scripts were replaced with placeholders.

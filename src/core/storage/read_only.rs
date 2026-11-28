@@ -81,13 +81,17 @@ impl PersistentArena {
         let source = [base.join(FORMAT_MANIFEST), data_path.join(FORMAT_MANIFEST)]
             .into_iter()
             .find(|path| path.exists());
-        let (version, segment_size) = match source {
+        let (version, segment_size, derived_tables) = match source {
             Some(source) => {
                 let (manifest, _) = Self::parse_manifest(&source)?;
-                (manifest.version, manifest.segment_size)
+                (
+                    manifest.version,
+                    manifest.segment_size,
+                    manifest.derived_tables,
+                )
             }
             // A store from before manifests is format 2 (see `validate_or_create_manifest`).
-            None => (2, LEGACY_SEGMENT_SIZE),
+            None => (2, LEGACY_SEGMENT_SIZE, false),
         };
         if let Some(store) = base.parent() {
             super::super::durable_file::verify_manifests(store, base)?;
@@ -96,6 +100,7 @@ impl PersistentArena {
         let arena = Self {
             segment_size,
             format_version: version,
+            derived_tables,
             base_path: base.to_path_buf(),
             data_path: RwLock::new(data_path),
             read_segments: RwLock::new(Vec::new()),

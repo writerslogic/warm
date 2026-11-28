@@ -103,7 +103,7 @@ test('filter operators', async () => {
   assert.deepEqual(await q({ category: { $in: ['b', 'c'] } }), ['v1', 'v3'])
   assert.deepEqual(await q({ category: { $nin: ['b', 'c'] } }), ['v0', 'v2'])
   assert.deepEqual(await q({ tags: { $all: ['x', 'y'] } }), ['v0'])
-  assert.deepEqual(await q({ tags: { $in: ['z'] } }), [])
+  assert.deepEqual(await q({ tags: { $in: ['z'] } }), ['v2'])
   assert.deepEqual(await q({ nested: { $exists: true } }), ['v2'])
   assert.deepEqual(await q({ $and: [{ category: 'a' }, { price: { $gt: 10 } }] }), ['v2'])
   assert.deepEqual(await q({ $or: [{ category: 'b' }, { price: 40 }] }), ['v1', 'v3'])

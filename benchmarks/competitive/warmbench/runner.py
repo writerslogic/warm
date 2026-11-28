@@ -107,9 +107,11 @@ def warm_install_facts(paths, crates=True):
                           "profile": WARM_PROFILE, "symbols": "stripped"}
     if not crates:
         return out
-    tree = subprocess.run(["cargo", "tree", "-e", "normal", "--prefix", "none", "-p", "writerslogic-warm", "--offline"],
+    tree = subprocess.run(["cargo", "tree", "-e", "normal", "--prefix", "none", "-p", "warm-rust", "--offline"],
                           capture_output=True, text=True, cwd=ROOT)
-    crates = sorted({line.split()[0] for line in tree.stdout.splitlines() if line.strip()}) if tree.returncode == 0 else []
+    if tree.returncode != 0:
+        raise RuntimeError(f"cargo tree failed, so the dependency count is unknown: {tree.stderr.strip()}")
+    crates = sorted({line.split()[0] for line in tree.stdout.splitlines() if line.strip()})
     out["_crate_dependencies"] = {"count": len(crates), "note": "unique crates in the default-feature normal dependency tree, including CLI-only crates; compiled in, not installed"}
     return out
 

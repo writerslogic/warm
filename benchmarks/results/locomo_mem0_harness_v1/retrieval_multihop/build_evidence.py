@@ -1,6 +1,6 @@
 # Assemble the committed evidence directory from the verified pilot outputs. No network, no key.
 import json, glob, os, hashlib, shutil, sys
-H = os.path.expanduser('~'); R = '/Volumes/A/.hms-lb/locomo-20261114'; P = R + '/pilot'
+H = os.path.expanduser('~'); R = '$WARM_BENCH_DATA'; P = R + '/pilot'
 D = H + '/warm-locomo2/benchmarks/results/locomo_mem0_harness_v1'
 os.makedirs(D + '/scripts', exist_ok=True); os.makedirs(D + '/mem0_published', exist_ok=True)
 for f in ('full1540-analysis.txt', 'ingest-gate.txt', 'run.py.diff', 'misses_full.json', 'all-usage.jsonl', 'all-child-env-names.txt'):

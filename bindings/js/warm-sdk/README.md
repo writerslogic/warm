@@ -132,7 +132,7 @@ Local invalid inputs throw `TypeError` or `RangeError`. `WarmError` carries `cod
 Applications that need a local native store can install the separate `warm-memory` package explicitly. It has its own engine version and bundles prebuilt binaries for eight platforms. It is not a dependency or optional dependency of this HTTP client:
 
 ```sh
-npm install warm-memory@0.7.4
+npm install warm-memory@0.7.5
 ```
 
 Check the [available native package versions](https://www.npmjs.com/package/warm-memory?activeTab=versions).

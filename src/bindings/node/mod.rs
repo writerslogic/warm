@@ -12,7 +12,7 @@ use crate::{
 };
 
 mod api;
-pub use api::WarmMemorySystem;
+pub use api::{EmbeddingModelJs, WarmMemorySystem};
 mod compaction;
 pub use compaction::{
     CompactionJob, CompactionOptionsJs, CompactionProgressJs, CompactionReportJs,
