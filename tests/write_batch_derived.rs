@@ -22,10 +22,10 @@ fn input(id: &str, text: &str) -> DocumentInput {
 
 fn text(n: usize) -> String {
     let mut out = format!("zebra w{} w{}", n % 40, n % 7);
-    if n % 3 == 0 {
+    if n.is_multiple_of(3) {
         out += " common";
     }
-    if n % 11 == 0 {
+    if n.is_multiple_of(11) {
         out += " zebra zebra rare";
     }
     out
