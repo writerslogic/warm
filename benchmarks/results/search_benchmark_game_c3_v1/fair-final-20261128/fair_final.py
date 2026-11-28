@@ -1,4 +1,4 @@
-import json, statistics as st, sys
+import json, statistics as st
 E=["warm-main-final","warm-new-final","warm-new-oldidx"]
 def load(p):
     with open(p) as f: return json.load(f)["results"]
