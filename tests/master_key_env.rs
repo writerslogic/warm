@@ -1,6 +1,7 @@
 // Copyright 2024-2026 WritersLogic Contributors
 // SPDX-License-Identifier: Apache-2.0
 // Own test target: the test sets process environment variables.
+#![cfg(feature = "security")]
 
 //! `WARM_MASTER_KEY_PATH` (and the legacy `HMS_MASTER_KEY_PATH`) locate the master key; an
 //! explicit config path wins over them.
