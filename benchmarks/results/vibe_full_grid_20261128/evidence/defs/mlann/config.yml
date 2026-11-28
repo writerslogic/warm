@@ -1,0 +1,26 @@
+float:
+  any:
+  - base_args: ['@metric']
+    constructor: MLANN
+    disabled: false
+    ood: true
+    singularity_image: mlann
+    module: vibe.algorithms.mlann
+    name: mlann-rf
+    run_groups:
+      small:
+        args:
+          index_type: [RF]
+          n_trees: [10, 15, 20]
+          depth: [14, 15, 16, 17, 18]
+        query_args:
+          voting_threshold: [0.0075, 0.0025, 0.00125, 0.0005, 0.00025, 0.000125, 0.0001, 7.5e-05, 5.0e-05, 2.5e-05, 1.75e-05,
+            1.25e-05, 1.0e-05, 7.5e-06, 5.0e-06, 2.5e-06, 1.75e-06, 1.25e-06, 1.0e-06, 7.5e-07]
+      big:
+        args:
+          index_type: [RF]
+          n_trees: [80]
+          depth: [13, 14, 15, 16]
+        query_args:
+          voting_threshold: [0.0075, 0.0025, 0.00125, 0.0005, 0.00025, 0.000125, 0.0001, 7.5e-05, 5.0e-05, 2.5e-05, 1.75e-05,
+            1.25e-05, 1.0e-05, 7.5e-06, 5.0e-06, 2.5e-06, 1.75e-06, 1.25e-06, 1.0e-06, 7.5e-07]
