@@ -542,6 +542,27 @@ pub(in crate::core::documents) fn execute(
         optional.clear();
     }
     let all_terms = optional.iter().all(|rt| !rt.phrase);
+    // A checkpoint the unpruned ranker serves, with its norms and long lists' weights stored, ranks
+    // a disjunction whose lists hold fewer postings than half the slots (the ranker's own sparse
+    // case) by adding stored weights over the slots it reaches.
+    if let Some(rank) = ranker {
+        if k > 0
+            && required.is_empty()
+            && excluded.is_empty()
+            && all_terms
+            && !optional.is_empty()
+            && image.stored_norms(bm25, average).is_some()
+            && optional.iter().map(Rt::rarest).sum::<usize>() < image.slot_count() / 2
+        {
+            let Some(hits) = rank()? else {
+                return Ok(None);
+            };
+            let count = options
+                .count
+                .then(|| union_count(image, &mut optional, image.slot_count()));
+            return Ok(Some(LexicalResults { hits, count }));
+        }
+    }
     // One long bounded term is ranked by its runs' frontiers; more terms go to the windowed ranker.
     let pruned_union = required.is_empty()
         && k > 0
@@ -3281,12 +3302,47 @@ mod tests {
         store
     }
 
+    /// The checkpoint of `store` without its per-slot norms and weighted lists, so the executors
+    /// that skip postings are the ones the tests below reach.
     fn image_of(store: &DocumentStore) -> ServingImage {
         let bytes = encode(store, 7, 64).unwrap().expect("checkpointable");
         ServingImage::new(Backing::Owned(bytes))
             .unwrap()
-            .with_derived_tables()
+            .with_derived_tables_options(true, false)
             .unwrap()
+    }
+
+    #[test]
+    fn a_sparse_disjunction_on_a_small_checkpoint_goes_to_the_ranker_when_the_tables_are_stored() {
+        let docs: Vec<Vec<u8>> = (0..2000u32)
+            .map(|i| vec![(i % 7) as u8, (i % 13) as u8 + 20, 30 + (i % 3) as u8])
+            .collect();
+        let live = corpus(&docs, true);
+        let bytes = encode(&live, 7, 64).unwrap().expect("checkpointable");
+        let open = |small: bool| {
+            ServingImage::new(Backing::Owned(bytes.clone()))
+                .unwrap()
+                .with_derived_tables_options(true, small)
+                .unwrap()
+        };
+        let ranked = std::cell::Cell::new(0);
+        let ranker = || -> Result<Option<Vec<LexicalHit>>> {
+            ranked.set(ranked.get() + 1);
+            Ok(Some(Vec::new()))
+        };
+        // Lists of about 286 and 154 postings, under half of the 2000 slots together: the ranker
+        // serves it when the tables are stored, and the class executor otherwise.
+        let query = LexicalQuery::parse("w1 w21").unwrap();
+        for (small, want) in [(true, true), (false, false)] {
+            ranked.set(0);
+            let image = open(small);
+            let options = LexicalOptions {
+                k: 10,
+                ..Default::default()
+            };
+            let _ = execute(&image, &query, &options, Bm25::DEFAULT, Some(&ranker)).unwrap();
+            assert_eq!(ranked.get() > 0, want, "small={small}");
+        }
     }
 
     #[test]
