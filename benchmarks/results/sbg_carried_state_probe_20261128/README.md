@@ -62,3 +62,23 @@ warm-new-final        TOP_10         229.5     191.5     193.1     191.5       1
 - hot/mixed is 1.92 (COUNT) and 1.20 (TOP_10): the 3 hot queries are slower than the average mixed query on this build, where 0.7.4 made them 3.6 to 5.2 times faster. 0.7.4's advantage on a repeated small set is gone; the mixed-stream per-query time is 232 us (COUNT) and 192 us (TOP_10) against 193 and 176 for 0.7.4, so this build is slower on the mixed stream in this probe. Different index (the new build's own), so not a paired engine comparison.
 
 The `fork` and `out` fields of the three `probe.json` files were redacted from absolute VM paths to relative names; no measured value changed.
+
+## WARM 0.7.5 (published), same protocol
+
+Run on `warm-sbg-c3` on 2026-11-28 after the pinned full run, against the adapter at `warm-0.7.5-bp` and its existing index, `taskset -c 2`, six repeats, together with the same four engines as above. Raw: `warm-0.7.5/probe.json`, `warm-0.7.5/probe.txt`.
+
+```
+engine                command       hot us  mixed us  pass1 us  pass2 us  hot/mixed  pass2/pass1  verdict
+warm-0.7.5-bp         COUNT          446.1     233.1     233.6     233.8       1.91         1.00  no carry detected
+warm-0.7.5-bp         TOP_10         230.6     197.6     195.5     197.6       1.17         1.01  no carry detected
+infino-0.11.26        COUNT          169.0     236.1     234.6     234.5       0.72         1.00  no carry detected
+infino-0.11.26        TOP_10         125.7     259.0     263.1     241.7       0.49         0.92  no carry detected
+infino-main           COUNT          221.2     268.6     266.4     267.5       0.82         1.00  no carry detected
+infino-main           TOP_10         140.0     275.8     276.3     254.0       0.51         0.92  no carry detected
+lucene-10.5.0         COUNT          648.1    1025.6    1015.4     717.3       0.63         0.71  no carry detected
+lucene-10.5.0         TOP_10         625.8    1249.7    1232.6     892.9       0.50         0.72  no carry detected
+lucene-10.5.0-bp      COUNT          463.8     819.7     826.0     552.5       0.57         0.67  CARRIES STATE
+lucene-10.5.0-bp      TOP_10         549.1     966.5     974.3     674.9       0.57         0.69  CARRIES STATE
+```
+
+WARM 0.7.5: pass2/pass1 is 1.00 (COUNT) and 1.01 (TOP_10), so a second pass over 500 distinct queries is not cheaper than the first. hot/mixed is above 1 (1.91 and 1.17): a small repeated set is not cheaper than the mixed stream, unlike WARM 0.7.4 (0.19 and 0.28). The 0.7.4 and 0.7.5 rows come from different runs of the probe. The flag threshold (below 0.7) marks lucene-10.5.0-bp here and not lucene-10.5.0, whose ratios (0.71 and 0.72) sit just above it; no cause is claimed.

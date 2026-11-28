@@ -1,0 +1,30 @@
+per-command median of per-query median duration (us), A and B orders; ratio main/new (>1 = new faster)
+TOP_10 962 queries
+   warm-main-final median A/B 172.0 172.0 mean A/B 323.3 323.5
+   warm-new-final median A/B 195.0 198.5 mean A/B 376.9 381.6
+   warm-new-oldidx median A/B 207.8 195.8 mean A/B 392.1 378.9
+   main/new median A 0.882 B 0.866 ; mean A 0.858 B 0.848 ; main/oldidx median A 0.828 B 0.879 ; mean A 0.825 B 0.854
+TOP_100 962 queries
+   warm-main-final median A/B 285.2 285.5 mean A/B 553.6 554.6
+   warm-new-final median A/B 341.2 337.5 mean A/B 676.5 674.7
+   warm-new-oldidx median A/B 338.5 340.5 mean A/B 673.4 677.7
+   main/new median A 0.836 B 0.846 ; mean A 0.818 B 0.822 ; main/oldidx median A 0.843 B 0.838 ; mean A 0.822 B 0.818
+TOP_1000 962 queries
+   warm-main-final median A/B 591.5 594.5 mean A/B 978.3 981.2
+   warm-new-final median A/B 694.0 693.0 mean A/B 1152.4 1151.4
+   warm-new-oldidx median A/B 689.5 693.2 mean A/B 1146.9 1149.4
+   main/new median A 0.852 B 0.858 ; mean A 0.849 B 0.852 ; main/oldidx median A 0.858 B 0.858 ; mean A 0.853 B 0.854
+TOP_100_COUNT 962 queries
+   warm-main-final median A/B 373.0 371.0 mean A/B 748.7 745.8
+   warm-new-final median A/B 461.0 462.0 mean A/B 924.2 922.5
+   warm-new-oldidx median A/B 461.5 461.5 mean A/B 924.0 923.7
+   main/new median A 0.809 B 0.803 ; mean A 0.810 B 0.808 ; main/oldidx median A 0.808 B 0.804 ; mean A 0.810 B 0.807
+COUNT 962 queries
+   warm-main-final median A/B 193.0 194.5 mean A/B 452.8 452.6
+   warm-new-final median A/B 246.2 247.2 mean A/B 545.3 543.3
+   warm-new-oldidx median A/B 250.0 247.2 mean A/B 545.2 544.6
+   main/new median A 0.784 B 0.787 ; mean A 0.830 B 0.833 ; main/oldidx median A 0.772 B 0.787 ; mean A 0.831 B 0.831
+COUNT A new vs oldidx differing: 0 new vs main differing: 0 of 962
+COUNT B new vs oldidx differing: 0 new vs main differing: 0 of 962
+TOP_100_COUNT A new vs oldidx differing: 0 new vs main differing: 0 of 962
+TOP_100_COUNT B new vs oldidx differing: 0 new vs main differing: 0 of 962
