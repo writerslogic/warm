@@ -18,6 +18,11 @@ const DIM: u32 = 256;
 /// The checkpoint header's feature word and its bit for the derived tables.
 const FEATURES_AT: usize = 8 + 8 * 3;
 const FEATURE_DERIVED: u64 = 2;
+/// Header word of the derived section's offset and length (the last of the 13 sections).
+const DERIVED_AT: usize = 8 + 8 * (14 + 2 * 12);
+/// The derived section's layout this build writes. A build that knows only layout 1 finds a
+/// header it does not match, computes its tables and reads none of the newer bytes.
+const DERIVED_FORMAT: u64 = 2;
 
 fn input(id: &str, text: &str) -> DocumentInput {
     serde_json::from_value(serde_json::json!({ "id": id, "text": text })).unwrap()
@@ -75,6 +80,19 @@ fn features(path: &Path) -> u64 {
     u64::from_le_bytes(bytes[FEATURES_AT..FEATURES_AT + 8].try_into().unwrap())
 }
 
+/// The derived section's format word, its slot-norm count and its weighted-list count.
+fn derived_header(path: &Path) -> (u64, u64, u64) {
+    let bytes = std::fs::read(path).unwrap();
+    let word = |at: usize| u64::from_le_bytes(bytes[at..at + 8].try_into().unwrap()) as usize;
+    let (start, len) = (word(DERIVED_AT), word(DERIVED_AT + 8));
+    assert!(len > 15 * 8 && start + len == bytes.len());
+    (
+        word(start) as u64,
+        word(start + 12 * 8) as u64,
+        word(start + 13 * 8) as u64,
+    )
+}
+
 fn manifest(dir: &Path) -> Vec<u8> {
     std::fs::read(dir.join("vectors_data.bin").join("format.json")).unwrap()
 }
@@ -126,6 +144,9 @@ fn a_new_store_records_the_field_and_its_checkpoint_carries_the_tables() {
     assert!(!found.is_empty());
     for path in found {
         assert_eq!(features(&path) & FEATURE_DERIVED, FEATURE_DERIVED);
+        let (format, norms, _) = derived_header(&path);
+        assert_eq!(format, DERIVED_FORMAT);
+        assert_eq!(norms, 60, "one stored norm per slot of a small store");
     }
 }
 

@@ -26,6 +26,35 @@ pub(in super::super) trait LexicalSource {
     fn impact_image(&self) -> Option<&super::super::image::ServingImage> {
         None
     }
+    /// The length normalization of every slot under `bm25` and `average`, when this source
+    /// stores it for exactly those constants.
+    fn stored_norms(&self, _bm25: Bm25, _average: f64) -> Option<&[f64]> {
+        None
+    }
+    /// The weights of `list` stored under the constants of [`Self::stored_norms`].
+    fn stored_weights<'a>(&'a self, _list: &Self::List<'a>) -> Option<StoredWeights<'a>> {
+        None
+    }
+}
+
+/// A posting list's (slot, BM25 weight) pairs as the checkpoint stores them, little endian, in
+/// posting order.
+#[derive(Clone, Copy)]
+pub(in super::super) struct StoredWeights<'a> {
+    pub(in super::super) slots: &'a [[u8; 4]],
+    pub(in super::super) weights: &'a [[u8; 8]],
+}
+
+impl StoredWeights<'_> {
+    #[inline(always)]
+    pub(super) fn iter(&self) -> impl Iterator<Item = (usize, f64)> + '_ {
+        self.slots.iter().zip(self.weights).map(|(slot, weight)| {
+            (
+                u32::from_le_bytes(*slot) as usize,
+                f64::from_le_bytes(*weight),
+            )
+        })
+    }
 }
 
 /// A term's postings as [`LexicalScratch::rank`] reads them.

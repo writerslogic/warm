@@ -41,9 +41,11 @@ pub(super) struct LexicalScratch {
 }
 
 /// One term's postings in a query.
-pub(super) struct Listed<L> {
+pub(super) struct Listed<'a, L> {
     idf: f64,
     list: L,
+    /// The list's weights from the checkpoint, when it stores them for these constants.
+    stored: Option<StoredWeights<'a>>,
 }
 
 thread_local! {
@@ -132,6 +134,9 @@ impl LexicalScratch {
                 1
             }
         };
+        // Norms and weights the checkpoint stores for exactly these constants, in place of the
+        // per-slot norm loop and the decode and weighing of each long list below.
+        let stored_norms = store.stored_norms(bm25, average);
         let mut lists = Vec::new();
         let mut postings = 0usize;
         for (form, terms) in prepared.query_terms.iter().enumerate() {
@@ -139,9 +144,11 @@ impl LexicalScratch {
                 if let Some(list) = store.postings(form, word) {
                     let df = list.len() as f64;
                     postings = postings.saturating_add(list.len());
+                    let stored = stored_norms.and(store.stored_weights(&list));
                     lists.push(Listed {
                         idf: Bm25::idf(n, df),
                         list,
+                        stored,
                     });
                 }
             }
@@ -149,7 +156,7 @@ impl LexicalScratch {
         // A query whose postings cover a good part of the store reads every slot's norm and
         // score; a sparser one keeps its norms lazy and its selection to the slots it reached.
         let dense = postings >= slots / 2;
-        if !self.complete && dense {
+        if !self.complete && dense && stored_norms.is_none() {
             for slot in 0..slots {
                 if self.norm_epochs[slot] != self.epoch {
                     self.norm_epochs[slot] = self.epoch;
@@ -161,9 +168,15 @@ impl LexicalScratch {
         let scores = &mut self.scores[..slots];
         self.touched.clear();
         if dense {
-            let norms = &self.norms[..slots];
+            let norms = stored_norms.unwrap_or(&self.norms[..slots]);
             for listed in &lists {
-                accumulate(&listed.list, bm25, listed.idf, norms, scores);
+                if let Some(stored) = listed.stored {
+                    for (slot, weight) in stored.iter() {
+                        scores[slot] += weight;
+                    }
+                } else {
+                    accumulate(&listed.list, bm25, listed.idf, norms, scores);
+                }
             }
         } else {
             self.touched.resize(postings, 0);
@@ -173,9 +186,18 @@ impl LexicalScratch {
             let simple = bm25.k1 <= 1.0 || bm25 == Bm25::DEFAULT;
             let mut reached = 0;
             for listed in &lists {
+                if let Some(stored) = listed.stored {
+                    for (slot, weight) in stored.iter() {
+                        let score = scores[slot];
+                        touched[reached] = slot as u32;
+                        reached += usize::from(score == 0.0);
+                        scores[slot] = score + weight;
+                    }
+                    continue;
+                }
                 let (idf, list) = (listed.idf, &listed.list);
                 list.for_each(|slot, frequency| {
-                    if !complete && norm_epochs[slot] != epoch {
+                    if stored_norms.is_none() && !complete && norm_epochs[slot] != epoch {
                         norm_epochs[slot] = epoch;
                         norms[slot] = bm25.norm(f64::from(store.slot_word_count(slot)), average);
                     }
@@ -185,7 +207,8 @@ impl LexicalScratch {
                     let score = scores[slot];
                     touched[reached] = slot as u32;
                     reached += usize::from(score == 0.0);
-                    let weight = weigh_one(simple, bm25, idf, f64::from(frequency), norms[slot]);
+                    let norm = stored_norms.map_or_else(|| norms[slot], |stored| stored[slot]);
+                    let weight = weigh_one(simple, bm25, idf, f64::from(frequency), norm);
                     scores[slot] = score + weight;
                 });
             }
@@ -284,7 +307,7 @@ fn top_by_order<S: LexicalSource>(store: &S, candidates: &mut Vec<(f64, u32)>, l
     candidates.extend(keyed.iter().map(|&(score, _, slot)| (score, slot)));
 }
 
-pub(super) const WEIGH_BLOCK: usize = 128;
+pub(in super::super) const WEIGH_BLOCK: usize = 128;
 
 /// One posting's weight: `Bm25::weight`, with its parameter test hoisted into `simple`.
 #[inline(always)]
@@ -353,6 +376,46 @@ pub(super) fn accumulate(
     if filled > 0 {
         flush(&slots[..filled], &tfs[..filled], &mut weights);
     }
+}
+
+/// The slots and BM25 weights of `list` under the default constants, as [`accumulate`] weighs
+/// them (the same block expression), for a checkpoint to store.
+pub(in super::super) fn weigh_list(
+    list: &impl PostingSet,
+    idf: f64,
+    norms: &[f64],
+) -> (Vec<u32>, Vec<f64>) {
+    let bm25 = Bm25::DEFAULT;
+    let mut out_slots = Vec::with_capacity(list.len());
+    let mut out_weights = Vec::with_capacity(list.len());
+    let mut slots = [0u32; WEIGH_BLOCK];
+    let mut tfs = [0f64; WEIGH_BLOCK];
+    let mut weights = [0f64; WEIGH_BLOCK];
+    let mut filled = 0usize;
+    let mut flush = |slots: &[u32], tfs: &[f64], weights: &mut [f64]| {
+        let highest = slots.iter().copied().max().unwrap_or(0) as usize;
+        assert!(
+            slots.is_empty() || highest < norms.len(),
+            "posting slot past the store"
+        );
+        // SAFETY: every slot is below `norms.len()`, checked above.
+        unsafe { weigh_simple(bm25, idf, norms, slots, tfs, weights) };
+        out_slots.extend_from_slice(slots);
+        out_weights.extend_from_slice(&weights[..slots.len()]);
+    };
+    list.for_each(|slot, frequency| {
+        slots[filled] = slot as u32;
+        tfs[filled] = f64::from(frequency);
+        filled += 1;
+        if filled == WEIGH_BLOCK {
+            flush(&slots, &tfs, &mut weights);
+            filled = 0;
+        }
+    });
+    if filled > 0 {
+        flush(&slots[..filled], &tfs[..filled], &mut weights);
+    }
+    (out_slots, out_weights)
 }
 
 /// `weights[i] = bm25.weight(idf, tfs[i], norms[slots[i]])` for the default saturation form

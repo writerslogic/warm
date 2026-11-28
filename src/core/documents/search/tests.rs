@@ -1844,6 +1844,207 @@ fn stored_derived_tables_equal_the_computed_ones_and_queries_leave_them_alone() 
     }
 }
 
+/// A store whose lists straddle the weighing block: "edge{n}" occurs in n documents, with
+/// frequencies that vary by document.
+fn edge_store(state: &mut u64) -> DocumentStore {
+    let mut store = heavy_tailed_store(500, 40, state);
+    for id in 0..500usize {
+        let mut words = Vec::new();
+        for edge in [
+            WEIGH_BLOCK - 1,
+            WEIGH_BLOCK,
+            WEIGH_BLOCK + 1,
+            WEIGH_BLOCK + 2,
+        ] {
+            if id < edge {
+                words.extend(std::iter::repeat_n(format!("edge{edge}"), 1 + id % 3));
+            }
+        }
+        let input = serde_json::from_value(json!({
+            "id": format!("e{id:06}"), "text": words.join(" ") + " filler",
+            "chunkWords": 4096, "overlapWords": 0,
+        }))
+        .unwrap();
+        let mut document =
+            super::super::prepare(input, 1024, None, TextEncoder::default()).unwrap();
+        for chunk in &mut document.chunks {
+            chunk.vector_state = super::super::VectorState::Lexical;
+            chunk.vector = crate::core::entangled::EntangledHVec::from_indices(Vec::new(), 1024);
+        }
+        store.insert(document.id.clone(), document);
+    }
+    store
+}
+
+/// The unpruned ranking of a checkpoint that stores its per-slot norms and pre-weighted lists,
+/// of the same checkpoint with them computed at open (an older writer's layouts), and with them
+/// off, is the exhaustive ranking of a version 2 checkpoint to the bit, at depths around the
+/// weighing block, and the stored lists are exactly those longer than one block.
+#[test]
+fn stored_small_tables_rank_to_the_bit_unpruned() {
+    let mut state = 0x9e37_79b9_7f4a_7c15u64;
+    let stores = [
+        edge_store(&mut state),
+        heavy_tailed_store(3000, 300, &mut state),
+        prose_store(0, 1),
+    ];
+    let block = WEIGH_BLOCK as u32;
+    let depths = [1, 10, block - 1, block, block + 1, 1000];
+    let settings = [(None, None), (Some(1.6), Some(0.4))];
+    for (index, store) in stores.iter().enumerate() {
+        let image =
+            |bytes: Vec<u8>| ServingImage::new(super::super::Backing::Owned(bytes)).unwrap();
+        type Encoder = fn(&DocumentStore, u32, usize) -> Result<Option<Vec<u8>>>;
+        let bytes = |encode: Encoder| encode(store, 1, 1024).unwrap().unwrap();
+        let exact = image(bytes(super::super::image::encode_v2));
+        let stored = image(bytes(super::super::image::encode))
+            .with_derived_tables_options(true, true)
+            .unwrap();
+        let computed = image(bytes(super::super::image::encode_v4_plain))
+            .with_derived_tables_options(true, true)
+            .unwrap();
+        let version_1 = image(bytes(super::super::image::encode_derived_v1))
+            .with_derived_tables_options(true, true)
+            .unwrap();
+        let off = image(bytes(super::super::image::encode))
+            .with_derived_tables_options(true, false)
+            .unwrap();
+        let (norms, lists) = stored.small_counts();
+        assert_eq!(norms, stored.slot_total());
+        assert!(lists > 0, "store {index} has no long list");
+        for other in [&computed, &version_1] {
+            assert_eq!(other.small_counts(), (norms, lists));
+        }
+        assert_eq!(off.small_counts(), (0, 0));
+        let average = stored.norm_average();
+        assert!(stored.stored_norms(Bm25::DEFAULT, average).is_some());
+        assert!(stored.stored_norms(Bm25::DEFAULT, average + 1.0).is_none());
+        assert!(stored
+            .stored_norms(
+                Bm25::from_options(&SearchOptions {
+                    bm25_k1: Some(1.6),
+                    ..Default::default()
+                })
+                .unwrap(),
+                average
+            )
+            .is_none());
+        assert!(off.stored_norms(Bm25::DEFAULT, average).is_none());
+        assert_eq!(
+            stored.stored_derived().unwrap(),
+            image(bytes(super::super::image::encode_v4_plain))
+                .derived_section()
+                .as_slice(),
+            "the stored section is the computed one"
+        );
+        let texts: Vec<String> = match index {
+            0 => vec![
+                "edge127".into(),
+                "edge128".into(),
+                "edge129 edge130".into(),
+                "edge127 edge128 edge129 edge130 w1 w2 w3 filler".into(),
+            ],
+            1 => (0..60)
+                .map(|_| {
+                    let terms = 1 + xorshift64(&mut state) % 20;
+                    (0..terms)
+                        .map(|_| format!("w{}", xorshift64(&mut state) % 300))
+                        .collect::<Vec<_>>()
+                        .join(" ")
+                })
+                .collect(),
+            _ => include_str!("../../../../CHANGELOG.md")
+                .lines()
+                .filter(|line| line.len() >= 20)
+                .step_by(9)
+                .map(str::to_owned)
+                .collect(),
+        };
+        let bits = |ranked: &[(f64, u32)]| -> Vec<(u64, u32)> {
+            ranked
+                .iter()
+                .map(|&(s, slot)| (s.to_bits(), slot))
+                .collect()
+        };
+        for text in &texts {
+            for &k in &depths {
+                for &(k1, b) in &settings {
+                    let options = SearchOptions {
+                        k: Some(k),
+                        candidate_limit: Some(k),
+                        bm25_k1: k1,
+                        bm25_b: b,
+                        ..Default::default()
+                    };
+                    let prepared = prepare_search(text, &options, None).unwrap();
+                    let want = LEXICAL_SCRATCH
+                        .with(|scratch| scratch.borrow_mut().rank(&exact, &prepared, false));
+                    for image in [&stored, &computed, &version_1, &off] {
+                        let got = LEXICAL_SCRATCH
+                            .with(|scratch| scratch.borrow_mut().rank(image, &prepared, false));
+                        assert_eq!(bits(&got), bits(&want), "{text:?} k={k}");
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// The stored lists are the ones longer than one weighing block, longest first within the
+/// budget of the direct tables, and only a checkpoint the unpruned ranker serves stores any.
+#[test]
+fn small_tables_follow_the_block_length_and_the_serving_floor() {
+    let mut state = 0x2545_f491_4f6c_dd1du64;
+    let store = edge_store(&mut state);
+    let image = ServingImage::new(super::super::Backing::Owned(
+        super::super::image::encode(&store, 1, 1024)
+            .unwrap()
+            .unwrap(),
+    ))
+    .unwrap()
+    .with_derived_tables_options(true, true)
+    .unwrap();
+    for (term, stored) in [
+        ("edge127", false),
+        ("edge128", false),
+        ("edge129", true),
+        ("edge130", true),
+    ] {
+        let prepared = prepare_search(term, &SearchOptions::default(), None).unwrap();
+        let list = prepared
+            .query_terms
+            .iter()
+            .enumerate()
+            .find_map(|(form, terms)| {
+                terms
+                    .iter()
+                    .next()
+                    .and_then(|word| image.postings(form, word))
+            });
+        let list = list.unwrap();
+        assert_eq!(
+            image.stored_weights(&list).is_some(),
+            stored,
+            "{term}: {} postings",
+            list.len()
+        );
+    }
+    // Exactly at the floor a checkpoint stores them; one slot over it, the pruned ranker serves it.
+    assert!(serves_unpruned(PRUNE_SLOT_FLOOR_SERVING));
+    assert!(!serves_unpruned(PRUNE_SLOT_FLOOR_SERVING + 1));
+    let over = heavy_tailed_store(PRUNE_SLOT_FLOOR_SERVING + 1, 20, &mut state);
+    let big = ServingImage::new(super::super::Backing::Owned(
+        super::super::image::encode(&over, 1, 1024)
+            .unwrap()
+            .unwrap(),
+    ))
+    .unwrap()
+    .with_derived_tables_options(true, true)
+    .unwrap();
+    assert_eq!(big.slot_total(), PRUNE_SLOT_FLOOR_SERVING + 1);
+    assert_eq!(big.small_counts(), (0, 0));
+}
+
 /// A crafted derived section is an error at open or opens to a checkpoint that still answers; it never panics or reads
 /// out of bounds. A flip in a field the checkpoint can verify (norms, word classes and counts, table keys and lengths)
 /// is always rejected (a flipped constant of the header only makes the tables
@@ -1858,7 +2059,7 @@ fn flipped_derived_bytes_never_panic_and_structural_flips_are_rejected() {
         let probe = ServingImage::new(super::super::Backing::Owned(bytes.clone())).unwrap();
         let len = probe.stored_derived().unwrap().len();
         let slots = probe.slot_total();
-        let norms_end = 96 + 8 * 8192;
+        let norms_end = 120 + 8 * 8192;
         let mut positions: Vec<usize> = (0..160).collect();
         positions.extend([
             norms_end - 1,
@@ -1881,7 +2082,7 @@ fn flipped_derived_bytes_never_panic_and_structural_flips_are_rejected() {
                 }
             }
         }
-        for at in [72, 80, 88, 96, norms_end, norms_end + slots] {
+        for at in [72, 80, 88, 96, 104, norms_end, norms_end + slots] {
             assert!(
                 ServingImage::open_with_flipped_derived(&bytes, at, 0x01)
                     .map(|_| ())

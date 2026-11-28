@@ -58,6 +58,7 @@ pub(crate) fn known_magic(magic: &[u8]) -> bool {
 }
 mod derived;
 mod merge;
+mod weighted;
 pub(crate) use merge::{bisection_order, can_merge, merge, SlotOrder, REORDER_MAX_EDGES};
 
 const HEADER_WORDS: usize = 40;
@@ -466,6 +467,18 @@ pub(crate) fn encode_v4_plain(
     dimensions: usize,
 ) -> Result<Option<Vec<u8>>> {
     encode_as(store, generation, dimensions, 4, false, false)
+}
+
+/// Version 4 with the derived section as 0.7.5 wrote it (format 1).
+#[cfg(test)]
+pub(crate) fn encode_derived_v1(
+    store: &DocumentStore,
+    generation: u32,
+    dimensions: usize,
+) -> Result<Option<Vec<u8>>> {
+    encode_v4_plain(store, generation, dimensions)?
+        .map(|bytes| derived::attach_section(bytes, ServingImage::derived_section_v1))
+        .transpose()
 }
 
 fn encode_as(
@@ -883,10 +896,18 @@ pub(crate) struct ServingImage {
     /// The lists long enough for a direct frequency table, found when the dictionaries are
     /// checked.
     tabled: Vec<ListSpan>,
+    /// The lists longer than one weighing block of a checkpoint the unpruned ranker serves,
+    /// found when the dictionaries are checked.
+    weighable: Vec<ListSpan>,
     /// Whether the checkpoint stores its derived tables.
     derived: bool,
     /// Length normalization by word count under the default BM25 constants, set at open.
     norms: Vec<f64>,
+    /// Length normalization of every slot under the default constants, for a checkpoint the
+    /// unpruned ranker serves (empty otherwise), set at open.
+    slot_norms: Vec<f64>,
+    /// Pre-weighted postings by the address of the list's postings, set at open.
+    weighted: std::collections::HashMap<usize, weighted::Weighted>,
     /// The rank tables of `ranked`, set by [`Self::with_derived_tables`] when the checkpoint
     /// is opened (the getter computes them for an image used without it, as tests do).
     ranks: std::sync::OnceLock<Ranks>,
@@ -1084,8 +1105,11 @@ impl ServingImage {
             block_keys: Default::default(),
             ranked: Vec::new(),
             tabled: Vec::new(),
+            weighable: Vec::new(),
             derived,
             norms: Vec::new(),
+            slot_norms: Vec::new(),
+            weighted: Default::default(),
             ranks: std::sync::OnceLock::new(),
             sections,
             blocked,
@@ -1109,12 +1133,19 @@ impl ServingImage {
         let mut totals = (0usize, 0usize);
         let mut ranked = Vec::new();
         let mut tabled = Vec::new();
+        let mut weighable = Vec::new();
         for form in 0..2 {
-            (image.dictionaries[form], image.block_keys[form]) =
-                image.check_dictionary(form, &mut totals, &mut ranked, &mut tabled)?;
+            (image.dictionaries[form], image.block_keys[form]) = image.check_dictionary(
+                form,
+                &mut totals,
+                &mut ranked,
+                &mut tabled,
+                &mut weighable,
+            )?;
         }
         image.ranked = ranked;
         image.tabled = tabled;
+        image.weighable = weighable;
         ensure!(
             totals
                 == if extended {
@@ -1343,6 +1374,7 @@ impl ServingImage {
         totals: &mut (usize, usize),
         ranked: &mut Vec<ListSpan>,
         tabled: &mut Vec<ListSpan>,
+        weighable: &mut Vec<ListSpan>,
     ) -> Result<(Dictionary, Vec<u64>)> {
         let (dict_section, block_section) = if form == 0 {
             (Section::Dict0, Section::Blocks0)
@@ -1423,6 +1455,16 @@ impl ServingImage {
             );
             if super::impact::tabled(entry.count as usize, self.slots) {
                 tabled.push(ListSpan {
+                    posting: base.posting,
+                    skip: base.skip,
+                    pos: base.pos,
+                    entry,
+                });
+            }
+            if super::search::serves_unpruned(self.slots)
+                && entry.count > super::search::WEIGH_BLOCK as u64
+            {
+                weighable.push(ListSpan {
                     posting: base.posting,
                     skip: base.skip,
                     pos: base.pos,
@@ -2302,6 +2344,12 @@ impl ServingImage {
         }
     }
 
+    /// The slots with a stored norm and the lists with stored weights.
+    #[cfg(test)]
+    pub(super) fn small_counts(&self) -> (usize, usize) {
+        (self.slot_norms.len(), self.weighted.len())
+    }
+
     #[cfg(test)]
     pub(super) fn dense_is_empty(&self) -> bool {
         self.dense.len() == 0
@@ -2393,6 +2441,21 @@ impl LexicalSource for ServingImage {
 
     fn slot_word_count(&self, slot: usize) -> u32 {
         self.slot(slot).0
+    }
+
+    fn stored_norms(&self, bm25: super::Bm25, average: f64) -> Option<&[f64]> {
+        (bm25 == super::Bm25::DEFAULT
+            && self.slot_norms.len() == self.slots
+            && average.to_bits() == self.norm_average().to_bits())
+        .then_some(&self.slot_norms[..])
+    }
+
+    fn stored_weights<'a>(
+        &'a self,
+        list: &Postings<'a>,
+    ) -> Option<super::search::StoredWeights<'a>> {
+        let stored = self.weighted.get(&(list.bytes.as_ptr() as usize))?;
+        Some(stored.view(self.derived_bytes().unwrap_or_default()))
     }
 
     fn slot_order(&self, slot: usize) -> (&str, usize) {

@@ -41,13 +41,21 @@ use super::super::impact::{
     DENSE_MIN_POSTINGS, DENSE_SHARE, DENSE_TABLES, NORM_CACHE, WINDOW,
 };
 use super::super::lists::{RankTable, RUN_BLOCKS};
+use super::super::search::{serves_unpruned, weigh_list};
+use super::weighted::{self, Weighted, POSTING_BYTES};
 use super::{
     word, Backing, ListSpan, Postings, Ranks, Section, ServingImage, CRC_START, FEATURE_DERIVED,
     HEADER_LEN, H_FEATURES, H_SECTIONS,
 };
 
-const FORMAT: u64 = 1;
+/// The layout this build writes: format 1 plus the per-slot norms and the pre-weighted lists
+/// after the direct tables. A build that knows only format 1 finds a header it does not match
+/// and computes the tables, so it opens such a checkpoint and reads none of the new bytes.
+const FORMAT: u64 = 2;
+/// The layout of 0.7.5, still read: its tables are stored, the newer ones computed at open.
+const FORMAT_1: u64 = 1;
 const HEADER: usize = 12 * 8;
+const HEADER_2: usize = 15 * 8;
 /// The section the stored tables take: the slot version 3 gives compressed text blocks, which a
 /// version 4 checkpoint never holds.
 pub(super) const DERIVED_INDEX: usize = Section::TextBlocks as usize;
@@ -56,9 +64,19 @@ pub(super) const DERIVED_INDEX: usize = Section::TextBlocks as usize;
 /// results and timings do not depend on them.
 const DENSE_ENV: &str = "WARM_DENSE_TABLES";
 
+/// Environment switch: `0` opens without the per-slot norms and pre-weighted lists.
+const SMALL_ENV: &str = "WARM_SMALL_TABLES";
+
+fn small_enabled() -> bool {
+    std::env::var_os(SMALL_ENV).is_none_or(|value| value != "0")
+}
+
 fn dense_enabled() -> bool {
     std::env::var_os(DENSE_ENV).is_none_or(|value| value != "0")
 }
+
+/// The per-slot norms and pre-weighted lists of a checkpoint.
+type Small = (Vec<f64>, Vec<(usize, Weighted)>);
 
 /// Every table, in memory.
 pub(super) struct Parts {
@@ -70,6 +88,10 @@ pub(super) struct Parts {
     norms: Vec<f64>,
     /// By postings offset in the postings section.
     dense: Vec<(usize, Dense)>,
+    /// Length normalization of every slot; empty for a checkpoint the pruned ranker serves.
+    slot_norms: Vec<f64>,
+    /// Pre-weighted lists by postings offset, ascending.
+    weighted: Vec<(usize, Weighted)>,
 }
 
 /// The direct-table budget rule (see [`select_tabled`]) as one header word.
@@ -124,7 +146,10 @@ impl ServingImage {
         let norms = (0..NORM_CACHE)
             .map(|words| super::super::Bm25::DEFAULT.norm(words as f64, ranks.average))
             .collect();
+        let (slot_norms, weighted) = self.compute_small();
         Parts {
+            slot_norms,
+            weighted,
             ranks,
             windows,
             word_counts,
@@ -132,6 +157,76 @@ impl ServingImage {
             norms,
             dense,
         }
+    }
+
+    /// The per-slot norms and pre-weighted lists, none for a checkpoint the pruned ranker serves.
+    fn compute_small(&self) -> Small {
+        if !serves_unpruned(self.slots) {
+            return (Vec::new(), Vec::new());
+        }
+        let bm25 = super::super::Bm25::DEFAULT;
+        let average = self.norm_average();
+        let norms: Vec<f64> = (0..self.slots)
+            .map(|slot| bm25.norm(f64::from(self.slot(slot).0), average))
+            .collect();
+        let by_offset: HashMap<usize, &ListSpan> = self
+            .weighable
+            .iter()
+            .map(|span| (span.posting, span))
+            .collect();
+        let mut chosen = self.chosen_weighted();
+        chosen.sort_unstable();
+        let weighted = chosen
+            .into_iter()
+            .map(|offset| {
+                let span = by_offset[&offset];
+                let idf = super::super::Bm25::idf(self.chunks as f64, span.entry.count as f64);
+                let (slots, weights) = weigh_list(&self.span_postings(span), idf, &norms);
+                (offset, Weighted::computed(&slots, &weights))
+            })
+            .collect();
+        (norms, weighted)
+    }
+
+    /// The postings offsets of the pre-weighted lists, a function of the index alone.
+    fn chosen_weighted(&self) -> Vec<usize> {
+        weighted::select(
+            self.weighable
+                .iter()
+                .map(|span| (span.entry.count as usize, span.posting))
+                .collect(),
+            self.index_bytes(),
+        )
+        .into_iter()
+        .map(|(_, offset)| offset)
+        .collect()
+    }
+
+    /// The checkpoint's bytes without its derived section.
+    fn index_bytes(&self) -> usize {
+        let derived_len = if self.derived {
+            self.section(Section::Derived).len()
+        } else {
+            0
+        };
+        self.bytes.len() - derived_len
+    }
+
+    /// The section as 0.7.5 wrote it: format 1, without the per-slot norms and weighted lists.
+    #[cfg(test)]
+    pub(in super::super) fn derived_section_v1(&self) -> Vec<u8> {
+        let parts = self.compute_parts();
+        let tail = parts.slot_norms.len() * 8
+            + parts
+                .weighted
+                .iter()
+                .map(|(_, list)| weighted::ENTRY_HEAD + POSTING_BYTES * list.count())
+                .sum::<usize>();
+        let full = self.derived_section();
+        let mut out = full[..HEADER].to_vec();
+        out[..8].copy_from_slice(&FORMAT_1.to_le_bytes());
+        out.extend_from_slice(&full[HEADER_2..full.len() - tail]);
+        out
     }
 
     /// The bytes of the section holding every table of this checkpoint.
@@ -153,6 +248,9 @@ impl ServingImage {
             parts.ranks.tables.len() as u64,
             parts.windows.len() as u64,
             parts.dense.len() as u64,
+            parts.slot_norms.len() as u64,
+            parts.weighted.len() as u64,
+            weighted::rule(),
         ] {
             put(&mut out, value);
         }
@@ -187,6 +285,18 @@ impl ServingImage {
             put(&mut out, *offset as u64);
             out.extend_from_slice(table.nibble_bytes());
         }
+        for norm in &parts.slot_norms {
+            out.extend_from_slice(&norm.to_le_bytes());
+        }
+        let n = self.chunks as f64;
+        for (offset, list) in &parts.weighted {
+            put(&mut out, *offset as u64);
+            put(
+                &mut out,
+                super::super::Bm25::idf(n, list.count() as f64).to_bits(),
+            );
+            out.extend_from_slice(list.bytes(&[]));
+        }
         out
     }
 
@@ -201,21 +311,33 @@ impl ServingImage {
         let header: Vec<u64> = (0..12).map(|_| reader.u64()).collect::<Result<_>>()?;
         let bm25 = super::super::Bm25::DEFAULT;
         let average = (self.words as f64 / (self.chunks as f64).max(1.0)).max(1.0);
-        let matches = header[..9]
-            == [
-                FORMAT,
-                average.to_bits(),
-                bm25.k1.to_bits(),
-                bm25.b.to_bits(),
-                class_checksum(),
-                dense_rule(),
-                DENSE_TABLES as u64,
-                DENSE_MIN_POSTINGS as u64,
-                self.slots as u64,
-            ];
+        let format = header[0];
+        let matches = matches!(format, FORMAT | FORMAT_1)
+            && header[..9]
+                == [
+                    format,
+                    average.to_bits(),
+                    bm25.k1.to_bits(),
+                    bm25.b.to_bits(),
+                    class_checksum(),
+                    dense_rule(),
+                    DENSE_TABLES as u64,
+                    DENSE_MIN_POSTINGS as u64,
+                    self.slots as u64,
+                ];
         if !matches {
             return Ok(None);
         }
+        let small = if format == FORMAT {
+            ensure!(bytes.len() >= HEADER_2, "derived tables are truncated");
+            let words: Vec<u64> = (0..3).map(|_| reader.u64()).collect::<Result<_>>()?;
+            if words[2] != weighted::rule() {
+                return Ok(None);
+            }
+            Some((usize::try_from(words[0])?, usize::try_from(words[1])?))
+        } else {
+            None
+        };
         let (rank_count, window_count, dense_count) = (
             usize::try_from(header[9])?,
             usize::try_from(header[10])?,
@@ -334,8 +456,25 @@ impl ServingImage {
                 dense.push((offset, unsafe { Dense::mapped(nibbles) }));
             }
         }
+        let (slot_norms, weighted) = match small {
+            None => (Vec::new(), Vec::new()),
+            Some((norm_count, weighted_count)) => {
+                match self.stored_small(&mut reader, bytes, norm_count, weighted_count, average)? {
+                    Some(small) => small,
+                    None => return Ok(None),
+                }
+            }
+        };
         ensure!(reader.0.is_empty(), "derived tables have trailing bytes");
+        // A checkpoint of the 0.7.5 layout stores neither; they are a function of the index.
+        let (slot_norms, weighted) = if format == FORMAT_1 {
+            self.compute_small()
+        } else {
+            (slot_norms, weighted)
+        };
         Ok(Some(Parts {
+            slot_norms,
+            weighted,
             ranks: Ranks { average, tables },
             windows: windows.into_boxed_slice(),
             word_counts,
@@ -345,20 +484,97 @@ impl ServingImage {
         }))
     }
 
+    /// Reads the per-slot norms and pre-weighted lists after the direct tables. Everything a
+    /// query indexes with is checked against the checkpoint; the weights are trusted as far as
+    /// the postings are, like the other bounds. Returns nothing stored when the writer's
+    /// inverse document frequencies differ from this platform's (a different `ln`), so the
+    /// caller computes them.
+    fn stored_small(
+        &self,
+        reader: &mut Reader<'_>,
+        section: &[u8],
+        norm_count: usize,
+        weighted_count: usize,
+        average: f64,
+    ) -> Result<Option<Small>> {
+        let expected = serves_unpruned(self.slots);
+        ensure!(
+            norm_count == if expected { self.slots } else { 0 },
+            "derived slot norms do not cover the checkpoint"
+        );
+        let slot_norms = reader.f64s(norm_count)?;
+        let bm25 = super::super::Bm25::DEFAULT;
+        for (slot, norm) in slot_norms.iter().enumerate() {
+            ensure!(
+                norm.to_bits() == bm25.norm(f64::from(self.slot(slot).0), average).to_bits(),
+                "derived slot norms do not match the checkpoint at slot {slot}"
+            );
+        }
+        let counts: HashMap<usize, usize> = self
+            .weighable
+            .iter()
+            .map(|span| (span.posting, span.entry.count as usize))
+            .collect();
+        let wanted: HashSet<usize> = if expected {
+            self.chosen_weighted().into_iter().collect()
+        } else {
+            HashSet::new()
+        };
+        ensure!(
+            weighted_count == wanted.len(),
+            "derived weighted lists are not the checkpoint's longest lists"
+        );
+        let n = self.chunks as f64;
+        let mut weighted = Vec::with_capacity(weighted_count);
+        let mut previous = None;
+        for _ in 0..weighted_count {
+            let offset = usize::try_from(reader.u64()?)?;
+            ensure!(
+                wanted.contains(&offset) && previous.is_none_or(|last| last < offset),
+                "derived weighted list addresses a list that is not weighted"
+            );
+            previous = Some(offset);
+            let count = counts[&offset];
+            if reader.u64()? != super::super::Bm25::idf(n, count as f64).to_bits() {
+                return Ok(None);
+            }
+            let start = reader.0.as_ptr() as usize - section.as_ptr() as usize;
+            let body = reader.take(
+                count
+                    .checked_mul(POSTING_BYTES)
+                    .context("derived tables size")?,
+            )?;
+            let (slots, weights) = body.split_at(4 * count);
+            ensure!(
+                slots
+                    .as_chunks::<4>()
+                    .0
+                    .iter()
+                    .all(|slot| (u32::from_le_bytes(*slot) as usize) < self.slots)
+                    && weights
+                        .as_chunks::<8>()
+                        .0
+                        .iter()
+                        .all(|weight| f64::from_le_bytes(*weight).is_finite()),
+                "derived weighted list does not fit the slot count"
+            );
+            weighted.push((
+                offset,
+                Weighted::stored(start..start + count * POSTING_BYTES, count),
+            ));
+        }
+        Ok(Some((slot_norms, weighted)))
+    }
+
     /// The postings offsets of the lists that get direct tables, a function of the index alone.
     fn chosen_tabled(&self) -> Vec<usize> {
-        let derived_len = if self.derived {
-            self.section(Section::Derived).len()
-        } else {
-            0
-        };
         select_tabled(
             self.tabled
                 .iter()
                 .map(|span| (span.entry.count as usize, span.posting))
                 .collect(),
             self.slots,
-            self.bytes.len() - derived_len,
+            self.index_bytes(),
         )
         .into_iter()
         .map(|(_, offset)| offset)
@@ -372,7 +588,13 @@ impl ServingImage {
     }
 
     /// [`Self::with_derived_tables`] with the direct frequency tables on or off.
-    pub(crate) fn with_derived_tables_using(mut self, dense: bool) -> Result<Self> {
+    pub(crate) fn with_derived_tables_using(self, dense: bool) -> Result<Self> {
+        self.with_derived_tables_options(dense, small_enabled())
+    }
+
+    /// [`Self::with_derived_tables`] with the direct frequency tables and the small-store
+    /// tables (per-slot norms, pre-weighted lists) each on or off.
+    pub(crate) fn with_derived_tables_options(mut self, dense: bool, small: bool) -> Result<Self> {
         let stored = match self.derived_bytes() {
             Some(bytes) => self.stored_parts(bytes, dense)?,
             None => None,
@@ -387,6 +609,10 @@ impl ServingImage {
                 parts
             }
         };
+        if !small {
+            parts.slot_norms.clear();
+            parts.weighted.clear();
+        }
         let offset = self.section(Section::Postings).as_ptr() as usize;
         self.dense = DenseTables::new(
             std::mem::take(&mut parts.dense)
@@ -395,13 +621,20 @@ impl ServingImage {
         );
         self.union_windows = parts.windows;
         self.norms = parts.norms;
+        let postings = self.section(Section::Postings).as_ptr() as usize;
+        self.slot_norms = parts.slot_norms;
+        self.weighted = parts
+            .weighted
+            .into_iter()
+            .map(|(at, list)| (postings + at, list))
+            .collect();
         let _ = self.ranks.set(parts.ranks);
         let _ = self.word_counts.set(parts.word_counts);
         let _ = self.word_classes.set(parts.word_classes);
         Ok(self)
     }
 
-    fn derived_bytes(&self) -> Option<&[u8]> {
+    pub(super) fn derived_bytes(&self) -> Option<&[u8]> {
         self.derived.then(|| self.section(Section::Derived))
     }
 }
@@ -471,8 +704,16 @@ pub(super) fn attached_header(base: &[u8], at: u64, len: u64) -> Vec<u8> {
 
 /// `bytes`, a version 4 checkpoint without derived tables, with them.
 pub(super) fn attach(bytes: Vec<u8>) -> Result<Vec<u8>> {
+    attach_section(bytes, ServingImage::derived_section)
+}
+
+/// [`attach`] with the section `section` makes of the checkpoint.
+pub(super) fn attach_section(
+    bytes: Vec<u8>,
+    section: impl FnOnce(&ServingImage) -> Vec<u8>,
+) -> Result<Vec<u8>> {
     let image = ServingImage::new(Backing::Owned(bytes))?;
-    let section = image.derived_section();
+    let section = section(&image);
     let Backing::Owned(mut out) = image.bytes else {
         unreachable!("the checkpoint was opened owned");
     };
