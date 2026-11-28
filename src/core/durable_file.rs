@@ -607,6 +607,11 @@ impl Spool {
         self.len
     }
 
+    /// The temporary file, to map it read-only: it is private to this run.
+    pub(crate) fn file(&self) -> &std::fs::File {
+        self.file.as_file()
+    }
+
     /// Calls `f` with each block in file order.
     pub(crate) fn for_each_block(&self, mut f: impl FnMut(&[u8]) -> Result<()>) -> Result<()> {
         let mut block = vec![0u8; STREAM_BLOCK];

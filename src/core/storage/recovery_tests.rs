@@ -89,6 +89,7 @@ fn active_segment_size_bounds_preserve_oversized_files() -> Result<()> {
             magic: FORMAT_MAGIC.into(),
             version,
             segment_size,
+            derived_tables: false,
         };
         super::super::durable_file::atomic_write(
             &dir.path().join(FORMAT_MANIFEST),

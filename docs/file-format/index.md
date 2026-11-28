@@ -55,6 +55,20 @@ A store keeps its schema on ordinary open. Enabling `vectorRecords` on schemas 2
 changes a store in place. Older readers reject schema 7 before replay. Stores without `store.json`
 are refused; rebuild them with `warm-admin reencode`.
 
+### Derived tables
+
+A version 4 checkpoint can end with a derived section (feature bit `0x2` in header word 3): the
+norm cache, per-slot classes and word counts, rank tables, window bounds and dense nibble tables
+that a query would otherwise compute at open. They are a function of the index and are checked
+against it when the checkpoint opens; a mismatch recomputes them. A build that predates the
+section rejects the unknown feature bit. Only a store whose `format.json` carries
+`"derived_tables": true` writes the section, and only a store created by a build that has the
+field carries it. An older store keeps writing version 4 checkpoints without the section, which an
+older build still reads; opening it, writing to it and compacting it never add the field. The tables
+are then computed at each open. `warm-format upgrade` writes a new store with the field set and
+leaves the source untouched; the copy keeps its existing checkpoint as it was, so the tables are
+written at the copy's next compaction, and until then it opens like the old store.
+
 ## Encryption
 
 Requires the `security` feature. With it compiled in, a new store is encrypted unless

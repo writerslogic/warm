@@ -1,6 +1,6 @@
 {
   "name": "warm-memory",
-  "version": "0.7.4",
+  "version": "0.7.5",
   "license": "Apache-2.0",
   "author": "WritersLogic, Inc. <david@writerslogic.com>",
   "description": "WARM (WritersLogic Adaptive Retention & Memory): local document search (BM25 + embedding cosine) and vector-symbolic associative memory, with prebuilt binaries for eight platforms in one package.",

@@ -16,8 +16,8 @@ pub(super) struct NormKey {
 /// Per-thread working memory of [`capture_ranked_lexical`], reused across queries so a query
 /// neither allocates nor clears a table per store slot. It grows to the largest store a thread
 /// queries (20 bytes per slot plus 4 per posting of the longest query: no more than the
-/// store's own owner and word-count tables per slot) and is not shrunk. The decoded lists in
-/// `hot` are bounded by the source's [`HotPolicy`].
+/// store's own owner and word-count tables per slot) and is not shrunk. It holds no result of
+/// an earlier query: every table is rewritten before a query reads it.
 #[derive(Default)]
 pub(super) struct LexicalScratch {
     /// BM25 sum per slot; every entry is 0 between queries.
@@ -37,57 +37,13 @@ pub(super) struct LexicalScratch {
     /// Set while a query runs; a query that finds it set (an earlier one panicked midway)
     /// zeroes every score first.
     pub(super) dirty: bool,
-    pub(super) hot: HotLists,
     pub(super) pruned: super::super::impact::PruneScratch,
 }
 
-/// The most postings a thread keeps decoded and weighted (12 bytes each).
-pub(super) const HOT_POSTINGS: usize = 1 << 18;
-
-/// The shortest posting list worth keeping decoded, as a fraction of the slot count and an
-/// absolute floor.
-pub(super) const HOT_MIN_LEN: usize = 32;
-pub(super) const HOT_MIN_SLOTS: usize = 32;
-pub(super) const LIVE_HOT_MIN_LEN: usize = 16;
-pub(super) const LIVE_HOT_POSTINGS: usize = if cfg!(test) { 2200 } else { 1 << 20 };
-
-/// What a thread's decoded posting lists belong to: one immutable checkpoint, or one generation
-/// of a live store, under fixed BM25 constants, so each list's idf and every posting's weight
-/// are fixed too.
-#[derive(Clone, Copy, PartialEq)]
-pub(super) struct HotKey {
-    pub(super) norm: NormKey,
-    pub(super) chunks: usize,
-    pub(super) words: usize,
-}
-
-/// A long posting list as slots and the BM25 weights `rank` computes for them. A query that
-/// meets it again adds the stored weights in slot order instead of decoding the list and
-/// weighing each posting, so the sum for every slot is the one the cold path computes.
-pub(super) struct HotList {
-    pub(super) slots: Box<[u32]>,
-    pub(super) weights: Box<[f64]>,
-}
-
-/// Per-thread decoded lists of an immutable checkpoint or a live store generation, by form and
-/// term, bounded by the source's [`HotPolicy`] and dropped when the checkpoint, the generation
-/// or the BM25 constants change.
-#[derive(Default)]
-pub(super) struct HotLists {
-    pub(super) key: Option<HotKey>,
-    pub(super) lists: [FastMap<String, std::rc::Rc<HotList>>; 2],
-    pub(super) postings: usize,
-}
-
-/// One term's postings in a query: kept decoded, or still to read from the source.
-pub(super) enum Listed<'a, L> {
-    Hot(std::rc::Rc<HotList>),
-    Cold {
-        idf: f64,
-        list: L,
-        form: usize,
-        word: &'a str,
-    },
+/// One term's postings in a query.
+pub(super) struct Listed<L> {
+    idf: f64,
+    list: L,
 }
 
 thread_local! {
@@ -165,49 +121,27 @@ impl LexicalScratch {
             one_minus_b: bm25.one_minus_b.to_bits(),
             b: bm25.b.to_bits(),
         };
-        if self.key != Some(key) {
-            self.key = Some(key);
-            self.complete = false;
-            self.epoch = match self.epoch.checked_add(1) {
-                Some(epoch) => epoch,
-                None => {
-                    self.norm_epochs.fill(0);
-                    1
-                }
-            };
-        }
-        if hot {
-            let hot_key = HotKey {
-                norm: key,
-                chunks: store.chunk_count(),
-                words: store.word_count(),
-            };
-            if self.hot.key != Some(hot_key) {
-                self.hot = HotLists {
-                    key: Some(hot_key),
-                    ..HotLists::default()
-                };
+        // Nothing computed for an earlier query is read: the norms are valid for this query
+        // alone.
+        self.key = Some(key);
+        self.complete = false;
+        self.epoch = match self.epoch.checked_add(1) {
+            Some(epoch) => epoch,
+            None => {
+                self.norm_epochs.fill(0);
+                1
             }
-        }
+        };
         let mut lists = Vec::new();
         let mut postings = 0usize;
         for (form, terms) in prepared.query_terms.iter().enumerate() {
             for word in terms {
-                if hot {
-                    if let Some(list) = self.hot.lists[form].get(word.as_str()) {
-                        postings = postings.saturating_add(list.slots.len());
-                        lists.push(Listed::Hot(std::rc::Rc::clone(list)));
-                        continue;
-                    }
-                }
                 if let Some(list) = store.postings(form, word) {
                     let df = list.len() as f64;
                     postings = postings.saturating_add(list.len());
-                    lists.push(Listed::Cold {
+                    lists.push(Listed {
                         idf: Bm25::idf(n, df),
                         list,
-                        form,
-                        word,
                     });
                 }
             }
@@ -228,48 +162,8 @@ impl LexicalScratch {
         self.touched.clear();
         if dense {
             let norms = &self.norms[..slots];
-            let policy = store.hot_policy();
             for listed in &lists {
-                match listed {
-                    Listed::Hot(list) => {
-                        for (&slot, &weight) in list.slots.iter().zip(&list.weights) {
-                            scores[slot as usize] += weight;
-                        }
-                    }
-                    &Listed::Cold {
-                        idf,
-                        ref list,
-                        form,
-                        word,
-                    } => {
-                        let length = list.len();
-                        if hot
-                            && length >= policy.min_len
-                            && length <= policy.postings.saturating_sub(self.hot.postings)
-                        {
-                            let mut kept_slots = Vec::with_capacity(length);
-                            let mut kept_weights = Vec::with_capacity(length);
-                            accumulate(
-                                list,
-                                bm25,
-                                idf,
-                                norms,
-                                scores,
-                                Some((&mut kept_slots, &mut kept_weights)),
-                            );
-                            self.hot.postings += kept_slots.len();
-                            self.hot.lists[form].insert(
-                                word.to_owned(),
-                                std::rc::Rc::new(HotList {
-                                    slots: kept_slots.into_boxed_slice(),
-                                    weights: kept_weights.into_boxed_slice(),
-                                }),
-                            );
-                        } else {
-                            accumulate(list, bm25, idf, norms, scores, None);
-                        }
-                    }
-                }
+                accumulate(&listed.list, bm25, listed.idf, norms, scores);
             }
         } else {
             self.touched.resize(postings, 0);
@@ -279,32 +173,21 @@ impl LexicalScratch {
             let simple = bm25.k1 <= 1.0 || bm25 == Bm25::DEFAULT;
             let mut reached = 0;
             for listed in &lists {
-                match listed {
-                    Listed::Hot(list) => {
-                        for (&slot, &weight) in list.slots.iter().zip(&list.weights) {
-                            let score = scores[slot as usize];
-                            touched[reached] = slot;
-                            reached += usize::from(score == 0.0);
-                            scores[slot as usize] = score + weight;
-                        }
+                let (idf, list) = (listed.idf, &listed.list);
+                list.for_each(|slot, frequency| {
+                    if !complete && norm_epochs[slot] != epoch {
+                        norm_epochs[slot] = epoch;
+                        norms[slot] = bm25.norm(f64::from(store.slot_word_count(slot)), average);
                     }
-                    &Listed::Cold { idf, ref list, .. } => list.for_each(|slot, frequency| {
-                        if !complete && norm_epochs[slot] != epoch {
-                            norm_epochs[slot] = epoch;
-                            norms[slot] =
-                                bm25.norm(f64::from(store.slot_word_count(slot)), average);
-                        }
-                        // Weights are never -0, so a slot reads +0 until its first nonzero
-                        // weight; a slot recorded twice reads 0 the second time in the
-                        // selection.
-                        let score = scores[slot];
-                        touched[reached] = slot as u32;
-                        reached += usize::from(score == 0.0);
-                        let weight =
-                            weigh_one(simple, bm25, idf, f64::from(frequency), norms[slot]);
-                        scores[slot] = score + weight;
-                    }),
-                }
+                    // Weights are never -0, so a slot reads +0 until its first nonzero
+                    // weight; a slot recorded twice reads 0 the second time in the
+                    // selection.
+                    let score = scores[slot];
+                    touched[reached] = slot as u32;
+                    reached += usize::from(score == 0.0);
+                    let weight = weigh_one(simple, bm25, idf, f64::from(frequency), norms[slot]);
+                    scores[slot] = score + weight;
+                });
             }
             self.touched.truncate(reached);
         }
@@ -425,7 +308,6 @@ pub(super) fn accumulate(
     idf: f64,
     norms: &[f64],
     scores: &mut [f64],
-    mut keep: Option<(&mut Vec<u32>, &mut Vec<f64>)>,
 ) {
     assert!(norms.len() == scores.len() && norms.len() <= i32::MAX as usize);
     let simple = bm25.k1 <= 1.0 || bm25 == Bm25::DEFAULT;
@@ -433,10 +315,6 @@ pub(super) fn accumulate(
         list.for_each(|slot, frequency| {
             let weight = weigh_one(simple, bm25, idf, f64::from(frequency), norms[slot]);
             scores[slot] += weight;
-            if let Some((kept_slots, kept_weights)) = keep.as_mut() {
-                kept_slots.push(slot as u32);
-                kept_weights.push(weight);
-            }
         });
         return;
     }
@@ -461,10 +339,6 @@ pub(super) fn accumulate(
         }
         for (&slot, &weight) in slots.iter().zip(&weights[..count]) {
             scores[slot as usize] += weight;
-        }
-        if let Some((kept_slots, kept_weights)) = keep.as_mut() {
-            kept_slots.extend_from_slice(slots);
-            kept_weights.extend_from_slice(&weights[..count]);
         }
     };
     list.for_each(|slot, frequency| {

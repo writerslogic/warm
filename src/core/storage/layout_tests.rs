@@ -14,6 +14,7 @@ fn legacy(path: &Path, version: u32) -> Result<()> {
         } else {
             LEGACY_SEGMENT_SIZE
         },
+        derived_tables: false,
     };
     std::fs::write(path.join(FORMAT_MANIFEST), serde_json::to_vec(&manifest)?)?;
     Ok(())
@@ -121,6 +122,7 @@ fn manifest_geometry_boundaries_fail_before_segment_mutation() -> Result<()> {
                 magic: FORMAT_MAGIC.into(),
                 version,
                 segment_size: size,
+                derived_tables: false,
             };
             std::fs::write(
                 arena_path.join(FORMAT_MANIFEST),

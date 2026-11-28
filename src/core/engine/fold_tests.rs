@@ -132,6 +132,11 @@ fn folded_ingest_writes_the_checkpoint_of_a_single_pass() -> Result<()> {
         );
         let bytes = checkpoint(folded.path());
         assert_eq!(&bytes[..8], b"HMSCKP\x00\x04", "retain={retain}: version 4");
+        assert_eq!(
+            features(folded.path()) & 2,
+            2,
+            "retain={retain}: a fold stores the derived tables"
+        );
         let reopened = WarmCore::new(
             256,
             Some(folded.path().display().to_string()),
@@ -319,12 +324,12 @@ fn compressed_text_stores_fold_to_the_answers_of_an_unfolded_store() -> Result<(
         assert_eq!((answers(&core)?, stored_texts(&core, 70)?), expected);
     }
     for dir in [&unfolded, &folded] {
-        assert_eq!(features(dir.path()), 1, "text blocks");
+        assert_eq!(features(dir.path()) & 1, 1, "text blocks");
         let core = open(dir, 1, true)?;
         assert!(core.serves_from_checkpoint());
         assert_eq!((answers(&core)?, stored_texts(&core, 70)?), expected);
     }
-    assert_eq!(features(plain.path()), 0);
+    assert_eq!(features(plain.path()) & 1, 0);
     Ok(())
 }
 
@@ -353,7 +358,7 @@ fn toggling_compress_text_between_folds_keeps_answers_and_text() -> Result<()> {
         let core = open(&toggled, 1, compress)?;
         ingest_range(&core, leg * 30, leg * 30 + 30, 5)?;
         drop(core);
-        assert_eq!(features(toggled.path()), expect_features, "leg {leg}");
+        assert_eq!(features(toggled.path()) & 1, expect_features, "leg {leg}");
         let core = open(&toggled, 1, compress)?;
         let seen = (leg + 1) * 30;
         assert_eq!(stored_texts(&core, 90)?[..seen].len(), seen);
