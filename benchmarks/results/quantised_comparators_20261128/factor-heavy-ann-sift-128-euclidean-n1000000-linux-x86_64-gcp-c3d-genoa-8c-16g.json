@@ -1,0 +1,577 @@
+{
+  "source_file": "heavy-ann-sift-128-euclidean-n1000000-linux-x86_64-gcp-c3d-genoa-8c-16g.json",
+  "hardware": {
+    "class": "linux-x86_64-gcp-c3d-genoa-8c-16g",
+    "cpu": "AMD EPYC 9B14",
+    "logical_cores": 8,
+    "memory_bytes": 16765677568,
+    "os": "Linux 6.8.0-1074-gcp",
+    "machine": "x86_64",
+    "hosted_runner": false,
+    "load_1m": 0.01220703125
+  },
+  "dataset": {
+    "name": "sift-128-euclidean",
+    "metric": "euclidean",
+    "n_train": 1000000,
+    "n_test": 10000,
+    "dim": 128,
+    "subset_of": null,
+    "train_sha256": "ac8e11ed111b09e882bcf0ef1a77ebdd36c89f495bce8fd596603f69c35148e6",
+    "test_sha256": "bf4c4c9db385017e63e7b0a9ccd8e3aab3744a02e053c135e000fa0b1dea2d6f"
+  },
+  "commit": "dbe04ad64efbae155ea4a9615d6671e2919027e0",
+  "rounds": 8,
+  "targets": {
+    "0.9": {
+      "warm": {
+        "reached": true,
+        "config": 11,
+        "params": {
+          "ef": 16,
+          "rerank": 64
+        },
+        "select_recall": 0.90206,
+        "report_recall": 0.90276,
+        "qps_by_round": [
+          25191.040520658324,
+          24242.663002830566,
+          25978.003631337877,
+          25818.549505287952,
+          25654.367774837752,
+          24894.674590034283,
+          25184.861164377682,
+          25900.156457957477
+        ],
+        "qps_median": 25422.704147748038,
+        "qps_ci": [
+          24894.674590034283,
+          25900.156457957477
+        ],
+        "estimates_per_query": null,
+        "build": "vertex-d32"
+      },
+      "warm_interpolated": {
+        "reached": true,
+        "build": "vertex-d32",
+        "qps_by_round": [
+          25487.776246125144,
+          24546.083361527522,
+          26203.671433353145,
+          26227.415511999676,
+          25912.909772093608,
+          25898.001421256457,
+          25442.018828976263,
+          26147.874643801388
+        ],
+        "qps_median": 25905.455596675034
+      },
+      "faiss-hnsw": {
+        "operating_point": {
+          "reached": true,
+          "config": 2,
+          "params": {
+            "ef": 24
+          },
+          "select_recall": 0.92298,
+          "report_recall": 0.92322,
+          "qps_by_round": [
+            9490.42706133745,
+            9396.83147794693,
+            9149.945909959006,
+            9192.995670276256,
+            9534.912799926122,
+            9383.86466694143,
+            9473.118042005835,
+            9475.48408477506
+          ],
+          "qps_median": 9434.974759976383,
+          "qps_ci": [
+            9288.430168608844,
+            9490.42706133745
+          ],
+          "estimates_per_query": null,
+          "build": "m32e500"
+        },
+        "warm_over": {
+          "reached": true,
+          "factor": 2.6945174517681143,
+          "ci95": [
+            2.6529234461080984,
+            2.8085023023308016
+          ],
+          "rounds": 8
+        },
+        "warm_over_interpolated": {
+          "reached": true,
+          "factor": 2.4205958486541337,
+          "ci95": [
+            2.372336384325437,
+            2.5135130337540423
+          ],
+          "rounds": 8
+        }
+      },
+      "faiss-hnswsq": {
+        "operating_point": {
+          "reached": true,
+          "config": 2,
+          "params": {
+            "ef": 24,
+            "k_factor": 1
+          },
+          "select_recall": 0.9164,
+          "report_recall": 0.91534,
+          "qps_by_round": [
+            11636.310098556682,
+            11903.787531395064,
+            11939.297146860823,
+            11730.005204620127,
+            12219.468754945065,
+            11983.660858318788,
+            12000.770658412483,
+            12092.600767183902
+          ],
+          "qps_median": 11961.479002589806,
+          "qps_ci": [
+            11787.803622708752,
+            12092.600767183902
+          ],
+          "estimates_per_query": null,
+          "build": "sq8_m32e500"
+        },
+        "warm_over": {
+          "reached": true,
+          "factor": 2.1253813297037696,
+          "ci95": [
+            2.088001782301033,
+            2.181606295098303
+          ],
+          "rounds": 8
+        },
+        "warm_over_interpolated": {
+          "reached": true,
+          "factor": 2.0278815761864104,
+          "ci95": [
+            1.9833882639384979,
+            2.060625126151238
+          ],
+          "rounds": 8
+        }
+      },
+      "usearch": {
+        "operating_point": {
+          "reached": true,
+          "config": 2,
+          "params": {
+            "ef": 24
+          },
+          "select_recall": 0.925,
+          "report_recall": 0.92578,
+          "qps_by_round": [
+            5492.819790223915,
+            5393.900178762457,
+            5440.459975356553,
+            5470.328481716844,
+            5532.1402303612485,
+            5493.680910857767,
+            5485.288029072535,
+            5510.10176362366
+          ],
+          "qps_median": 5489.053909648225,
+          "qps_ci": [
+            5440.459975356553,
+            5510.10176362366
+          ],
+          "estimates_per_query": null,
+          "build": "m32e500_f16"
+        },
+        "warm_over": {
+          "reached": true,
+          "factor": 4.631527502956751,
+          "ci95": [
+            4.5570654896932385,
+            4.728196981420502
+          ],
+          "rounds": 8
+        },
+        "warm_over_interpolated": {
+          "reached": true,
+          "factor": 4.176828793168728,
+          "ci95": [
+            4.090161213597381,
+            4.270425307105366
+          ],
+          "rounds": 8
+        }
+      }
+    },
+    "0.95": {
+      "warm": {
+        "reached": true,
+        "config": 13,
+        "params": {
+          "ef": 32,
+          "rerank": 64
+        },
+        "select_recall": 0.95836,
+        "report_recall": 0.95908,
+        "qps_by_round": [
+          15773.60362843766,
+          15166.584521242636,
+          15991.148096718562,
+          16319.794409014892,
+          15859.333428726695,
+          15921.20108027076,
+          15539.92282004443,
+          16134.106786240885
+        ],
+        "qps_median": 15890.267254498727,
+        "qps_ci": [
+          15539.92282004443,
+          16134.106786240885
+        ],
+        "estimates_per_query": null,
+        "build": "vertex-d32"
+      },
+      "warm_interpolated": {
+        "reached": true,
+        "build": "vertex-d32",
+        "qps_by_round": [
+          17416.70534547262,
+          17009.12857434518,
+          17480.078635005924,
+          17849.53387647474,
+          17468.725796685518,
+          17413.91506979499,
+          17277.222568430978,
+          17657.635527005736
+        ],
+        "qps_median": 17442.71557107907
+      },
+      "faiss-hnsw": {
+        "operating_point": {
+          "reached": true,
+          "config": 3,
+          "params": {
+            "ef": 32
+          },
+          "select_recall": 0.95056,
+          "report_recall": 0.95142,
+          "qps_by_round": [
+            7400.900383621201,
+            7697.832545888074,
+            7592.751580425411,
+            7572.02586279149,
+            7513.65207960579,
+            7640.662557733003,
+            7694.323863773554,
+            7703.8338469867995
+          ],
+          "qps_median": 7616.707069079207,
+          "qps_ci": [
+            7513.65207960579,
+            7697.832545888074
+          ],
+          "estimates_per_query": null,
+          "build": "m32e500"
+        },
+        "warm_over": {
+          "reached": true,
+          "factor": 2.0862384637328217,
+          "ci95": [
+            2.0196606089340166,
+            2.120944435654899
+          ],
+          "rounds": 8
+        },
+        "warm_over_interpolated": {
+          "reached": true,
+          "factor": 2.276243584269547,
+          "ci95": [
+            2.2316907176371372,
+            2.308339801257108
+          ],
+          "rounds": 8
+        }
+      },
+      "faiss-hnswsq": {
+        "operating_point": {
+          "reached": true,
+          "config": 28,
+          "params": {
+            "ef": 48,
+            "k_factor": 4
+          },
+          "select_recall": 0.95814,
+          "report_recall": 0.96072,
+          "qps_by_round": [
+            7348.189517971346,
+            7415.689299419105,
+            7309.787207462205,
+            7313.463489455678,
+            7282.978068182025,
+            7259.358947998826,
+            7414.213566401546,
+            7338.216987757773
+          ],
+          "qps_median": 7325.8402386067255,
+          "qps_ci": [
+            7282.978068182025,
+            7381.939408695225
+          ],
+          "estimates_per_query": null,
+          "build": "sq4_m32e500"
+        },
+        "warm_over": {
+          "reached": true,
+          "factor": 2.169070951173355,
+          "ci95": [
+            2.0959637432708402,
+            2.198641279367611
+          ],
+          "rounds": 8
+        },
+        "warm_over_interpolated": {
+          "reached": true,
+          "factor": 1.8719898150493146,
+          "ci95": [
+            1.842094201185005,
+            1.9049711170592516
+          ],
+          "rounds": 8
+        }
+      },
+      "usearch": {
+        "operating_point": {
+          "reached": true,
+          "config": 3,
+          "params": {
+            "ef": 32
+          },
+          "select_recall": 0.95184,
+          "report_recall": 0.95168,
+          "qps_by_round": [
+            4548.871255115015,
+            4394.280481971991,
+            4416.944200013189,
+            4481.925938892475,
+            4493.752205972012,
+            4565.5710522658865,
+            4491.969887170098,
+            4502.4946265266235
+          ],
+          "qps_median": 4492.861046571055,
+          "qps_ci": [
+            4416.944200013189,
+            4548.871255115015
+          ],
+          "estimates_per_query": null,
+          "build": "m32e500_f16"
+        },
+        "warm_over": {
+          "reached": true,
+          "factor": 3.5367813715552487,
+          "ci95": [
+            3.4675862964248343,
+            3.5967791445983486
+          ],
+          "rounds": 8
+        },
+        "warm_over_interpolated": {
+          "reached": true,
+          "factor": 3.8334241346980265,
+          "ci95": [
+            3.783349228152016,
+            3.891216271734259
+          ],
+          "rounds": 8
+        }
+      }
+    },
+    "0.99": {
+      "warm": {
+        "reached": true,
+        "config": 6,
+        "params": {
+          "ef": 96,
+          "rerank": 32
+        },
+        "select_recall": 0.9924,
+        "report_recall": 0.99264,
+        "qps_by_round": [
+          7309.275792863887,
+          7187.207171579902,
+          7305.001582838359,
+          7326.684611338522,
+          7137.6515790135845,
+          7242.869119763391,
+          7096.970491592173,
+          7347.294860838134
+        ],
+        "qps_median": 7273.9353513008755,
+        "qps_ci": [
+          7137.6515790135845,
+          7326.684611338522
+        ],
+        "estimates_per_query": null,
+        "build": "vertex-d32"
+      },
+      "warm_interpolated": {
+        "reached": true,
+        "build": "vertex-d32",
+        "qps_by_round": [
+          8089.272065909113,
+          7991.72069975067,
+          8051.338014256117,
+          8088.965742429391,
+          7917.472491210415,
+          8003.504678824969,
+          7911.790104765789,
+          8134.6945259738295
+        ],
+        "qps_median": 8027.421346540543
+      },
+      "faiss-hnsw": {
+        "operating_point": {
+          "reached": true,
+          "config": 6,
+          "params": {
+            "ef": 96
+          },
+          "select_recall": 0.9946,
+          "report_recall": 0.9942,
+          "qps_by_round": [
+            3021.2274132902703,
+            3017.9198893206008,
+            3036.375457068395,
+            3068.657198735662,
+            3088.574217148638,
+            3072.227221621399,
+            3059.3287924499173,
+            3085.34793526037
+          ],
+          "qps_median": 3063.9929955927896,
+          "qps_ci": [
+            3021.2274132902703,
+            3085.34793526037
+          ],
+          "estimates_per_query": null,
+          "build": "m32e500"
+        },
+        "warm_over": {
+          "reached": true,
+          "factor": 2.3740052153394657,
+          "ci95": [
+            2.3277294117711933,
+            2.412551249804355
+          ],
+          "rounds": 8
+        },
+        "warm_over_interpolated": {
+          "reached": true,
+          "factor": 2.1591739992348162,
+          "ci95": [
+            2.1266079117976595,
+            2.18879094080914
+          ],
+          "rounds": 8
+        }
+      },
+      "faiss-hnswsq": {
+        "operating_point": {
+          "reached": true,
+          "config": 18,
+          "params": {
+            "ef": 96,
+            "k_factor": 2
+          },
+          "select_recall": 0.99444,
+          "report_recall": 0.99382,
+          "qps_by_round": [
+            3903.2559221241368,
+            3906.8354101856644,
+            3990.0820645111544,
+            3911.4737090355147,
+            3967.789429179872,
+            3860.184944007031,
+            3983.407172562655,
+            4047.7903729197687
+          ],
+          "qps_median": 3939.6315691076934,
+          "qps_ci": [
+            3903.2559221241368,
+            3990.0820645111544
+          ],
+          "estimates_per_query": null,
+          "build": "sq8_m32e500"
+        },
+        "warm_over": {
+          "reached": true,
+          "factor": 1.8463491379089505,
+          "ci95": [
+            1.7988987839228434,
+            1.8717516817315374
+          ],
+          "rounds": 8
+        },
+        "warm_over_interpolated": {
+          "reached": true,
+          "factor": 1.7128410939533083,
+          "ci95": [
+            1.6757873407529418,
+            1.739854752773092
+          ],
+          "rounds": 8
+        }
+      },
+      "usearch": {
+        "operating_point": {
+          "reached": true,
+          "config": 6,
+          "params": {
+            "ef": 96
+          },
+          "select_recall": 0.99496,
+          "report_recall": 0.99422,
+          "qps_by_round": [
+            1979.4176390496818,
+            2013.4730474936248,
+            1947.9219320608674,
+            2013.3588740129085,
+            1999.4135712408188,
+            2021.3599555545165,
+            2023.6149569769868,
+            1997.0186855103489
+          ],
+          "qps_median": 2006.3862226268636,
+          "qps_ci": [
+            1979.4176390496818,
+            2021.3599555545165
+          ],
+          "estimates_per_query": null,
+          "build": "m32e500_f16"
+        },
+        "warm_over": {
+          "reached": true,
+          "factor": 3.625391397363897,
+          "ci95": [
+            3.5571399985590366,
+            3.6904801890850534
+          ],
+          "rounds": 8
+        },
+        "warm_over_interpolated": {
+          "reached": true,
+          "factor": 3.3381161448171444,
+          "ci95": [
+            3.3054538978571277,
+            3.3711773534837914
+          ],
+          "rounds": 8
+        }
+      }
+    }
+  },
+  "pairing": "WARM and every comparator ran each round in the same session, order rotated per round; the factor is median-over-rounds QPS ratio, interval is a percentile bootstrap over rounds with one round draw for both sides"
+}
