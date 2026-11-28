@@ -92,7 +92,7 @@ pub(super) struct Summary {
     /// The maxima over every run but the last, kept so that a write to the last run (the usual
     /// append) re-seals in constant time.
     head: (u32, u32),
-    runs: Box<[Frontier]>,
+    runs: Vec<Frontier>,
 }
 
 /// The highest frequency and fewest words of `runs`: a frontier lists its highest frequency
@@ -843,27 +843,35 @@ impl PostingList {
             return;
         };
         let total = self.blocks.len().div_ceil(SUPER_LEN);
-        let mut old = std::mem::take(&mut summary.runs).into_vec();
-        let old_len = old.len();
+        let old_len = summary.runs.len();
         let moved = summary.shifted || old_len != total;
         let (from, to) = (summary.first / SUPER_LEN, summary.last / SUPER_LEN);
-        let runs: Vec<Frontier> = (0..total)
-            .map(|run| {
-                if run < from || (!moved && run > to) {
-                    return std::mem::take(&mut old[run]);
+        let build = |run: usize| {
+            let mut points = Vec::new();
+            for block in
+                &self.blocks[run * SUPER_LEN..((run + 1) * SUPER_LEN).min(self.blocks.len())]
+            {
+                match block.frontier.as_deref() {
+                    Some(frontier) => points.extend_from_slice(frontier),
+                    None => points.push((block.max_frequency, block.min_words)),
                 }
-                let mut points = Vec::new();
-                for block in
-                    &self.blocks[run * SUPER_LEN..((run + 1) * SUPER_LEN).min(self.blocks.len())]
-                {
-                    match block.frontier.as_deref() {
-                        Some(frontier) => points.extend_from_slice(frontier),
-                        None => points.push((block.max_frequency, block.min_words)),
-                    }
-                }
-                pareto(points)
-            })
-            .collect();
+            }
+            pareto(points)
+        };
+        // The runs are edited in place, so a write to the last run costs one run, not a copy
+        // of every run's pointer.
+        let runs = &mut summary.runs;
+        if moved {
+            runs.truncate(from.min(total));
+            for run in runs.len()..total {
+                runs.push(build(run));
+            }
+        } else {
+            let end = to.min(total - 1) + 1;
+            for (run, slot) in runs.iter_mut().enumerate().take(end).skip(from) {
+                *slot = build(run);
+            }
+        }
         // The runs before the last are untouched when the change starts in the last run, or in
         // the one before it when the list grew by one run: then the head is carried, and only the
         // tail is read. Any other change refolds the runs (still 1/SUPER_LEN of the blocks).
@@ -871,15 +879,15 @@ impl PostingList {
         let carried = if !summary.shifted && old_len == total && from >= last {
             Some(summary.head)
         } else if !summary.shifted && old_len + 1 == total && from + 1 >= last {
-            let (frequency, words) = run_maxima(&runs[last - 1..last]);
+            let (frequency, words) = run_maxima(&summary.runs[last - 1..last]);
             Some((summary.head.0.max(frequency), summary.head.1.min(words)))
         } else {
             None
         };
-        summary.head = carried.unwrap_or_else(|| run_maxima(&runs[..last]));
-        let (frequency, words) = run_maxima(&runs[last..]);
-        summary.maxima = (summary.head.0.max(frequency), summary.head.1.min(words));
-        summary.runs = runs.into_boxed_slice();
+        let head = carried.unwrap_or_else(|| run_maxima(&summary.runs[..last]));
+        let (frequency, words) = run_maxima(&summary.runs[last..]);
+        summary.head = head;
+        summary.maxima = (head.0.max(frequency), head.1.min(words));
         summary.stale = false;
     }
 
