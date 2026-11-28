@@ -140,13 +140,13 @@ def lines(results, cells):
     if not results:
         return []
     out = ["## JavaScript in-process: WARM and Vectra", "",
-           "Both stores are called from one Node process (`warm-memory` for WARM, `vectra` for Vectra), index the same 384-dimension document vectors "
+           ("Both stores are called from one Node process (`warm-memory` for WARM, `vectra` for Vectra), index the same 384-dimension document vectors "
            "(WARM's local embedder, one file shared by every row) and answer with the same query vectors, so the comparison is the stores, not the models. "
            "Quality is nDCG@10 and recall@10 of the returned top 10; QPS and latency are one query at a time with the hit ids read inside the timer; "
            "build, size, serve RSS and cold start are per fresh process. Vectra's `isBm25` option is measured on a small query sample because it rebuilds "
            "a BM25 engine per query and exhausts the heap after about 20 queries in one process. Factors are ratios of medians, more than 1x is WARM ahead; "
            "W, T and L follow the same bootstrap rule as the sections above, `n/v` is no verdict. Method, versions and the unsupported rows are recorded in "
-           "each results file (`kind: js`); how to reproduce: [index.md](index.md).", ""]
+           "each results file (`kind: js`); how to reproduce: [index.md](index.md)."), ""]
     for path, data in results:
         hw, ds, systems = data["hardware"]["class"], data["dataset"], data["systems"]
         out += [f"### {ds['name']} ({ds['documents']:,} documents, {ds['queries']:,} queries) on `{hw}`", "",

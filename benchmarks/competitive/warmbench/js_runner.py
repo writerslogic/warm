@@ -14,8 +14,6 @@ store, built as `warm-docs`).
 import hashlib
 import json
 import os
-import platform
-import random
 import shutil
 import statistics
 import subprocess
