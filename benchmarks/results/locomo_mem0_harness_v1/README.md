@@ -55,3 +55,5 @@ python scripts/run_full.py
 
 Analysis (free): `uv run --no-project --with numpy python scripts/analyze_full.py` after pointing its paths at the run output;
 `scripts/empty_answers.py` runs inside this directory.
+
+Absolute local paths in these scripts were replaced with placeholders.

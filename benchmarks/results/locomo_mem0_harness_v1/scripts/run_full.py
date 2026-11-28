@@ -1,13 +1,13 @@
 import os, sys, subprocess, re, time, shutil, glob, threading, json
-H = os.path.expanduser('~'); P = '/Volumes/A/.hms-lb/locomo-20261114/pilot'
+H = os.path.expanduser('~'); P = '$WARM_BENCH_DATA/pilot'
 OUT = H + '/pilot-out/all'; STORE = H + '/pilot-out/store'
-DATA = '/Volumes/A/.hms-lb/locomo-20261114/locomo10.json'
+DATA = '$WARM_BENCH_DATA/locomo10.json'
 def log(m): print(time.strftime('%H:%M:%S'), m, flush=True)
 if not os.environ.get('KEEP'):
     shutil.rmtree(OUT, ignore_errors=True); shutil.rmtree(STORE, ignore_errors=True); open(H + '/pilot-out/all-server.log', 'w').close()
 os.makedirs(OUT, exist_ok=True); os.makedirs(STORE, exist_ok=True)
 if not os.environ.get('KEEP'): assert not glob.glob(OUT + '/**/_progress_*', recursive=True) + glob.glob(OUT + '/**/_ingestion_*', recursive=True)
-srv = subprocess.Popen(['/Volumes/C/.hms-tgt/locomo/release/pilot-memsrv', '--no-auth', '--bind', '127.0.0.1:0', '--data-dir', STORE + '/data',
+srv = subprocess.Popen(['$WARM_BENCH_TARGET/locomo/release/pilot-memsrv', '--no-auth', '--bind', '127.0.0.1:0', '--data-dir', STORE + '/data',
                         '--input-dim', '1536', '--max-top-k', '200', '--max-queue', '1000'], stdout=subprocess.PIPE, stderr=open(H + '/pilot-out/all-server.log', 'ab'))
 m = re.search(r'listening on (\S+)', srv.stdout.readline().decode()); assert m, 'server did not start'
 threading.Thread(target=lambda: [None for _ in srv.stdout], daemon=True).start()
