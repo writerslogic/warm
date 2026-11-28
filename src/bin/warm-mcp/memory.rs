@@ -276,6 +276,10 @@ impl SearchReq {
         if self.filter.len() > 16 {
             return Err(Fail::invalid("filter has at most 16 keys"));
         }
+        writerslogic_warm::core::documents::validate_filter(Some(&Value::Object(
+            self.filter.clone(),
+        )))
+        .map_err(|e| Fail::invalid(e.to_string()))?;
         if let Some(s) = self.min_score {
             if !(0.0..=1.0).contains(&s) {
                 return Err(Fail::invalid("min_score must be within 0..=1"));

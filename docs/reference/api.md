@@ -65,6 +65,26 @@ A new store creates the file (mode 0600 on Unix, parent directories included). T
 file; empty values and directories are rejected. An existing store never gets a fresh key: a missing
 key, or one that does not open the store, is an error. Reopen with the same path every time.
 
+## Document search: filters, scores, model, analysis
+
+- **Metadata filters** take a JSON object of top-level keys, ANDed. A value is an exact match, or an
+  object with `$eq` or `$in` (an array of at most 1024 scalars). A list-valued field matches when
+  any element equals the value, or for `$in` is in the set; a list filter value still compares the
+  whole list. Any other operator (`$gt`, `$or`, `$regex`, ...) is an error naming the operator and
+  the supported set (`UnsupportedFilterOperator` in Rust; a 400 from `warm-server` and the MCP
+  tools). Before this release such filters silently matched nothing.
+- **`semanticScore`** is the exact cosine of the hit's stored chunk vector and the query vector,
+  whenever a query vector (or a text embedding from an installed embedder) exists. It is `null`
+  only without one, or for a chunk stored without a vector.
+- **Embedding model**: `WarmCore::embedding_model()`, `WarmMemorySystem.embeddingModel()` and
+  `Warm.embedding_model()` return `model`, `revision`, `dimensions`, `normalization`, `metric` and
+  `packSha256`. `revision` hashes the model parameters including the pack, so compare it with your
+  embedder's to detect a mismatch. `packSha256` is set only while an embedder is installed (the
+  store does not persist it) and is otherwise `null`.
+- **Analysis**: `stem(word)` and `analyze(text)` (Rust: `writerslogic_warm::{stem, analyze}` and
+  `Analyzer::{stem, analyze}`; Node and Python take an optional analyzer name) return the terms the
+  indexer counts, so ranking is unchanged.
+
 ## Cargo features
 
 `default = []`: nothing is enabled unless you ask. The list is in `Cargo.toml` `[features]`.

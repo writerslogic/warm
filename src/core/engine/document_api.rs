@@ -39,6 +39,27 @@ impl WarmCore {
         self.config.embedding_space.as_ref()
     }
 
+    /// The model the store's vectors were built with, so a caller can detect a mismatch with its
+    /// own model. `revision` hashes the model parameters including the pack and is always set
+    /// with the embedding space; `pack_sha256` is set only while an embedder is installed,
+    /// because the store does not persist it.
+    pub fn embedding_model(&self) -> Option<documents::EmbeddingModelInfo> {
+        let space = self.config.embedding_space.as_ref()?;
+        Some(documents::EmbeddingModelInfo {
+            model: space.model.clone(),
+            revision: space.revision.clone(),
+            dimensions: space.dimensions,
+            normalization: space.normalization.clone(),
+            metric: space.metric.clone(),
+            #[cfg(feature = "local-embed")]
+            pack_sha256: self
+                .text_embedder()
+                .map(|embedder| embedder.pack_sha256().to_owned()),
+            #[cfg(not(feature = "local-embed"))]
+            pack_sha256: None,
+        })
+    }
+
     pub fn memorize_document(&self, input: DocumentInput) -> Result<u32> {
         self.memorize_document_with(input, &IngestOptions::default())
     }
@@ -469,6 +490,7 @@ impl WarmCore {
         k: usize,
         options: &VectorQueryOptions,
     ) -> Result<documents::VectorSearchResults> {
+        documents::validate_filter(options.filter.as_ref())?;
         let Some(space) = &self.config.embedding_space else {
             anyhow::bail!("configure an embedding space before vector search");
         };

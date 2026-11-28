@@ -15,8 +15,9 @@ pub use bindings::node::*;
 #[cfg(not(target_arch = "wasm32"))]
 pub use crate::core::audit::{AuditEntry, AuditOp};
 pub use crate::core::documents::{
-    chunk_document, DocumentChunk, DocumentChunkRecord, DocumentInfo, DocumentInput,
-    DocumentReadChanged, DocumentRecord, DocumentResult, SearchOptions,
+    analyze, chunk_document, stem, Analyzer, DocumentChunk, DocumentChunkRecord, DocumentInfo,
+    DocumentInput, DocumentReadChanged, DocumentRecord, DocumentResult, EmbeddingModelInfo,
+    SearchOptions, UnsupportedFilterOperator, SUPPORTED_FILTER_OPERATORS,
 };
 #[cfg(not(target_arch = "wasm32"))]
 pub use crate::core::engine::{BatchOp, BatchResult};

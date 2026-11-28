@@ -913,6 +913,10 @@ pub async fn query(State(state): State<Arc<AppState>>, req: Request) -> ApiResul
             Some(Value::Object(m)) => Some(m),
             Some(_) => return Err(ApiError::bad("filter must be a JSON object")),
         };
+        if let Some(m) = &filter {
+            writerslogic_warm::core::documents::validate_filter(Some(&Value::Object(m.clone())))
+                .map_err(|e| ApiError::bad(e.to_string()))?;
+        }
         let document_ids = q.document_ids;
         if let Some(ids) = &document_ids {
             let mut seen = std::collections::HashSet::new();
