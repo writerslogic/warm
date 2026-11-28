@@ -2276,28 +2276,25 @@ impl ServingImage {
         self.ranks.get_or_init(|| self.compute_ranks())
     }
 
+    /// The list of `span` with its skip table and positions.
+    fn ranked_list(&self, span: &ListSpan) -> ListRef<'_> {
+        ListRef {
+            bytes: &self.section(Section::Postings)[span.posting..span.posting + span.entry.len],
+            count: span.entry.count as u32,
+            skips: &self.section(Section::Skips)[span.skip..span.skip + span.entry.skip_len],
+            positions: &self.section(Section::Positions)[span.pos..span.pos + span.entry.pos_len],
+        }
+    }
+
     fn compute_ranks(&self) -> Ranks {
         {
             let average = (self.words as f64 / (self.chunks as f64).max(1.0)).max(1.0);
             let unit = super::lexical::wand::Bound::new(1.0, average, super::Bm25::DEFAULT);
-            let (postings, skips, positions) = (
-                self.section(Section::Postings),
-                self.section(Section::Skips),
-                self.section(Section::Positions),
-            );
             let tables = unit
                 .map(|unit| {
                     self.ranked
                         .iter()
-                        .map(|span| {
-                            let list = ListRef {
-                                bytes: &postings[span.posting..span.posting + span.entry.len],
-                                count: span.entry.count as u32,
-                                skips: &skips[span.skip..span.skip + span.entry.skip_len],
-                                positions: &positions[span.pos..span.pos + span.entry.pos_len],
-                            };
-                            (span.skip, RankTable::new(list, unit))
-                        })
+                        .map(|span| (span.skip, RankTable::new(self.ranked_list(span), unit)))
                         .collect()
                 })
                 .unwrap_or_default();
@@ -2313,6 +2310,19 @@ impl ServingImage {
     #[cfg(test)]
     pub(super) fn stored_derived(&self) -> Option<&[u8]> {
         self.derived.then(|| self.section(Section::Derived))
+    }
+
+    /// Opens `bytes` with the byte `at` of the derived section xored with `mask`, the file's CRC
+    /// recomputed so only the section's own validation can reject it.
+    #[cfg(test)]
+    pub(super) fn open_with_flipped_derived(bytes: &[u8], at: usize, mask: u8) -> Result<Self> {
+        let probe = Self::new(Backing::Owned(bytes.to_vec()))?;
+        let (start, len) = probe.sections[Section::Derived as usize];
+        let mut copy = bytes.to_vec();
+        copy[start + at % len] ^= mask;
+        let crc = crc32fast::hash(&copy[CRC_START..]);
+        copy[8..16].copy_from_slice(&u64::from(crc).to_le_bytes());
+        Self::new(Backing::Owned(copy))?.with_derived_tables_using(true)
     }
 
     #[cfg(test)]

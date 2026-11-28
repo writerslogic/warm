@@ -158,6 +158,48 @@ fn single_posting_edits_recompute_one_block_frontier() {
     assert!(list.block_count() >= blocks);
 }
 
+/// A long list's summary is kept by the writes: after random inserts, deletes and reweights (blocks split, shrink and
+/// vanish) it equals one computed from every block.
+#[test]
+fn summary_follows_random_edits_like_a_full_recompute() {
+    let words = |slot: usize| 5 + (slot % 31) as u32;
+    let run: Vec<Posting> = (0..40 * BLOCK_LEN)
+        .map(|i| (i * 4, 1 + (i % 9) as u32))
+        .collect();
+    let mut list = PostingList::default();
+    list.append_run_with_lengths(&run, words);
+    let mut live: std::collections::BTreeSet<usize> = run.iter().map(|p| p.0).collect();
+    let mut state = 0x2545_f491_4f6c_dd1du64;
+    let mut next = move || {
+        state ^= state << 13;
+        state ^= state >> 7;
+        state ^= state << 17;
+        state
+    };
+    for step in 0..3000 {
+        let slot = (next() % (45 * BLOCK_LEN as u64 * 4)) as usize;
+        let last = live.last().copied().unwrap_or(0);
+        match next() % 4 {
+            0 if live.contains(&slot) => {
+                list.remove(slot, words);
+                live.remove(&slot);
+            }
+            1 if live.contains(&slot) => list.set_frequency(slot, 1 + (next() % 20) as u32, words),
+            2 => {
+                let slot = last + 4;
+                list.append_run_with_lengths(&[(slot, 1 + (next() % 5) as u32)], words);
+                live.insert(slot);
+            }
+            3 if !live.contains(&slot) && slot < last => {
+                list.insert((slot, 2), 0, words);
+                live.insert(slot);
+            }
+            _ => {}
+        }
+        assert!(list.summary_matches_recompute(), "step {step}");
+    }
+}
+
 #[test]
 fn gallop_matches_partition_point() {
     for length in 0..70usize {

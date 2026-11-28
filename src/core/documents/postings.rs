@@ -36,7 +36,6 @@ use rayon::prelude::*;
 
 use super::binary::put_varint;
 use super::StoredChunk;
-use std::sync::OnceLock;
 
 const NONE: u32 = u32::MAX;
 

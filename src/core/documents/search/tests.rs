@@ -688,7 +688,7 @@ fn screened_semantic_scan_matches_the_exact_scan() {
     }
 }
 
-/// The screen table serves from `SCREEN_TABLE_MIN_CHUNKS` chunks (the second query of a generation builds it) and
+/// The screen table serves from `SCREEN_TABLE_MIN_CHUNKS` chunks (the writes keep it, queries never build it) and
 /// ranks identically to the exact scan on both sides of that size.
 #[test]
 fn screen_table_switches_on_at_the_chunk_threshold() {
@@ -716,7 +716,7 @@ fn screen_table_switches_on_at_the_chunk_threshold() {
         }
         assert_eq!(store.chunk_count, 2046 + extra, "{extra}");
         let built: Vec<bool> = (0..3).map(|_| store.screen_table(8).is_some()).collect();
-        assert_eq!(built, [false, served, served], "{extra}");
+        assert_eq!(built, [served; 3], "{extra}");
         let expected =
             super::super::search_impl(&store, "common", &options, Some(8), false).unwrap();
         let actual = super::super::search_impl(&store, "common", &options, Some(8), true).unwrap();
@@ -1842,4 +1842,222 @@ fn stored_derived_tables_equal_the_computed_ones_and_queries_leave_them_alone() 
         assert_eq!(stored.dense_len(), before);
         assert_eq!(computed.dense_len(), before);
     }
+}
+
+/// A crafted derived section is an error at open or opens to a checkpoint that still answers; it never panics or reads
+/// out of bounds. A flip in a field the checkpoint can verify (norms, word classes and counts, table keys and lengths)
+/// is always rejected (a flipped constant of the header only makes the tables
+/// recompute).
+#[test]
+fn flipped_derived_bytes_never_panic_and_structural_flips_are_rejected() {
+    let mut state = 0x9e37_79b9_7f4a_7c15u64;
+    for store in [prose_store(0, 1), heavy_tailed_store(6000, 400, &mut state)] {
+        let bytes = super::super::image::encode(&store, 1, 1024)
+            .unwrap()
+            .unwrap();
+        let probe = ServingImage::new(super::super::Backing::Owned(bytes.clone())).unwrap();
+        let len = probe.stored_derived().unwrap().len();
+        let slots = probe.slot_total();
+        let norms_end = 96 + 8 * 8192;
+        let mut positions: Vec<usize> = (0..160).collect();
+        positions.extend([
+            norms_end - 1,
+            norms_end,
+            norms_end + slots,
+            norms_end + slots * 3 - 1,
+        ]);
+        positions.extend((0..97).map(|step| step * (len / 97)));
+        positions.extend(len - 64..len);
+        for &at in &positions {
+            for mask in [0x01u8, 0x80, 0xff] {
+                let opened = ServingImage::open_with_flipped_derived(&bytes, at, mask);
+                let Ok(image) = opened else {
+                    continue;
+                };
+                for text in ["w1 w2", "w0", "the and of a"] {
+                    let prepared = prepare_search(text, &SearchOptions::default(), None).unwrap();
+                    LEXICAL_SCRATCH
+                        .with(|scratch| scratch.borrow_mut().rank(&image, &prepared, true));
+                }
+            }
+        }
+        for at in [72, 80, 88, 96, norms_end, norms_end + slots] {
+            assert!(
+                ServingImage::open_with_flipped_derived(&bytes, at, 0x01)
+                    .map(|_| ())
+                    .is_err(),
+                "a flipped byte at {at} was accepted"
+            );
+        }
+    }
+}
+
+/// The screen table is a function of the slots, kept by the writes: after inserts, replacements and deletes it equals
+/// one built from scratch, and queries leave it untouched.
+#[test]
+fn screen_table_follows_the_writes_and_queries_leave_it_alone() {
+    let single = |id: usize, scale: f64, embedded: bool| {
+        let mut value = json!({
+            "id": format!("s{id:04}"), "version": "1", "text": "running common",
+            "chunkWords": 3, "overlapWords": 0,
+        });
+        if embedded {
+            value["embeddings"] = json!([[
+                scale * (id as f64 + 1.0),
+                0.5,
+                -0.2,
+                0.3,
+                0.1,
+                0.9,
+                -0.4,
+                0.2
+            ]]);
+        }
+        let input = serde_json::from_value(value).unwrap();
+        super::super::prepare(input, 1024, Some(8), TextEncoder::default()).unwrap()
+    };
+    let mut store = noisy_store(1100, 0);
+    assert!(store.screen_table(8).is_some() && store.screen_matches_rebuild());
+    for id in 0..40 {
+        let document = single(id, 0.1, true);
+        store.insert(document.id.clone(), document);
+        assert!(store.screen_matches_rebuild(), "insert {id}");
+    }
+    for id in (0..40).step_by(3) {
+        let document = single(id, 0.7, id % 2 == 0);
+        store.insert(document.id.clone(), document);
+        assert!(store.screen_matches_rebuild(), "replace {id}");
+    }
+    for id in (0..40).step_by(2) {
+        store.remove(&format!("s{id:04}"));
+        assert!(store.screen_matches_rebuild(), "remove {id}");
+    }
+    let before = store.screen_table(8).unwrap();
+    let options = SearchOptions {
+        k: Some(9),
+        candidate_limit: Some(10),
+        embedding: Some(vec![0.3, -0.2, 0.5, 0.1, 0.4, -0.3, 0.2, 0.25]),
+        min_semantic_score: Some(-1.0),
+        ..Default::default()
+    };
+    for _ in 0..3 {
+        super::super::search_impl(&store, "common", &options, Some(8), true).unwrap();
+    }
+    assert!(Arc::ptr_eq(&before, &store.screen_table(8).unwrap()));
+    while store.chunk_count >= 2048 {
+        let id = store.documents.keys().next().unwrap().clone();
+        store.remove(&id);
+    }
+    assert!(store.screen_table(8).is_none() && store.screen_matches_rebuild());
+}
+
+/// Write-path cost: single inserts into a store past the screen threshold, and into a list long enough for a summary.
+/// Run with `--ignored --nocapture` in release.
+#[test]
+#[ignore = "write-path microbenchmark"]
+fn write_path_cost_bench() {
+    let single = |id: usize, text: &str, embedded: bool| {
+        let mut value = json!({
+            "id": format!("b{id:06}"), "version": "1", "text": text,
+            "chunkWords": 64, "overlapWords": 0,
+        });
+        if embedded {
+            value["embeddings"] = json!([[
+                0.01 * (id % 97) as f64 + 0.1,
+                0.5,
+                -0.2,
+                0.3,
+                0.1,
+                0.9,
+                -0.4,
+                0.2
+            ]]);
+        }
+        super::super::prepare(
+            serde_json::from_value(value).unwrap(),
+            1024,
+            embedded.then_some(8),
+            TextEncoder::default(),
+        )
+        .unwrap()
+    };
+    let mut store = noisy_store(4000, 0);
+    let documents: Vec<_> = (0..3000)
+        .map(|id| single(id, "running common", true))
+        .collect();
+    let start = std::time::Instant::now();
+    for document in documents {
+        store.insert(document.id.clone(), document);
+    }
+    println!(
+        "WRITE screen: {:.1} us per insert into {} chunks",
+        start.elapsed().as_secs_f64() * 1e6 / 3000.0,
+        store.chunk_count
+    );
+    let mut store = DocumentStore::default();
+    let documents: Vec<_> = (0..30000).map(|id| single(id, "common", false)).collect();
+    let start = std::time::Instant::now();
+    for document in documents {
+        store.insert(document.id.clone(), document);
+    }
+    println!(
+        "WRITE summary: {:.1} us per insert building a 30000-posting list",
+        start.elapsed().as_secs_f64() * 1e6 / 30000.0
+    );
+    for base in [4000usize, 50000] {
+        let mut store = noisy_store(base, 0);
+        let chunks = store.chunk_count;
+        let documents: Vec<_> = (0..2000)
+            .map(|id| single(id, "running common", true))
+            .collect();
+        let start = std::time::Instant::now();
+        for document in documents {
+            store.insert(document.id.clone(), document);
+        }
+        println!(
+            "WRITE embedded insert at {chunks} chunks: {:.1} us per insert",
+            start.elapsed().as_secs_f64() * 1e6 / 2000.0
+        );
+        let start = std::time::Instant::now();
+        for id in 0..2000 {
+            store.remove(&format!("b{id:06}"));
+        }
+        println!(
+            "WRITE embedded delete at {chunks} chunks: {:.1} us per delete",
+            start.elapsed().as_secs_f64() * 1e6 / 2000.0
+        );
+    }
+    for size in [100usize, 1000] {
+        for (label, embedded) in [("summary", false), ("screen", true)] {
+            let mut store = if embedded {
+                noisy_store(4000, 0)
+            } else {
+                DocumentStore::default()
+            };
+            let total = if embedded { 3000 } else { 30000 };
+            let documents: Vec<_> = (0..total)
+                .map(|id| single(id, "common", embedded))
+                .collect();
+            let start = std::time::Instant::now();
+            let mut documents = documents.into_iter();
+            while documents.len() > 0 {
+                let batch: Vec<_> = documents.by_ref().take(size).collect();
+                store
+                    .insert_batch(batch.into_iter().map(Arc::new).collect())
+                    .unwrap();
+            }
+            println!(
+                "WRITE batch {size} {label}: {:.1} us per document",
+                start.elapsed().as_secs_f64() * 1e6 / total as f64
+            );
+        }
+    }
+    let start = std::time::Instant::now();
+    for id in 0..3000 {
+        store.remove(&format!("b{id:06}"));
+    }
+    println!(
+        "WRITE summary remove: {:.1} us per delete from the list",
+        start.elapsed().as_secs_f64() * 1e6 / 3000.0
+    );
 }

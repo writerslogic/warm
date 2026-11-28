@@ -287,7 +287,7 @@ pub(super) fn prefetch<T>(table: &[T], at: usize) {
 const PREFETCH_BYTES: usize = 1 << 20;
 
 /// Slots per accumulation window.
-const WINDOW: u32 = 4096;
+pub(super) const WINDOW: u32 = 4096;
 /// The window of a query that wants few chunks: fewer windows mean less per-window work, and the
 /// accumulator it touches stays sparse. Offsets stay below `u16::MAX`.
 const WIDE_WINDOW: u32 = 8192;
@@ -346,6 +346,11 @@ pub(super) const DENSE_BYTES: usize = 32 << 20;
 /// with the slot count (a table is `slots / 2` bytes), so a large index keeps its longest lists'
 /// tables (see [`select_tabled`]).
 pub(super) const DENSE_TABLES: usize = 128;
+/// No checkpoint holds more than this many bytes of direct tables, nor more than a
+/// 1/[`DENSE_SHARE`] share of the index (tables are mapped and cost page cache, not heap).
+pub(super) const DENSE_CAP: usize = 512 << 20;
+/// The tables' share of the checkpoint's bytes is at most 1/this.
+pub(super) const DENSE_SHARE: usize = 8;
 /// A list is tabled when it holds at least this share (1/32) of the slots and this many postings.
 pub(super) const DENSE_MIN_POSTINGS: usize = if cfg!(test) { 8 } else { 512 };
 /// Distinct word counts whose length normalization is tabled.
@@ -387,7 +392,33 @@ pub(super) fn tabled(postings: usize, slots: usize) -> bool {
 /// (read the list), else the frequency. A query that must know whether a few chunks hold a
 /// frequent term reads one nibble per chunk instead of seeking the list.
 pub(super) struct Dense {
-    nibbles: Vec<u8>,
+    nibbles: Nibbles,
+}
+
+/// The bytes of a [`Dense`] table: built in memory, or read in place from a mapped checkpoint.
+enum Nibbles {
+    Owned(Vec<u8>),
+    Mapped {
+        ptr: std::ptr::NonNull<u8>,
+        len: usize,
+    },
+}
+
+// SAFETY: `Mapped` is a read-only view of bytes that are never written while the table lives
+// (see `Dense::mapped`), so sharing and sending it is as safe as sharing a `&[u8]`.
+unsafe impl Send for Nibbles {}
+unsafe impl Sync for Nibbles {}
+
+impl Nibbles {
+    #[inline(always)]
+    fn bytes(&self) -> &[u8] {
+        match self {
+            Self::Owned(bytes) => bytes,
+            // SAFETY: `Dense::mapped` guarantees `ptr` addresses `len` readable bytes that
+            // outlive this table.
+            Self::Mapped { ptr, len } => unsafe { std::slice::from_raw_parts(ptr.as_ptr(), *len) },
+        }
+    }
 }
 
 impl Dense {
@@ -397,39 +428,67 @@ impl Dense {
         list.for_each(|slot, frequency| {
             nibbles[slot >> 1] |= (frequency.min(15) as u8) << ((slot & 1) * 4);
         });
-        Self { nibbles }
+        Self {
+            nibbles: Nibbles::Owned(nibbles),
+        }
     }
 
-    /// A table from its stored nibbles.
+    /// A table from nibbles held in memory.
+    #[cfg(test)]
     pub(super) fn from_nibbles(nibbles: Vec<u8>) -> Self {
-        Self { nibbles }
+        Self {
+            nibbles: Nibbles::Owned(nibbles),
+        }
+    }
+
+    /// A table read in place from `bytes`, which must be a stored table of the right length.
+    ///
+    /// # Safety
+    /// `bytes` must stay mapped, unmodified and at the same address for as long as the table
+    /// or any clone of its `Arc` lives. The checkpoint image keeps its mapping for its whole
+    /// life and owns every table made from it, and queries only borrow the image.
+    pub(super) unsafe fn mapped(bytes: &[u8]) -> Self {
+        Self {
+            nibbles: Nibbles::Mapped {
+                ptr: std::ptr::NonNull::from(bytes).cast(),
+                len: bytes.len(),
+            },
+        }
     }
 
     /// The nibble of `slot`: 0 when the list lacks it, 15 when its frequency is fifteen or more.
     #[inline]
     pub(super) fn get(&self, slot: usize) -> u8 {
-        (self.nibbles[slot >> 1] >> ((slot & 1) * 4)) & 15
+        (self.nibbles.bytes()[slot >> 1] >> ((slot & 1) * 4)) & 15
     }
 
     /// The nibbles, two slots a byte, the even slot in the low half.
     pub(super) fn nibble_bytes(&self) -> &[u8] {
-        &self.nibbles
+        self.nibbles.bytes()
     }
 
     /// Starts loading the nibble of `slot`; a hint, with no effect on results.
     #[inline(always)]
     pub(super) fn prefetch(&self, slot: usize) {
-        prefetch(&self.nibbles, slot >> 1);
+        prefetch(self.nibbles.bytes(), slot >> 1);
     }
 }
 
 /// The lists that get direct tables, by their `(postings, key)` among the lists long enough
 /// for one (see [`tabled`]): the longest first (ties by key) while the tables fit
 /// [`DENSE_BYTES`] and [`DENSE_TABLES`]. A function of the index alone, never of the queries.
-pub(super) fn select_tabled(mut lists: Vec<(usize, usize)>, slots: usize) -> Vec<(usize, usize)> {
+pub(super) fn select_tabled(
+    mut lists: Vec<(usize, usize)>,
+    slots: usize,
+    index_bytes: usize,
+) -> Vec<(usize, usize)> {
     lists.sort_unstable_by(|a, b| b.0.cmp(&a.0).then(a.1.cmp(&b.1)));
     let size = slots.div_ceil(2);
-    let budget = DENSE_BYTES.max(DENSE_TABLES * size);
+    let budget = DENSE_BYTES.max(
+        (DENSE_TABLES * size)
+            .min(DENSE_CAP)
+            .min(index_bytes / DENSE_SHARE),
+    );
     let fit = budget.checked_div(size).unwrap_or(lists.len());
     lists.truncate(fit);
     lists

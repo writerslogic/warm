@@ -12,16 +12,35 @@
 //! per-slot word counts (`u16`), the rank tables, the window bounds and the dense tables, each
 //! keyed by its list's offset (skip table offset, or postings offset for dense tables). A
 //! reader whose constants differ from the header's computes the tables instead.
+//!
+//! The section is read in place: the direct frequency tables are views of the mapped file, not
+//! copies. Which lists get one is fixed by [`select_tabled`]: the longest lists meeting the
+//! length rule, within at most 1/8 of the checkpoint's bytes and 512 MiB (and never fewer
+//! bytes than 32 MiB allows).
+//!
+//! Trust model. The section is covered by the checkpoint CRC, and open also checks every field
+//! a query uses to index or size anything against the checkpoint itself: the norms, word
+//! counts and classes are recomputed and compared, each rank table's run and block counts and
+//! order permutation must fit its list, window bounds must fit the slot count and address
+//! ranked lists, and the direct tables must be exactly the set [`select_tabled`] picks. A
+//! crafted section is an error at open, never a panic or an out-of-bounds read. The weights
+//! the tables carry (rank and window bounds, frequency nibbles) are not recomputed: a writer
+//! of a plaintext store file can already rewrite its postings, so they are trusted as far as
+//! the postings are.
+//!
+//! Not stored: checkpoints with compressed text blocks (version 3 layout) compute the tables
+//! at open; `WARM_DENSE_TABLES=0` turns off only the direct frequency tables; the dense path
+//! recomputes its length normalization per query.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use anyhow::{bail, ensure, Context, Result};
 
 use super::super::impact::{
-    classes, select_tabled, Dense, DenseTables, WindowBounds, DENSE_BYTES, DENSE_MIN_POSTINGS,
-    DENSE_TABLES, NORM_CACHE,
+    classes, select_tabled, Dense, DenseTables, WindowBounds, DENSE_BYTES, DENSE_CAP,
+    DENSE_MIN_POSTINGS, DENSE_SHARE, DENSE_TABLES, NORM_CACHE, WINDOW,
 };
-use super::super::lists::RankTable;
+use super::super::lists::{RankTable, RUN_BLOCKS};
 use super::{
     word, Backing, ListSpan, Postings, Ranks, Section, ServingImage, CRC_START, FEATURE_DERIVED,
     HEADER_LEN, H_FEATURES, H_SECTIONS,
@@ -51,6 +70,11 @@ pub(super) struct Parts {
     norms: Vec<f64>,
     /// By postings offset in the postings section.
     dense: Vec<(usize, Dense)>,
+}
+
+/// The direct-table budget rule (see [`select_tabled`]) as one header word.
+fn dense_rule() -> u64 {
+    (DENSE_BYTES as u64) ^ (DENSE_CAP as u64).rotate_left(21) ^ (DENSE_SHARE as u64).rotate_left(43)
 }
 
 fn class_checksum() -> u64 {
@@ -84,13 +108,7 @@ impl ServingImage {
         let word_counts = (0..self.slots)
             .map(|slot| self.slot(slot).0.min(u32::from(u16::MAX)) as u16)
             .collect();
-        let chosen = select_tabled(
-            self.tabled
-                .iter()
-                .map(|span| (span.entry.count as usize, span.posting))
-                .collect(),
-            self.slots,
-        );
+        let chosen = self.chosen_tabled();
         let by_offset: HashMap<usize, &ListSpan> = self
             .tabled
             .iter()
@@ -98,7 +116,7 @@ impl ServingImage {
             .collect();
         let dense = chosen
             .into_iter()
-            .map(|(_, offset)| {
+            .map(|offset| {
                 let list = self.span_postings(by_offset[&offset]);
                 (offset, Dense::build(self.slots, &list))
             })
@@ -128,7 +146,7 @@ impl ServingImage {
             bm25.k1.to_bits(),
             bm25.b.to_bits(),
             class_checksum(),
-            DENSE_BYTES as u64,
+            dense_rule(),
             DENSE_TABLES as u64,
             DENSE_MIN_POSTINGS as u64,
             self.slots as u64,
@@ -173,7 +191,10 @@ impl ServingImage {
     }
 
     /// The stored tables, or `None` when this build's constants differ from the ones they were
-    /// computed under.
+    /// computed under. Everything a query indexes with is checked against the checkpoint's own
+    /// lists, so a crafted section is an error, never an out-of-bounds read. The bounds the
+    /// tables carry (rank and window weights, frequency nibbles) are trusted as far as the
+    /// postings are: whoever can write this file can already rewrite them.
     fn stored_parts(&self, bytes: &[u8], dense_on: bool) -> Result<Option<Parts>> {
         let mut reader = Reader(bytes);
         ensure!(bytes.len() >= HEADER, "derived tables are truncated");
@@ -187,7 +208,7 @@ impl ServingImage {
                 bm25.k1.to_bits(),
                 bm25.b.to_bits(),
                 class_checksum(),
-                DENSE_BYTES as u64,
+                dense_rule(),
                 DENSE_TABLES as u64,
                 DENSE_MIN_POSTINGS as u64,
                 self.slots as u64,
@@ -201,49 +222,115 @@ impl ServingImage {
             usize::try_from(header[11])?,
         );
         let norms = reader.f64s(NORM_CACHE)?;
+        ensure!(
+            norms
+                .iter()
+                .enumerate()
+                .all(|(words, norm)| norm.to_bits() == bm25.norm(words as f64, average).to_bits()),
+            "derived length normalization does not match the checkpoint"
+        );
         let word_classes = reader.take(self.slots)?.to_vec();
-        let word_counts = reader
+        let word_counts: Vec<u16> = reader
             .take(self.slots.checked_mul(2).context("derived tables size")?)?
             .chunks_exact(2)
             .map(|pair| u16::from_le_bytes([pair[0], pair[1]]))
             .collect();
+        let (_, class_of) = classes();
+        let last = class_of.len() - 1;
+        for slot in 0..self.slots {
+            let words = self.slot(slot).0;
+            ensure!(
+                u32::from(word_counts[slot]) == words.min(u32::from(u16::MAX))
+                    && word_classes[slot] == class_of[(words as usize).min(last)],
+                "derived word counts do not match the checkpoint at slot {slot}"
+            );
+        }
+        let lists: HashMap<usize, &ListSpan> =
+            self.ranked.iter().map(|span| (span.skip, span)).collect();
+        ensure!(
+            rank_count == 0 || rank_count == lists.len(),
+            "derived rank tables do not cover the checkpoint's ranked lists"
+        );
         let mut tables = HashMap::new();
         for _ in 0..rank_count {
             let skip = usize::try_from(reader.u64()?)?;
+            let span = lists
+                .get(&skip)
+                .context("derived rank table addresses no ranked list")?;
+            let list = self.ranked_list(span);
+            let (want_blocks, want_runs) = (list.blocks(), list.blocks().div_ceil(RUN_BLOCKS));
             let (runs, blocks) = (reader.u32()? as usize, reader.u32()? as usize);
+            ensure!(
+                runs == want_runs && blocks == want_blocks,
+                "derived rank table does not fit its list"
+            );
             let order = reader.u32s(runs)?;
+            let mut seen = vec![false; runs];
+            for &run in &order {
+                let slot = seen
+                    .get_mut(run as usize)
+                    .context("derived rank order is out of range")?;
+                ensure!(!*slot, "derived rank order repeats a run");
+                *slot = true;
+            }
             let run_bounds = reader.f32s(runs)?;
             let block_bounds = reader.f32s(blocks)?;
-            tables.insert(
-                skip,
-                RankTable {
-                    order: order.into_boxed_slice(),
-                    runs: run_bounds.into_boxed_slice(),
-                    blocks: block_bounds.into_boxed_slice(),
-                },
+            ensure!(
+                tables
+                    .insert(
+                        skip,
+                        RankTable {
+                            order: order.into_boxed_slice(),
+                            runs: run_bounds.into_boxed_slice(),
+                            blocks: block_bounds.into_boxed_slice(),
+                        },
+                    )
+                    .is_none(),
+                "derived rank tables repeat a list"
             );
         }
-        let mut windows = Vec::new();
+        let min_count = self.slots.div_ceil(16);
+        let mut windows: Vec<(usize, WindowBounds)> = Vec::new();
         for _ in 0..window_count {
             let skip = usize::try_from(reader.u64()?)?;
+            let span = lists
+                .get(&skip)
+                .context("derived window bounds address no ranked list")?;
+            ensure!(
+                span.entry.count as usize >= min_count
+                    && windows.last().is_none_or(|(last, _)| *last < skip),
+                "derived window bounds are misplaced"
+            );
             let len = reader.u32()? as usize;
+            ensure!(
+                len == self.slots.div_ceil(WINDOW as usize),
+                "derived window bounds do not fit the slot count"
+            );
             windows.push((
                 skip,
                 WindowBounds::from_values(reader.f64s(len)?.into_boxed_slice()),
             ));
         }
+        let table_len = self.slots.div_ceil(2);
+        let wanted: HashSet<usize> = self.chosen_tabled().into_iter().collect();
+        ensure!(
+            dense_count == wanted.len(),
+            "derived frequency tables are not the checkpoint's longest lists"
+        );
         let mut dense = Vec::new();
-        if dense_on {
-            for _ in 0..dense_count {
-                let offset = usize::try_from(reader.u64()?)?;
-                let nibbles = reader.take(self.slots.div_ceil(2))?.to_vec();
-                dense.push((offset, Dense::from_nibbles(nibbles)));
+        let mut keys = HashSet::new();
+        for _ in 0..dense_count {
+            let offset = usize::try_from(reader.u64()?)?;
+            ensure!(
+                wanted.contains(&offset) && keys.insert(offset),
+                "derived frequency table addresses a list that is not tabled"
+            );
+            let nibbles = reader.take(table_len)?;
+            if dense_on {
+                // SAFETY: the nibbles are bytes of this image's own mapping, which it keeps
+                // mapped and unmoved for its whole life and which owns the table.
+                dense.push((offset, unsafe { Dense::mapped(nibbles) }));
             }
-        } else {
-            let skipped = dense_count
-                .checked_mul(8 + self.slots.div_ceil(2))
-                .context("derived tables size")?;
-            reader.take(skipped)?;
         }
         ensure!(reader.0.is_empty(), "derived tables have trailing bytes");
         Ok(Some(Parts {
@@ -254,6 +341,26 @@ impl ServingImage {
             norms,
             dense,
         }))
+    }
+
+    /// The postings offsets of the lists that get direct tables, a function of the index alone.
+    fn chosen_tabled(&self) -> Vec<usize> {
+        let derived_len = if self.derived {
+            self.section(Section::Derived).len()
+        } else {
+            0
+        };
+        select_tabled(
+            self.tabled
+                .iter()
+                .map(|span| (span.entry.count as usize, span.posting))
+                .collect(),
+            self.slots,
+            self.bytes.len() - derived_len,
+        )
+        .into_iter()
+        .map(|(_, offset)| offset)
+        .collect()
     }
 
     /// Installs every table the queries read: the stored ones, or computed ones for a
