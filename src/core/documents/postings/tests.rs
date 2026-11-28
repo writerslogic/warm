@@ -200,6 +200,36 @@ fn summary_follows_random_edits_like_a_full_recompute() {
     }
 }
 
+/// Appending one posting at a time, the summary equals a full recompute at one posting below,
+/// at and above each run boundary (a run is `SUPER_LEN` blocks), including after the highest
+/// frequency of an earlier run is lowered, which the carried head cannot answer.
+#[test]
+fn summary_is_exact_across_run_boundaries() {
+    use super::list::{SUMMARY_MIN_BLOCKS, SUPER_LEN};
+    let words = |slot: usize| 5 + (slot % 31) as u32;
+    let boundary = SUPER_LEN * BLOCK_LEN;
+    let total = 4 * boundary + 2;
+    let mut list = PostingList::default();
+    let mut slots = Vec::new();
+    for n in 1..=total {
+        let slot = n * 4;
+        list.append_run_with_lengths(&[(slot, 1 + ((n * 7) % 11) as u32)], words);
+        slots.push(slot);
+        if n >= SUMMARY_MIN_BLOCKS * BLOCK_LEN
+            && (n % boundary == 0 || (n + 1) % boundary == 0 || (n - 1) % boundary == 0)
+        {
+            assert!(list.summary_matches_recompute(), "{n} postings");
+        }
+    }
+    // Raise a posting in the first run above everything, then lower it again.
+    list.set_frequency(slots[3], 500, words);
+    assert!(list.summary_matches_recompute());
+    list.set_frequency(slots[3], 1, words);
+    assert!(list.summary_matches_recompute());
+    list.remove(slots[boundary + 5], words);
+    assert!(list.summary_matches_recompute());
+}
+
 #[test]
 fn gallop_matches_partition_point() {
     for length in 0..70usize {
