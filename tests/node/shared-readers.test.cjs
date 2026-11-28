@@ -31,6 +31,27 @@ test('a reader sees a snapshot, refresh picks up commits, and it cannot write', 
   }
 })
 
+test('a reader opens a store whose master key lives outside it', async () => {
+  const directory = store()
+  const keys = store()
+  try {
+    const options = { masterKeyPath: join(keys, 'nested', 'master.key') }
+    const writer = new WarmMemorySystem(1024, directory, options)
+    await writer.memorizeDocument({ id: 'one', text: 'first committed document' })
+    const reader = WarmMemorySystem.openReadOnly(1024, directory, options)
+    assert.equal(reader.readOnly, true)
+    assert.equal(reader.refresh(), false)
+    await writer.memorizeDocument({ id: 'two', text: 'second committed document' })
+    assert.equal(reader.refresh(), true)
+    reader.close()
+    assert.throws(() => WarmMemorySystem.openReadOnly(1024, directory), /master key/)
+    writer.close()
+  } finally {
+    rmSync(directory, { recursive: true, force: true })
+    rmSync(keys, { recursive: true, force: true })
+  }
+})
+
 test('close releases the lock, is idempotent, and later calls fail clearly', async () => {
   const directory = store()
   try {

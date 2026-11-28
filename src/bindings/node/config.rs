@@ -42,6 +42,7 @@ pub struct WarmConfigJs {
     pub diffusion_n_langevin: Option<u32>,
     pub signing_enabled: Option<bool>,
     pub signing_key_path: Option<String>,
+    pub master_key_path: Option<String>,
     pub encryption_enabled: Option<bool>,
     pub encryption_passphrase: Option<String>,
     pub encryption_passphrase_env: Option<String>,
@@ -179,6 +180,9 @@ impl WarmConfigJs {
         }
         if let Some(v) = self.signing_key_path {
             cfg.security.key_path = Some(v);
+        }
+        if let Some(v) = self.master_key_path {
+            cfg.security.master_key_file = Some(v);
         }
         if let Some(v) = self.encryption_enabled {
             cfg.security.encryption_enabled = v;

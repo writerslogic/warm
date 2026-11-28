@@ -155,6 +155,49 @@ def test_experience_form_state_switch_off_stores_no_controls(tmp_path):
     assert store.experience_form_tables([("run-1", 0)]) == [""]
 
 
+def test_master_key_path_outside_the_store(tmp_path):
+    store, key = str(tmp_path / "store"), tmp_path / "keys" / "nested" / "master.key"
+    first = hm.Warm(1024, store, master_key_path=str(key))
+    first.memorize_document({"id": "harbor", "text": "The harbor opens at six."})
+    del first
+    assert key.stat().st_size == 32
+    if os.name == "posix":
+        assert key.stat().st_mode & 0o777 == 0o600
+    assert not (tmp_path / "store" / "master.key").exists()
+
+    kept = key.read_bytes()
+    key.unlink()
+    with pytest.raises(Exception, match="master key"):
+        hm.Warm(1024, store, master_key_path=str(key))
+    assert not key.exists()
+
+    key.write_bytes(b"\x07" * 32)
+    key.chmod(0o600)
+    with pytest.raises(Exception, match="does not open this store"):
+        hm.Warm(1024, store, master_key_path=str(key))
+
+    key.write_bytes(kept)
+    key.chmod(0o600)
+    reopened = hm.Warm(1024, store, master_key_path=str(key))
+    assert reopened.search_documents("harbor", {"k": 1})[0]["documentId"] == "harbor"
+    with pytest.raises(Exception, match="not a directory"):
+        hm.Warm(1024, str(tmp_path / "other"), master_key_path=str(key.parent))
+
+
+def test_read_only_reader_uses_the_external_master_key(tmp_path):
+    path, key = str(tmp_path / "store"), tmp_path / "keys" / "master.key"
+    with hm.Warm(1024, path, master_key_path=str(key)) as writer:
+        writer.memorize_document({"id": "one", "text": "harbor opens at six"})
+        reader = hm.Warm.open_read_only(1024, path, master_key_path=str(key))
+        assert reader.search_documents("harbor", {"k": 1})[0]["documentId"] == "one"
+        writer.memorize_document({"id": "two", "text": "market opens at nine"})
+        assert reader.refresh() is True
+        assert reader.search_documents("market", {"k": 1})[0]["documentId"] == "two"
+        reader.close()
+        with pytest.raises(Exception, match="master key"):
+            hm.Warm.open_read_only(1024, path)
+
+
 def test_read_only_reader_refresh_and_context_manager(tmp_path):
     path = str(tmp_path / "store")
     with hm.Warm(1024, path) as writer:
@@ -188,3 +231,60 @@ def test_close_releases_the_lock_and_later_calls_fail(tmp_path):
     with hm.Warm(1024, path) as again:
         assert not again.closed
     assert again.closed
+
+
+def test_write_batch_is_atomic_ordered_and_reports_each_operation(tmp_path):
+    path = str(tmp_path / "store")
+    store = hm.Warm(1024, path)
+    store.memorize_document({"id": "old", "text": "old document to remove"})
+    put = lambda i, t: {"op": "memorize", "document": {"id": i, "text": t}}
+    delete = lambda i: {"op": "delete", "id": i}
+
+    results = store.write_batch(
+        [put("a", "first document"), delete("old"), put("a", "final version of a"), delete("missing")]
+    )
+    assert results == [
+        {"op": "memorize", "chunks": 1},
+        {"op": "delete", "existed": True},
+        {"op": "memorize", "chunks": 1},
+        {"op": "delete", "existed": False},
+    ]
+    assert store.get_document("old") is None
+    assert store.search_documents("final version", {"k": 1})[0]["documentId"] == "a"
+
+    before = store.search_documents("final version", {"k": 5})
+    for bad in (put("", "no id"), delete(""), {"op": "upsert", "id": "x"}, {"op": "delete"}):
+        with pytest.raises(ValueError):
+            store.write_batch([put("new", "would be added"), delete("a"), bad])
+        assert store.get_document("new") is None
+        assert store.get_document("a") is not None
+    with pytest.raises(ValueError):
+        store.write_batch([])
+    with pytest.raises(ValueError, match="4096"):
+        store.write_batch([delete(f"x{i}") for i in range(4097)])
+    assert store.search_documents("final version", {"k": 5}) == before
+
+    del store
+    reopened = hm.Warm(1024, path)
+    assert reopened.get_document("old") is None
+    assert reopened.search_documents("final version", {"k": 1})[0]["documentId"] == "a"
+
+
+def test_write_batch_is_visible_whole_to_a_reader_and_denied_to_it(tmp_path):
+    path = str(tmp_path / "store")
+    writer = hm.Warm(1024, path)
+    writer.memorize_document({"id": "seed", "text": "seed document"})
+    reader = hm.Warm.open_read_only(1024, path)
+    with pytest.raises(hm.ReadOnlyError):
+        reader.write_batch([{"op": "delete", "id": "seed"}])
+    writer.write_batch(
+        [
+            {"op": "memorize", "document": {"id": "p", "text": "pair zebra"}},
+            {"op": "memorize", "document": {"id": "q", "text": "pair zebra"}},
+            {"op": "delete", "id": "seed"},
+        ]
+    )
+    assert reader.refresh()
+    ids = sorted(h["documentId"] for h in reader.search_documents("pair zebra", {"k": 5}))
+    assert ids == ["p", "q"]
+    assert reader.get_document("seed") is None

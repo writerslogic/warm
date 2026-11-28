@@ -389,6 +389,26 @@ impl WarmMemorySystem {
         run_async(move || core.memorize_documents(inputs)).await
     }
 
+    /// Applies memorize and delete operations as one atomic unit: after a crash or in a
+    /// read-only reader, all of the batch is visible or none of it. Operations apply in
+    /// order; if any is invalid nothing is applied. 1..=4096 operations.
+    #[napi]
+    pub async fn write_batch(&self, ops: Vec<BatchOpJs>) -> Result<Vec<BatchResultJs>> {
+        let core = self.core()?;
+        run_async(move || {
+            let ops = ops
+                .into_iter()
+                .map(BatchOpJs::into_op)
+                .collect::<anyhow::Result<Vec<_>>>()?;
+            Ok(core
+                .write_batch(ops)?
+                .into_iter()
+                .map(BatchResultJs::from)
+                .collect())
+        })
+        .await
+    }
+
     #[napi]
     // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
     pub async fn chunk_document(&self, input: DocumentInput) -> Result<Vec<DocumentChunk>> {

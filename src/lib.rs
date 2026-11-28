@@ -19,6 +19,8 @@ pub use crate::core::documents::{
     DocumentReadChanged, DocumentRecord, DocumentResult, SearchOptions,
 };
 #[cfg(not(target_arch = "wasm32"))]
+pub use crate::core::engine::{BatchOp, BatchResult};
+#[cfg(not(target_arch = "wasm32"))]
 pub use crate::core::engine::{
     CompactionHandle, CompactionOptions, CompactionProgress, CompactionReport, CompactionResource,
     CompactionStage, CompactionStatus,

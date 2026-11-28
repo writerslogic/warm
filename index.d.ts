@@ -58,6 +58,12 @@ export declare class WarmMemorySystem {
   memoryCall(op: string, request: any): Promise<any>
   memorizeDocument(input: DocumentInput): Promise<number>
   memorizeDocuments(inputs: Array<DocumentInput>): Promise<Array<number>>
+  /**
+   * Applies memorize and delete operations as one atomic unit: after a crash or in a
+   * read-only reader, all of the batch is visible or none of it. Operations apply in
+   * order; if any is invalid nothing is applied. 1..=4096 operations.
+   */
+  writeBatch(ops: Array<BatchOpJs>): Promise<Array<BatchResultJs>>
   chunkDocument(input: DocumentInput): Promise<Array<DocumentChunk>>
   searchDocuments(text: string, options?: SearchOptions | undefined | null): Promise<Array<DocumentResult>>
   /**
@@ -200,6 +206,20 @@ export interface AuditEntryJs {
   effectId?: string
   signature: string
   signableBytes: string
+}
+
+/** One operation of `writeBatch`: `{op: 'memorize', document}` or `{op: 'delete', id}`. */
+export interface BatchOpJs {
+  op: string
+  document?: DocumentInput
+  id?: string
+}
+
+/** What one `writeBatch` operation did: `chunks` for a memorize, `existed` for a delete. */
+export interface BatchResultJs {
+  op: string
+  chunks?: number
+  existed?: boolean
 }
 
 export interface CleanupResultJs {
@@ -591,6 +611,7 @@ export interface WarmConfigJs {
   diffusionNLangevin?: number
   signingEnabled?: boolean
   signingKeyPath?: string
+  masterKeyPath?: string
   encryptionEnabled?: boolean
   encryptionPassphrase?: string
   encryptionPassphraseEnv?: string

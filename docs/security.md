@@ -33,7 +33,7 @@ only, for an index someone else holds; it does nothing for a local store.
 
 With the `security` feature a new store is encrypted by default (AES-256-GCM, 12-byte random nonce
 per record). The default key is 32 random bytes in `<store>/master.key` with mode 0600; set
-`security.master_key_file` to keep it elsewhere, because a key next to the data does not protect
+`security.master_key_file` or `WARM_MASTER_KEY_PATH` to keep it elsewhere ([API](reference/api.md#master-key-location)), because a key next to the data does not protect
 against a copy of the whole directory. A passphrase scheme derives the key with Argon2id and a
 16-byte salt in `encryption.salt`. Plaintext is an explicit opt-out (`security.plaintext = true` or
 `WARM_ENCRYPTION=off`). Key schemes and the on-disk envelope are in [file format](file-format/index.md#encryption).

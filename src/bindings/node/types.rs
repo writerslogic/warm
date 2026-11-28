@@ -150,3 +150,50 @@ pub struct QuestionJs {
     pub text: String,
     pub goal_relevance: f64,
 }
+
+/// One operation of `writeBatch`: `{op: 'memorize', document}` or `{op: 'delete', id}`.
+#[napi(object)]
+pub struct BatchOpJs {
+    pub op: String,
+    pub document: Option<crate::core::documents::DocumentInput>,
+    pub id: Option<String>,
+}
+
+impl BatchOpJs {
+    pub(super) fn into_op(self) -> anyhow::Result<crate::core::engine::BatchOp> {
+        match (self.op.as_str(), self.document, self.id) {
+            ("memorize", Some(document), None) => {
+                Ok(crate::core::engine::BatchOp::Memorize { document })
+            }
+            ("delete", None, Some(id)) => Ok(crate::core::engine::BatchOp::Delete { id }),
+            ("memorize", ..) => anyhow::bail!("a memorize operation takes `document` and no `id`"),
+            ("delete", ..) => anyhow::bail!("a delete operation takes `id` and no `document`"),
+            (other, ..) => anyhow::bail!("unknown batch operation {other:?}"),
+        }
+    }
+}
+
+/// What one `writeBatch` operation did: `chunks` for a memorize, `existed` for a delete.
+#[napi(object)]
+pub struct BatchResultJs {
+    pub op: String,
+    pub chunks: Option<u32>,
+    pub existed: Option<bool>,
+}
+
+impl From<crate::core::engine::BatchResult> for BatchResultJs {
+    fn from(result: crate::core::engine::BatchResult) -> Self {
+        match result {
+            crate::core::engine::BatchResult::Memorize { chunks } => Self {
+                op: "memorize".into(),
+                chunks: Some(chunks),
+                existed: None,
+            },
+            crate::core::engine::BatchResult::Delete { existed } => Self {
+                op: "delete".into(),
+                chunks: None,
+                existed: Some(existed),
+            },
+        }
+    }
+}

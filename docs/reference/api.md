@@ -17,12 +17,53 @@ page says which surface to use and lists the Cargo features.
 | MCP (`warm-mcp`) | Agent and editor integration | memory tools over stdio or streamable HTTP |
 | C ABI | Go, Java and .NET bindings | `hms1_*` symbols; check `hms1_abi_version()` |
 
+## Atomic batches
+
+`write_batch` applies document upserts and deletes as one unit: a reopened store and every
+read-only reader sees all of the batch or none of it, after a crash at any point.
+
+| Surface | Call |
+|---|---|
+| Rust | `WarmCore::write_batch(Vec<BatchOp>) -> Vec<BatchResult>`; `BatchOp::Memorize { document }`, `BatchOp::Delete { id }` |
+| Node | `await sys.writeBatch([{ op: 'memorize', document }, { op: 'delete', id }])` returns `[{ op, chunks }, { op, existed }]` |
+| Python | `warm.write_batch([{"op": "memorize", "document": {...}}, {"op": "delete", "id": "..."}])` returns the same dicts |
+
+- Every operation is validated before any is applied; one invalid operation fails the whole
+  batch with nothing written. A failed commit leaves the in-memory state unchanged.
+- Operations apply in order and the last write to an id wins. Delete then memorize leaves the
+  new document; memorize then delete leaves none; memorizing an id twice leaves the second; a
+  repeated delete reports `existed: false`. Results come back one per operation, in order:
+  chunk count for a memorize, `existed` for a delete.
+- 1..=4096 operations and at most 32 MiB (33554432 bytes) of encoded journal frame, plus the
+  document batch limits (8 MiB of source, 4096 chunks). Beyond any of them the call fails with a
+  batch-size error naming the limit and writes nothing.
+- One batch is one journal frame and one durable sync, not one per operation.
+- A read-only store fails with `read_only`.
+- On disk the batch is one ordinary journal frame (`HMS-TXN-2` or `HMS-TXN-3`, whichever the
+  store writes) holding the mutations in order. Those frames already carry any mix of document
+  and delete mutations, so no format changes and any release that reads the store reads batches.
+
 Opening a store beside a running writer (`open_read_only`, `refresh`, `close`) is described in
 [one writer, many readers](concurrency.md).
 
 The memory API (`remember`, `recall`, `forget`, `explain`) is described in
 [concepts](../concepts.md#memory-api). Stability promises per surface are in
 [security](../security.md#stability-and-compatibility).
+
+## Master key location
+
+An encrypted store keeps its master key in `<store>/master.key` unless told otherwise. Precedence: the
+explicit option, then `WARM_MASTER_KEY_PATH` (legacy `HMS_MASTER_KEY_PATH`), then the store directory.
+
+| Surface | Option |
+|---|---|
+| Rust | `SecurityConfig::master_key_file` |
+| Node | `masterKeyPath` in the `WarmMemorySystem` options |
+| Python | `Warm(..., master_key_path=...)` |
+
+A new store creates the file (mode 0600 on Unix, parent directories included). The path must name a
+file; empty values and directories are rejected. An existing store never gets a fresh key: a missing
+key, or one that does not open the store, is an error. Reopen with the same path every time.
 
 ## Cargo features
 
