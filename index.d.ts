@@ -17,22 +17,6 @@ export declare class CompactionJob {
   wait(): Promise<CompactionReport>
 }
 
-/** The embedding model a store was built with. `packSha256` is null while no embedder is installed. */
-export interface EmbeddingModel {
-  model: string
-  revision: string
-  dimensions: number
-  normalization: string
-  metric: string
-  packSha256?: string | null
-}
-
-/** The indexed term of one word, stemmed as the indexer does. */
-export declare function stem(word: string, analyzer?: string | undefined | null): string
-
-/** The indexed terms of `text`, in order with repeats, as the indexer counts them. */
-export declare function analyze(text: string, analyzer?: string | undefined | null): Array<string>
-
 export declare class WarmMemorySystem {
   mutateVectorRecords(operations: Array<{ op: 'insert' | 'upsert'; record: VectorRecordInput } | { op: 'delete'; id: string }>, options?: VectorRecordRevisionOptions): Promise<VectorRecordMutationResult>
   getVectorRecord(id: string, options?: VectorRecordRevisionOptions | undefined | null): Promise<VectorRecordGetResult>
@@ -72,11 +56,6 @@ export declare class WarmMemorySystem {
    * `Memory` in `memory.js`.
    */
   memoryCall(op: string, request: any): Promise<any>
-  /**
-   * The embedding model the store was built with, or `null` without an embedding space.
-   * Compare `revision` (and `dimensions`) with your embedder's to detect a mismatch.
-   */
-  embeddingModel(): EmbeddingModel | null
   memorizeDocument(input: DocumentInput): Promise<number>
   memorizeDocuments(inputs: Array<DocumentInput>): Promise<Array<number>>
   /**
@@ -85,6 +64,11 @@ export declare class WarmMemorySystem {
    * order; if any is invalid nothing is applied. 1..=4096 operations.
    */
   writeBatch(ops: Array<BatchOpJs>): Promise<Array<BatchResultJs>>
+  /**
+   * The embedding model the store was built with, or `null` without an embedding space.
+   * Compare `revision` (and `dimensions`) with your embedder's to detect a mismatch.
+   */
+  embeddingModel(): EmbeddingModel | null
   chunkDocument(input: DocumentInput): Promise<Array<DocumentChunk>>
   searchDocuments(text: string, options?: SearchOptions | undefined | null): Promise<Array<DocumentResult>>
   /**
@@ -219,6 +203,9 @@ export declare class WarmMemorySystem {
   federatedQuery(peerPaths: Array<string>, text: string, k: number): Promise<Array<RetrievalResult>>
 }
 
+/** The indexed terms of `text`, in order with repeats, as the indexer counts them. */
+export declare function analyze(text: string, analyzer?: string | undefined | null): Array<string>
+
 export interface AuditEntryJs {
   timestampMs: number
   op: string
@@ -331,6 +318,17 @@ export interface DocumentResult {
   score: number
   lexicalScore: number
   semanticScore?: number
+}
+
+/** The embedding model a store was built with. */
+export interface EmbeddingModel {
+  model: string
+  revision: string
+  dimensions: number
+  normalization: string
+  metric: string
+  /** `null` while no embedder is installed. */
+  packSha256?: string
 }
 
 export interface GoalJs {
@@ -489,6 +487,12 @@ export interface SearchOptions {
   /** BM25 length normalization `b` in `[0, 1]`; the default scores exactly as before (0.75). */
   bm25B?: number
 }
+
+/**
+ * The indexed term of one word, stemmed as the indexer does. `analyzer` names the store's
+ * analyzer (default: the legacy English analyzer).
+ */
+export declare function stem(word: string, analyzer?: string | undefined | null): string
 
 /** Persistence health information suitable for diagnostics and monitoring. */
 export interface StorageHealth {

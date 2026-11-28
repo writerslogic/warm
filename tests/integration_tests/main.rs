@@ -28,7 +28,6 @@ mod document_chunks;
 mod document_competition;
 mod document_dense;
 mod documents;
-mod metadata_filters;
 #[cfg(feature = "local-embed")]
 mod embed_store;
 #[cfg(feature = "security")]
@@ -46,6 +45,7 @@ mod lexical_count;
 mod matryoshka_vectors;
 #[cfg(feature = "server")]
 mod memory_api_server;
+mod metadata_filters;
 mod native_memory_workflow;
 mod qgraph_prefetch;
 #[cfg(feature = "experimental")]

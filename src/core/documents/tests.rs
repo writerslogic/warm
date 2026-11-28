@@ -708,14 +708,22 @@ fn replacements_preserve_frequency_filters_embeddings_and_retained_views() {
 #[test]
 fn public_stem_and_analyze_equal_the_terms_the_indexer_counts() {
     let text = "Running dogs were RUNNING quickly; Café résumés, don't stop: connection connected";
-    for analyzer in [Analyzer::Legacy, Analyzer::English, Analyzer::French, Analyzer::German] {
+    for analyzer in [
+        Analyzer::Legacy,
+        Analyzer::English,
+        Analyzer::French,
+        Analyzer::German,
+    ] {
         let indexed = terms_with(analyzer, text, true);
         let mut counted = std::collections::BTreeMap::new();
         for token in analyzer.analyze(text) {
             *counted.entry(token).or_insert(0u32) += 1;
         }
         assert_eq!(counted, indexed, "{}", analyzer.name());
-        for word in text.split(|c: char| !c.is_alphanumeric()).filter(|w| !w.is_empty()) {
+        for word in text
+            .split(|c: char| !c.is_alphanumeric())
+            .filter(|w| !w.is_empty())
+        {
             assert_eq!(analyzer.analyze(word), [analyzer.stem(word)], "{word}");
         }
     }
