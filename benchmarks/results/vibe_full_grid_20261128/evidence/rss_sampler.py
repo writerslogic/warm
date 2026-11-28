@@ -3,7 +3,7 @@
 Each worker process is one index build plus all its query groups, so the peak covers
 dataset load, build and search. Poll interval 0.25 s; the last sample before exit is reported.
 """
-import csv, os, sys, time, json
+import csv, os, sys, time
 out = sys.argv[1]
 os.sched_setaffinity(0, {0})
 seen = {}
