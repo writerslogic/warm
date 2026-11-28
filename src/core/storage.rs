@@ -106,6 +106,11 @@ pub(crate) struct FormatManifest {
     pub(crate) magic: String,
     pub(crate) version: u32,
     pub(crate) segment_size: usize,
+    /// Set when the store was created by a build that stores derived tables in its checkpoints
+    /// (see `documents::image::derived`). A store without it keeps writing the older checkpoint
+    /// encoding, which an older build still reads; `warm-format upgrade` writes a new store with it.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub(crate) derived_tables: bool,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -164,6 +169,8 @@ impl ActiveSegment {
 pub(crate) struct PersistentArena {
     segment_size: usize,
     format_version: u32,
+    /// The manifest's `derived_tables`: whether checkpoints of this store carry derived tables.
+    derived_tables: bool,
     base_path: PathBuf,
     data_path: RwLock<PathBuf>,
     read_segments: RwLock<Vec<Arc<Mmap>>>,
@@ -293,6 +300,7 @@ impl PersistentArena {
         Ok(Self {
             segment_size: manifest.segment_size,
             format_version: manifest.version,
+            derived_tables: manifest.derived_tables,
             base_path: base,
             data_path: RwLock::new(data_path),
             read_segments: RwLock::new(segments),
@@ -367,9 +375,16 @@ impl PersistentArena {
             magic: FORMAT_MAGIC.to_string(),
             version: if legacy { 2 } else { STORAGE_FORMAT_VERSION },
             segment_size: LEGACY_SEGMENT_SIZE,
+            // A store created now takes derived tables; a pre-manifest one is an old store.
+            derived_tables: !legacy,
         };
         super::durable_file::atomic_write(&path, &serde_json::to_vec_pretty(&manifest)?)?;
         Ok(manifest)
+    }
+
+    /// Whether this store's checkpoints carry derived tables (see [`FormatManifest`]).
+    pub(crate) fn derived_tables(&self) -> bool {
+        self.derived_tables
     }
 
     pub(crate) fn stats(&self) -> ArenaStats {
@@ -1853,6 +1868,7 @@ mod tests {
             magic: FORMAT_MAGIC.to_string(),
             version: STORAGE_FORMAT_VERSION + 1,
             segment_size: SEGMENT_SIZE,
+            derived_tables: false,
         };
         std::fs::write(
             dir.path().join(FORMAT_MANIFEST),

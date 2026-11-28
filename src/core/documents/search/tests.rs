@@ -2061,3 +2061,44 @@ fn write_path_cost_bench() {
         start.elapsed().as_secs_f64() * 1e6 / 3000.0
     );
 }
+
+/// Embedded single-insert cost against store size: `WARM_BENCH_DOCS` lists the document counts (two chunks each).
+/// Run with `--ignored --nocapture` in release.
+#[test]
+#[ignore = "write-path scale microbenchmark"]
+fn write_path_scale_bench() {
+    let sizes: Vec<usize> = std::env::var("WARM_BENCH_DOCS")
+        .unwrap_or_else(|_| "50000,150000,500000".into())
+        .split(',')
+        .map(|size| size.parse().unwrap())
+        .collect();
+    for docs in sizes {
+        let mut store = noisy_store(docs, 0);
+        let chunks = store.chunk_count;
+        let documents: Vec<_> = (0..4000)
+            .map(|id| {
+                let input = serde_json::from_value(json!({
+                    "id": format!("b{id:06}"), "version": "1", "text": "running common",
+                    "chunkWords": 64, "overlapWords": 0,
+                    "embeddings": [[0.01 * (id % 97) as f64 + 0.1, 0.5, -0.2, 0.3, 0.1, 0.9, -0.4, 0.2]],
+                }))
+                .unwrap();
+                super::super::prepare(input, 1024, Some(8), TextEncoder::default()).unwrap()
+            })
+            .collect();
+        let mut times: Vec<f64> = Vec::with_capacity(documents.len());
+        for document in documents {
+            let start = std::time::Instant::now();
+            store.insert(document.id.clone(), document);
+            times.push(start.elapsed().as_secs_f64() * 1e6);
+        }
+        times.sort_by(f64::total_cmp);
+        println!(
+            "SCALE embedded insert at {chunks} chunks: median {:.1} us, mean {:.1} us, p99 {:.1} us, max {:.1} us",
+            times[times.len() / 2],
+            times.iter().sum::<f64>() / times.len() as f64,
+            times[times.len() * 99 / 100],
+            times[times.len() - 1]
+        );
+    }
+}

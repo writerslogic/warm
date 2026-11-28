@@ -458,8 +458,8 @@ fn pack_frontiers(infos: &[super::postings::BlockInfo], skips: &mut Vec<u8>) -> 
 /// [`encode`] with a skip table and word positions per list (version 4), impact-carrying block
 /// postings (version 3), plain block postings (version 2) or flat ones (version 1); the chunk
 /// text is in compressed blocks (version 3 only) or inline.
-/// Version 4 without the stored derived tables, as an older writer wrote it.
-#[cfg(test)]
+/// Version 4 without the stored derived tables, as an older writer wrote it; what a store whose
+/// manifest does not take them keeps writing.
 pub(crate) fn encode_v4_plain(
     store: &DocumentStore,
     generation: u32,

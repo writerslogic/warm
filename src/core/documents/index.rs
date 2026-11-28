@@ -739,6 +739,7 @@ impl DocumentStore {
         Self {
             owners: self.owners.clone(),
             chunk_count: self.chunk_count,
+            embedded_count: self.embedded_count,
             ..Self::default()
         }
     }

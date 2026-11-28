@@ -294,6 +294,7 @@ impl WarmCore {
             Self::generation_crc(generation),
             self.dimensions,
             self.config.document_checkpoint.compress_text,
+            self.arena.derived_tables(),
         )?
         else {
             return Ok(None);
@@ -335,6 +336,7 @@ impl WarmCore {
             self.dimensions,
             &staging.join(FILE),
             order,
+            self.arena.derived_tables(),
         )
     }
 
@@ -639,6 +641,7 @@ mod tests {
             &store,
             WarmCore::generation_crc(generation),
             dimensions,
+            false,
             false,
         )?
         .expect("lexical-only store");

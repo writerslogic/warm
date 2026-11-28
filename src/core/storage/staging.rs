@@ -26,6 +26,7 @@ impl StagedArena {
                 magic: super::FORMAT_MAGIC.into(),
                 version: format.format_version,
                 segment_size: format.segment_size,
+                derived_tables: format.derived_tables(),
             };
             crate::core::durable_file::atomic_write(
                 &path.join(super::FORMAT_MANIFEST),

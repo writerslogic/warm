@@ -335,6 +335,7 @@ pub(crate) fn merge(
     dimensions: usize,
     destination: &Path,
     order: Option<&SlotOrder>,
+    derived: bool,
 ) -> Result<Option<u64>> {
     let Some(positional) = positions_of(base, store) else {
         return Ok(None);
@@ -579,13 +580,19 @@ pub(crate) fn merge(
     }
     drop(spools);
     let base_run = base_run.finish_spool()?;
-    let derived = {
+    let derived = if derived {
         // SAFETY: the run is a temporary file private to this call; nothing writes it while
         // it is mapped.
         let map = unsafe { memmap2::Mmap::map(base_run.file())? };
         super::ServingImage::new(super::Backing::Mapped(map))?.derived_section()
+    } else {
+        Vec::new()
     };
-    let mut header = super::derived::attached_header(&header, base_run.len(), derived.len() as u64);
+    let mut header = if derived.is_empty() {
+        header
+    } else {
+        super::derived::attached_header(&header, base_run.len(), derived.len() as u64)
+    };
     let mut hasher = crc32fast::Hasher::new();
     hasher.update(&header[super::CRC_START..]);
     let mut skipped = 0usize;
