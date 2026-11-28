@@ -1,0 +1,90 @@
+{
+  "corpus": {
+    "corpus.json": "b11c3c90041e4b88296f19c10b6469590bac200b76a4094a3b455e22e9bc71eb"
+  },
+  "sets": {
+    "length_sweep.jsonl": {
+      "split": "open",
+      "sha256": "8bd57159fa14a54e9b1b02fdbfce52897c7730aff9667b99992601bca48b5d17",
+      "per_category": {
+        "union": 720
+      },
+      "seed": 401,
+      "per_length": 60
+    },
+    "long_validation.jsonl": {
+      "split": "open",
+      "sha256": "b1c6fa184ec545180d86a8e95f68a67a5be517686eb0c96c6f43a1ee89ae2f1e",
+      "per_category": {
+        "union": 400
+      },
+      "seed": 301,
+      "count": 400
+    },
+    "nq_train_validation.jsonl": {
+      "split": "open",
+      "sha256": "9cb808fa01da41e886f944016f0adf6b2e2618f39d85fc0c10a61071f7795877",
+      "per_category": {
+        "term": 81,
+        "intersection": 122,
+        "phrase": 122,
+        "union": 122,
+        "intersection_union": 115,
+        "negated": 98
+      },
+      "candidate_seed": 11,
+      "build_seed": 21
+    },
+    "random_A.jsonl": {
+      "split": "open",
+      "sha256": "5469adf9b566e526471653ca68ea3fa295c495ec5c01de2c1a675e41aee70c2e",
+      "per_category": {
+        "term": 391,
+        "intersection": 400,
+        "phrase": 392,
+        "union": 400,
+        "intersection_union": 400,
+        "negated": 400
+      },
+      "seed": 101,
+      "sources": 400
+    },
+    "long_sealed.jsonl": {
+      "split": "sealed",
+      "sha256": "2cf3cc5dd9024b151e592cdf544b0fedced953009e4d74d18518fbe5866cf023",
+      "per_category": {
+        "union": 400
+      },
+      "seed": 302,
+      "count": 400
+    },
+    "nq_dev_sealed.jsonl": {
+      "split": "sealed",
+      "sha256": "70baeff9c306851e35fb454b4e96eae3063295bbf67a76ba25a1223066e49437",
+      "per_category": {
+        "term": 1,
+        "intersection": 3,
+        "phrase": 3,
+        "union": 3,
+        "intersection_union": 3,
+        "negated": 3
+      },
+      "candidate_seed": 12,
+      "build_seed": 22
+    },
+    "random_B.jsonl": {
+      "split": "sealed",
+      "sha256": "1de6bddf75ee5d1cc435ea7558047393ea51e520e3119e21279024f9bf57574d",
+      "per_category": {
+        "term": 371,
+        "intersection": 400,
+        "phrase": 384,
+        "union": 400,
+        "intersection_union": 400,
+        "negated": 400
+      },
+      "seed": 202,
+      "sources": 400
+    }
+  }
+}
