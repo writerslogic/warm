@@ -288,3 +288,36 @@ def test_write_batch_is_visible_whole_to_a_reader_and_denied_to_it(tmp_path):
     ids = sorted(h["documentId"] for h in reader.search_documents("pair zebra", {"k": 5}))
     assert ids == ["p", "q"]
     assert reader.get_document("seed") is None
+
+
+def _filter_ids(store, filter):
+    return sorted(hit["documentId"] for hit in store.search_documents("memo", {"filter": filter, "k": 10}))
+
+
+def test_in_eq_and_list_filters_and_unsupported_operators(tmp_path):
+    store = hm.Warm(1024, str(tmp_path / "store"))
+    store.memorize_document({"id": "a", "text": "memo a", "metadata": {"team": "red", "n": 1, "tags": ["x", "y"]}})
+    store.memorize_document({"id": "b", "text": "memo b", "metadata": {"team": "blue", "n": 2, "tags": ["y", "z"]}})
+    store.memorize_document({"id": "c", "text": "memo c", "metadata": {"team": "green", "n": 3}})
+    assert _filter_ids(store, {"team": {"$eq": "red"}}) == ["a"]
+    assert _filter_ids(store, {"team": {"$in": ["red", "green"]}}) == ["a", "c"]
+    assert _filter_ids(store, {"n": {"$in": [2, 3]}}) == ["b", "c"]
+    assert _filter_ids(store, {"tags": "y"}) == ["a", "b"]
+    assert _filter_ids(store, {"tags": {"$in": ["x", "z"]}}) == ["a", "b"]
+    with pytest.raises(Exception, match=r"\$gt"):
+        _filter_ids(store, {"n": {"$gt": 1}})
+    with pytest.raises(Exception, match=r"\$or"):
+        _filter_ids(store, {"$or": [{"team": "red"}]})
+
+
+def test_semantic_score_embedding_model_and_stemmer(tmp_path):
+    store = hm.Warm(1024, str(tmp_path / "store"), embedding_dimensions=4, embedding_model="fixture", embedding_revision="rev-1")
+    for doc_id, vector in (("a", [1, 0, 0, 0]), ("b", [0, 1, 0, 0])):
+        store.memorize_document({"id": doc_id, "text": f"memo {doc_id}", "embeddings": [vector]})
+    hits = store.search_documents("memo", {"embedding": [1, 1, 0, 0], "k": 2, "minSemanticScore": -1})
+    assert hits and all(isinstance(hit["semanticScore"], float) for hit in hits)
+    assert hits[0]["semanticScore"] == pytest.approx(2 ** -0.5, abs=1e-6)
+    model = store.embedding_model()
+    assert model["model"] == "fixture" and model["dimensions"] == 4
+    assert hm.Warm(1024, str(tmp_path / "plain")).embedding_model() is None
+    assert hm.analyze("harbors harbor") == [hm.stem("harbors"), hm.stem("harbor")]

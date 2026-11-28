@@ -28,6 +28,7 @@ mod document_chunks;
 mod document_competition;
 mod document_dense;
 mod documents;
+mod metadata_filters;
 #[cfg(feature = "local-embed")]
 mod embed_store;
 #[cfg(feature = "security")]

@@ -417,6 +417,17 @@ impl PyWarm {
         Ok(false)
     }
 
+    /// The embedding model the store was built with as a dict (`model`, `revision`,
+    /// `dimensions`, `normalization`, `metric`, `packSha256`), or `None` without an embedding
+    /// space. `packSha256` is `None` while no embedder is installed; compare `revision` and
+    /// `dimensions` with your embedder's to detect a mismatch.
+    fn embedding_model<'py>(&self, py: Python<'py>) -> PyResult<Option<Bound<'py, PyAny>>> {
+        self.core()?
+            .embedding_model()
+            .map(|info| to_py(py, &serde_json::to_value(info).map_err(err)?))
+            .transpose()
+    }
+
     /// Adds or replaces one document: `{"id", "text", "metadata"?, "embeddings"?, ...}`.
     /// Returns the number of chunks stored.
     fn memorize_document(&self, py: Python<'_>, document: &Bound<'_, PyAny>) -> PyResult<u32> {
@@ -674,7 +685,28 @@ impl PyWarm {
     }
 }
 
+fn analyzer_named(name: Option<&str>) -> PyResult<crate::core::documents::Analyzer> {
+    name.map_or_else(|| Ok(Default::default()), |name| name.parse().map_err(err))
+}
+
+/// The indexed term of one word, stemmed as the indexer does. `analyzer` names the store's
+/// analyzer (default: the legacy English analyzer).
+#[pyfunction]
+#[pyo3(signature = (word, analyzer=None))]
+fn stem(word: &str, analyzer: Option<&str>) -> PyResult<String> {
+    Ok(analyzer_named(analyzer)?.stem(word))
+}
+
+/// The indexed terms of `text`, in order with repeats, as the indexer counts them.
+#[pyfunction]
+#[pyo3(signature = (text, analyzer=None))]
+fn analyze(text: &str, analyzer: Option<&str>) -> PyResult<Vec<String>> {
+    Ok(analyzer_named(analyzer)?.analyze(text))
+}
+
 pub(super) fn register(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_function(wrap_pyfunction!(stem, m)?)?;
+    m.add_function(wrap_pyfunction!(analyze, m)?)?;
     m.add_class::<PyWarm>()?;
     m.add("StoreClosedError", m.py().get_type::<StoreClosedError>())?;
     m.add("ReadOnlyError", m.py().get_type::<ReadOnlyError>())?;

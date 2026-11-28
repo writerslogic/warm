@@ -32,6 +32,43 @@ pub struct VectorRecordQueryResultJs {
     pub diagnostics: serde_json::Value,
 }
 
+/// The embedding model a store was built with.
+#[napi(object, js_name = "EmbeddingModel")]
+pub struct EmbeddingModelJs {
+    pub model: String,
+    pub revision: String,
+    pub dimensions: u32,
+    pub normalization: String,
+    pub metric: String,
+    /// `null` while no embedder is installed.
+    pub pack_sha256: Option<String>,
+}
+
+#[cfg_attr(test, allow(dead_code))]
+fn analyzer_named(name: Option<String>) -> Result<crate::core::documents::Analyzer> {
+    match name {
+        None => Ok(Default::default()),
+        Some(name) => name
+            .parse()
+            .map_err(|e: anyhow::Error| napi::Error::from_reason(e.to_string())),
+    }
+}
+
+/// The indexed term of one word, stemmed as the indexer does. `analyzer` names the store's
+/// analyzer (default: the legacy English analyzer).
+#[napi]
+#[cfg_attr(test, allow(dead_code))]
+pub fn stem(word: String, analyzer: Option<String>) -> Result<String> {
+    Ok(analyzer_named(analyzer)?.stem(&word))
+}
+
+/// The indexed terms of `text`, in order with repeats, as the indexer counts them.
+#[napi]
+#[cfg_attr(test, allow(dead_code))]
+pub fn analyze(text: String, analyzer: Option<String>) -> Result<Vec<String>> {
+    Ok(analyzer_named(analyzer)?.analyze(&text))
+}
+
 #[napi]
 // codeql[rust/access-invalid-pointer] False positive: NAPI macro generated FFI bindings
 pub struct WarmMemorySystem {
@@ -407,6 +444,20 @@ impl WarmMemorySystem {
                 .collect())
         })
         .await
+    }
+
+    /// The embedding model the store was built with, or `null` without an embedding space.
+    /// Compare `revision` (and `dimensions`) with your embedder's to detect a mismatch.
+    #[napi]
+    pub fn embedding_model(&self) -> Result<Option<EmbeddingModelJs>> {
+        Ok(self.core()?.embedding_model().map(|info| EmbeddingModelJs {
+            model: info.model,
+            revision: info.revision,
+            dimensions: info.dimensions as u32,
+            normalization: info.normalization,
+            metric: info.metric,
+            pack_sha256: info.pack_sha256,
+        }))
     }
 
     #[napi]
