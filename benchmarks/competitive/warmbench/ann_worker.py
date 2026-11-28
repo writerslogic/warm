@@ -287,6 +287,39 @@ class FaissHnsw(FaissBase):
         raise Unsupported("IndexHNSWFlat cannot remove vectors")
 
 
+class FaissHnswSq(FaissBase):
+    """HNSW whose graph traversal reads scalar-quantised vectors (IndexHNSWSQ), with the top k * k_factor candidates re-scored
+    against a float copy (IndexRefineFlat). k_factor 1 re-scores exactly the k returned candidates."""
+    BUILDS = {"sq8_m32e500": {"M": 32, "efConstruction": 500, "bits": 8}, "sq4_m32e500": {"M": 32, "efConstruction": 500, "bits": 4}}
+    SWEEPS = {k: [{"ef": e, "k_factor": f} for f in (1, 2, 4) for e in EF_SWEEP] for k in BUILDS}
+
+    def build(self, train, params):
+        import faiss
+        faiss.omp_set_num_threads(self.threads)
+        qt = faiss.ScalarQuantizer.QT_8bit if params["bits"] == 8 else faiss.ScalarQuantizer.QT_4bit
+        base = faiss.IndexHNSWSQ(self.dim, qt, params["M"], faiss.METRIC_INNER_PRODUCT if self.angular else faiss.METRIC_L2)
+        base.hnsw.efConstruction = params["efConstruction"]
+        index = faiss.IndexRefineFlat(base)
+        index.train(train)
+        index.add(train)
+        self._write(index)
+
+    def open(self, params, n):
+        import faiss
+        super().open(params, n)
+        self.base = faiss.downcast_index(self.index.base_index)
+
+    def configure(self, sp):
+        self.base.hnsw.efSearch = max(sp["ef"], K)
+        self.index.k_factor = sp["k_factor"]
+
+    def replace(self, ids, vectors):
+        raise Unsupported("IndexRefineFlat cannot remove or replace vectors")
+
+    def delete(self, ids):
+        raise Unsupported("IndexRefineFlat cannot remove vectors")
+
+
 class FaissFlat(FaissBase):
     BUILDS = {"flat": {}}
     SWEEPS = {"flat": [{}]}
@@ -382,7 +415,9 @@ class Usearch(Adapter):
               "m32": {"connectivity": 32, "expansion_add": 200, "dtype": "f32"},
               "m16_i8": {"connectivity": 16, "expansion_add": 200, "dtype": "i8"},
               "m16e500": {"connectivity": 16, "expansion_add": 500, "dtype": "f32"},
-              "m32e500": {"connectivity": 32, "expansion_add": 500, "dtype": "f32"}}
+              "m32e500": {"connectivity": 32, "expansion_add": 500, "dtype": "f32"},
+              "m32e500_i8": {"connectivity": 32, "expansion_add": 500, "dtype": "i8"},
+              "m32e500_f16": {"connectivity": 32, "expansion_add": 500, "dtype": "f16"}}
     SWEEPS = {k: [{"ef": e} for e in EF_SWEEP] for k in BUILDS}
     PERSISTENT_FLUSH = True
 
@@ -685,7 +720,7 @@ class Duckdb(Adapter):
 
 SYSTEMS = {
     "warm": Warm,
-    "hnswlib": Hnswlib, "faiss-hnsw": FaissHnsw, "faiss-flat": FaissFlat, "faiss-ivfpq": FaissIvfpq, "faiss-ivfpqfs": FaissIvfpqFs,
+    "hnswlib": Hnswlib, "faiss-hnsw": FaissHnsw, "faiss-hnswsq": FaissHnswSq, "faiss-flat": FaissFlat, "faiss-ivfpq": FaissIvfpq, "faiss-ivfpqfs": FaissIvfpqFs,
     "usearch": Usearch, "annoy": Annoy, "sqlite-vec": SqliteVec, "lancedb": Lancedb, "chroma": Chroma,
     "qdrant-local": Qdrant, "milvus-lite": Milvus, "duckdb-vss": Duckdb,
 }

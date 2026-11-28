@@ -341,7 +341,7 @@ def cmd_headline(a):
             iw = interpolated({b: v["serve_rounds"] for b, v in systems["warm"]["builds"].items()}, target)
             row = {"warm": warm, "warm_interpolated": iw}
             for system, entry in systems.items():
-                if system == "warm" or system not in ("hnswlib", "hnswlib-cpp", "faiss-hnsw", "usearch"):
+                if system == "warm" or system not in ("hnswlib", "hnswlib-cpp", "faiss-hnsw", "faiss-hnswsq", "usearch"):
                     continue
                 theirs = best_build(entry["builds"], target)
                 row[system] = {"operating_point": theirs, "warm_over": factor(warm, theirs),
