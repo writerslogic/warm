@@ -28,6 +28,14 @@ class FigureTests(unittest.TestCase):
         found = [written for written, _, _ in module.figures("a 2.93\u00d7 lead and 3.4k QPS")]
         self.assertEqual(sorted(found), ["2.93", "3400"])
 
+    def test_a_link_to_this_repository_reads_the_checkout(self) -> None:
+        root = pathlib.Path("/repo")
+        page = root / "docs/benchmarks/index.md"
+        url = "https://github.com/writerslogic/warm/blob/main/benchmarks/results/a.json"
+        self.assertEqual(module.linked_path(root, page, url), root / "benchmarks/results/a.json")
+        self.assertEqual(module.linked_path(root, page, "../../benchmarks/results/a.json"), root / "benchmarks/results/a.json")
+        self.assertIsNone(module.linked_path(root, page, "https://github.com/other/repo/blob/main/a.json"))
+
 
 if __name__ == "__main__":
     unittest.main()

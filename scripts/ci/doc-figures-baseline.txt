@@ -1,2 +1,0 @@
-docs/benchmarks/index.md|2,092 QPS
-docs/benchmarks/index.md|2,819 QPS

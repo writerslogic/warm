@@ -7,7 +7,8 @@ between <!-- BENCH:START --> and <!-- BENCH:END --> excluded) is scanned for ben
 a number written next to QPS, MiB, GiB, a ratio suffix (2.93x), or after recall / nDCG / MRR.
 Each must equal, at the precision it is written with, a number in the committed generated data
 (docs/benchmarks/comparison.cells.json, COMPARISON.md) or in a file that the same table
-row or paragraph links to (a result file, or every file under a linked directory). Numbers with
+row or paragraph links to (a result file, or every file under a linked directory; relative links and
+github.com/writerslogic/warm main-branch URLs are read from the checkout). Numbers with
 no unit, years and versions are not figures.
 
 README.md is held to this fully. Any docs/benchmarks page may
@@ -39,7 +40,19 @@ STRICT = {"README.md"}
 BASELINE = "scripts/ci/doc-figures-baseline.txt"
 CORPUS_SUFFIXES = {".json", ".jsonl", ".txt", ".csv", ".md", ".log"}
 LINK = re.compile(r"\]\(([^)#\s]+)(?:#[^)]*)?\)")
+# Pages link result files by their GitHub URL so the links also work off GitHub; read those from the checkout.
+REPO_LINK = re.compile(r"https://github\.com/writerslogic/warm/(?:blob|tree)/main/(.+)")
 MAX_FILE = 64 * 1024 * 1024
+
+
+def linked_path(root: pathlib.Path, page: pathlib.Path, target: str):
+    """The local file or directory a link names, or None for a link outside this repository."""
+    repo = REPO_LINK.fullmatch(target)
+    if repo:
+        return root / repo.group(1)
+    if "://" in target:
+        return None
+    return (page.parent / target).resolve()
 
 
 def strip_generated(text: str) -> str:
@@ -166,9 +179,9 @@ def main() -> int:
         for number, block in blocks(source):
             values = list(generated)
             for target in LINK.findall(block):
-                if "://" in target:
-                    continue
-                values.extend(file_numbers((path.parent / target).resolve(), cache))
+                local = linked_path(root, path, target)
+                if local is not None:
+                    values.extend(file_numbers(local, cache))
             values.sort()
             for written, percent, context in figures(strip_noise(block)):
                 checked += 1
